@@ -117,7 +117,7 @@ export const preferencesConverter: FirestoreDataConverter<UserPreferences> = {
     const d = snapshot.data(options)
     return {
       current_energy: d.current_energy ?? undefined,
-      theme: d.theme ?? 'light',
+      theme: d.theme ?? 'system',
       notifications_enabled: d.notifications_enabled ?? false,
     }
   },
