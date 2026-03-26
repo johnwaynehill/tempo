@@ -1,7 +1,83 @@
+import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { useTodos } from '@/hooks/useTodos'
+import { useNotes } from '@/hooks/useNotes'
 
 export function SettingsPage() {
   const { user } = useAuth()
+  const { todos } = useTodos()
+  const { notes } = useNotes()
+  const [exporting, setExporting] = useState(false)
+
+  const handleExportJSON = async () => {
+    setExporting(true)
+
+    const data = {
+      exported_at: new Date().toISOString(),
+      todos: todos.map((t) => ({
+        ...t,
+        created_at: t.created_at.toISOString(),
+        updated_at: t.updated_at.toISOString(),
+        due_date: t.due_date?.toISOString() ?? null,
+        defer_until: t.defer_until?.toISOString() ?? null,
+        completed_at: t.completed_at?.toISOString() ?? null,
+        dismissed_from_today: t.dismissed_from_today?.toISOString() ?? null,
+        reminder_at: t.reminder_at?.toISOString() ?? null,
+      })),
+      notes: notes.map((n) => ({
+        ...n,
+        created_at: n.created_at.toISOString(),
+        updated_at: n.updated_at.toISOString(),
+      })),
+    }
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tempo-export-${new Date().toISOString().split('T')[0]}.json`
+    a.click()
+    URL.revokeObjectURL(url)
+
+    setExporting(false)
+  }
+
+  const handleExportMarkdown = () => {
+    // Bundle notes as individual .md files in a zip-like concatenation
+    // For simplicity, export as a single combined markdown file
+    const lines = notes.map(
+      (n) => `# ${n.title}\n\n_Updated: ${n.updated_at.toLocaleDateString()}_\n\n${n.content}\n\n---\n`,
+    )
+    const blob = new Blob([lines.join('\n')], { type: 'text/markdown' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `tempo-notes-${new Date().toISOString().split('T')[0]}.md`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const handleImportCSV = () => {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.csv'
+    input.onchange = async (e) => {
+      const file = (e.target as HTMLInputElement).files?.[0]
+      if (!file) return
+
+      const text = await file.text()
+      const lines = text.split('\n').filter((l) => l.trim())
+
+      // Skip header row, parse each line as a todo title
+      // Simple CSV: assumes first column is the task title
+      const rows = lines.slice(1)
+      console.log(`Importing ${rows.length} items from CSV...`, rows)
+
+      // TODO: Parse CSV columns and batch create todos
+      alert(`Parsed ${rows.length} rows. CSV import mapping coming soon — check console for preview.`)
+    }
+    input.click()
+  }
 
   return (
     <div>
@@ -33,13 +109,33 @@ export function SettingsPage() {
       <section className="mb-10">
         <h2 className="font-display text-lg font-semibold text-on-surface mb-4">Data</h2>
         <div className="space-y-3">
-          <button className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer">
-            <p className="text-on-surface text-sm font-medium">Import from Coda (CSV)</p>
-            <p className="text-on-surface-variant text-xs mt-0.5">One-time migration from your Coda workspace</p>
+          <button
+            onClick={handleImportCSV}
+            className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
+          >
+            <p className="text-on-surface text-sm font-medium">Import from CSV</p>
+            <p className="text-on-surface-variant text-xs mt-0.5">One-time migration from Coda or another tool</p>
           </button>
-          <button className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer">
-            <p className="text-on-surface text-sm font-medium">Export data</p>
-            <p className="text-on-surface-variant text-xs mt-0.5">Download todos as JSON + notes as Markdown files</p>
+          <button
+            onClick={handleExportJSON}
+            disabled={exporting}
+            className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer disabled:opacity-50"
+          >
+            <p className="text-on-surface text-sm font-medium">
+              {exporting ? 'Exporting...' : 'Export all data (JSON)'}
+            </p>
+            <p className="text-on-surface-variant text-xs mt-0.5">
+              {todos.length} todos + {notes.length} notes
+            </p>
+          </button>
+          <button
+            onClick={handleExportMarkdown}
+            className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
+          >
+            <p className="text-on-surface text-sm font-medium">Export notes (Markdown)</p>
+            <p className="text-on-surface-variant text-xs mt-0.5">
+              {notes.length} note{notes.length !== 1 ? 's' : ''} as .md file
+            </p>
           </button>
         </div>
       </section>
