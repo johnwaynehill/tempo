@@ -29,12 +29,17 @@ export function NotesPage() {
                 <h3 className="font-display font-semibold text-on-surface text-[15px] mb-1">
                   {note.title}
                 </h3>
-                <p className="text-on-surface-variant text-xs">
-                  {note.updated_at.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                  })}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="text-on-surface-variant text-xs">
+                    {note.updated_at.toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </p>
+                  {note.linked_todo_id && (
+                    <span className="text-xs text-primary/60">linked</span>
+                  )}
+                </div>
               </Link>
             ))}
           </div>

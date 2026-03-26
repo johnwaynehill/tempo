@@ -1,15 +1,20 @@
 import { useParams, Link, useNavigate } from 'react-router'
 import { useRef, useCallback } from 'react'
 import { useNotes } from '@/hooks/useNotes'
+import { useTodos } from '@/hooks/useTodos'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
 
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { notes, loading, updateNote, removeNote } = useNotes()
+  const { todos } = useTodos()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
 
   const note = notes.find((n) => n.id === id)
+  const linkedTodo = note?.linked_todo_id
+    ? todos.find((t) => t.id === note.linked_todo_id)
+    : undefined
 
   // Debounced auto-save (800ms after last keystroke)
   const handleContentChange = useCallback(
@@ -84,7 +89,7 @@ export function NoteEditorPage() {
       />
 
       {/* Metadata */}
-      <p className="text-on-surface-variant text-xs mb-6">
+      <p className="text-on-surface-variant text-xs mb-4">
         Last edited{' '}
         {note.updated_at.toLocaleDateString('en-US', {
           month: 'short',
@@ -93,6 +98,22 @@ export function NoteEditorPage() {
           minute: '2-digit',
         })}
       </p>
+
+      {/* Linked todo chip */}
+      {linkedTodo && (
+        <div className="mb-6 flex items-center gap-2">
+          <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
+            linkedTodo.status === 'done'
+              ? 'bg-primary/10 text-primary line-through'
+              : 'bg-surface-container-high text-on-surface-variant'
+          }`}>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+              linkedTodo.status === 'done' ? 'bg-primary' : 'border border-outline-variant'
+            }`} />
+            {linkedTodo.title}
+          </span>
+        </div>
+      )}
 
       {/* Editor */}
       <MilkdownEditor
