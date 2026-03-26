@@ -294,7 +294,7 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
                 onClick={() => { moveToBacklog(todo.id); setExpanded(false) }}
                 className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
                   todo.status === 'inbox'
-                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                    ? 'bg-gradient-to-br from-primary to-primary-dim text-on-primary hover:shadow-md'
                     : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
                 }`}
               >
