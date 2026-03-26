@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
+import { useTheme } from '@/hooks/useTheme'
 import { AppShell } from '@/components/layout/AppShell'
 import { LoginPage } from '@/pages/Login'
 import { TodayPage } from '@/pages/Today'
@@ -29,6 +30,7 @@ function AuthenticatedApp() {
 
 export default function App() {
   const { user, loading } = useAuth()
+  useTheme()
 
   if (loading) {
     return (

@@ -46,6 +46,31 @@
   --radius-xl: 1.5rem;
 }
 
+/* --- Dark Theme --- */
+
+[data-theme='dark'] {
+  --color-surface: #1a1c1b;
+  --color-surface-container-lowest: #111312;
+  --color-surface-container-low: #1f2120;
+  --color-surface-container: #252726;
+  --color-surface-container-high: #2f3130;
+  --color-surface-container-highest: #3a3c3b;
+
+  --color-primary: #8fb5a4;
+  --color-primary-dim: #7da393;
+  --color-on-primary: #1a2e26;
+  --color-primary-container: #3a544a;
+
+  --color-on-surface: #e1e3e1;
+  --color-on-surface-variant: #9fa3a1;
+
+  --color-secondary-container: #3a4a40;
+
+  --color-outline-variant: #4a4e4d;
+
+  --color-error: #e5726f;
+}
+
 /* --- Base Styles --- */
 
 html {
@@ -88,4 +113,23 @@ h1, h2, h3, h4, h5, h6 {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* --- Milkdown Dark Mode Overrides --- */
+
+[data-theme='dark'] .milkdown .ProseMirror {
+  color: var(--color-on-surface);
+}
+
+[data-theme='dark'] .milkdown {
+  --nord-neutral-50: var(--color-on-surface);
+  --nord-neutral-200: var(--color-on-surface-variant);
+  --nord-neutral-500: var(--color-outline-variant);
+  --nord-neutral-900: var(--color-surface);
+}
+
+/* --- Theme transition --- */
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
