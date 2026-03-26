@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
@@ -5,11 +6,25 @@ import { usePreferences } from '@/hooks/usePreferences'
 import { suggestTodayTodos } from '@/lib/scoring'
 
 export function TodayPage() {
-  const { todos, pinned, completeTodo, deferTodo, dismissFromToday, loading } = useTodos()
+  const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading } = useTodos()
   const { preferences, updatePreferences } = usePreferences()
 
   const suggested = suggestTodayTodos(todos, preferences.current_energy, pinned.length)
   const todayTodos = [...pinned, ...suggested]
+
+  // Count items completed today
+  const todayCompletedCount = useMemo(() => {
+    const startOfDay = new Date()
+    startOfDay.setHours(0, 0, 0, 0)
+    return done.filter((t) => t.completed_at && t.completed_at >= startOfDay).length
+  }, [done])
+
+  // Vary the empty state message based on completions
+  const emptyMessage = todayCompletedCount === 0
+    ? 'Nothing on your plate. Enjoy the quiet.'
+    : todayCompletedCount === 1
+      ? 'All done. You knocked out 1 task today.'
+      : `All done. You knocked out ${todayCompletedCount} tasks today.`
 
   return (
     <div>
@@ -46,9 +61,9 @@ export function TodayPage() {
                 key={todo.id}
                 todo={todo}
                 onComplete={completeTodo}
-                onDefer={(id) => {
+                onDefer={(id, until) => {
                   if (todo.status === 'today_pinned') {
-                    deferTodo(id)
+                    deferTodo(id, until)
                   } else {
                     dismissFromToday(id)
                   }
@@ -60,7 +75,16 @@ export function TodayPage() {
           {todayTodos.length === 0 && (
             <div className="text-center py-20">
               <p className="text-on-surface-variant text-sm">
-                Nothing on your plate. Enjoy the quiet.
+                {emptyMessage}
+              </p>
+            </div>
+          )}
+
+          {/* Subtle completion counter when items remain */}
+          {todayTodos.length > 0 && todayCompletedCount > 0 && (
+            <div className="mt-6 text-center">
+              <p className="text-on-surface-variant/60 text-xs">
+                {todayCompletedCount} done today
               </p>
             </div>
           )}

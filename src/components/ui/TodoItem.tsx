@@ -12,35 +12,96 @@ const SIZE_LABELS: Record<TodoSize, string> = {
 interface TodoItemProps {
   todo: Todo
   onComplete: (id: string) => void
-  onDefer: (id: string) => void
+  onDefer: (id: string, until?: Date) => void
   showEnergy?: boolean
 }
 
 export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoItemProps) {
   const [expanded, setExpanded] = useState(false)
+  const [completing, setCompleting] = useState(false)
+  const [showDeferMenu, setShowDeferMenu] = useState(false)
   const { updateTodo, pinToToday, moveToBacklog, removeTodo } = useTodos()
 
   const setField = (field: string, value: unknown) => {
     updateTodo(todo.id, { [field]: value })
   }
 
+  const handleComplete = () => {
+    setCompleting(true)
+    // Let the checkbox fill + strikethrough show (200ms),
+    // then fade out (500ms), then fire the actual completion
+    setTimeout(() => {
+      onComplete(todo.id)
+    }, 700)
+  }
+
+  const handleDeferOption = (until: Date) => {
+    setShowDeferMenu(false)
+    onDefer(todo.id, until)
+  }
+
+  // Defer date helpers
+  const tomorrow = () => {
+    const d = new Date()
+    d.setDate(d.getDate() + 1)
+    d.setHours(9, 0, 0, 0)
+    return d
+  }
+
+  const nextWeek = () => {
+    const d = new Date()
+    d.setDate(d.getDate() + 7)
+    d.setHours(9, 0, 0, 0)
+    return d
+  }
+
+  const nextMonth = () => {
+    const d = new Date()
+    d.setMonth(d.getMonth() + 1)
+    d.setHours(9, 0, 0, 0)
+    return d
+  }
+
   return (
-    <div className="transition-colors duration-200">
+    <div
+      className={`transition-all duration-500 ease-out ${
+        completing
+          ? 'opacity-0 translate-x-4'
+          : 'opacity-100 translate-x-0'
+      }`}
+    >
       {/* Main row */}
       <div className="group flex items-start gap-3.5 py-3.5">
         {/* Checkbox */}
         <button
-          onClick={() => onComplete(todo.id)}
-          className="mt-0.5 w-5 h-5 rounded-full border-2 border-outline-variant flex-shrink-0 hover:border-primary hover:bg-primary/10 transition-all duration-300 cursor-pointer"
+          onClick={handleComplete}
+          disabled={completing}
+          className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all duration-300 cursor-pointer flex items-center justify-center ${
+            completing
+              ? 'border-primary bg-primary scale-110'
+              : 'border-outline-variant hover:border-primary hover:bg-primary/10'
+          }`}
           aria-label={`Complete "${todo.title}"`}
-        />
+        >
+          {completing && (
+            <svg className="w-3 h-3 text-on-primary" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M2.5 6L5 8.5L9.5 3.5" />
+            </svg>
+          )}
+        </button>
 
         {/* Content — tap to expand */}
         <button
           onClick={() => setExpanded(!expanded)}
           className="flex-1 min-w-0 text-left cursor-pointer"
         >
-          <p className="text-on-surface text-[15px] leading-snug">{todo.title}</p>
+          <p className={`text-[15px] leading-snug transition-all duration-300 ${
+            completing
+              ? 'text-on-surface-variant line-through'
+              : 'text-on-surface'
+          }`}>
+            {todo.title}
+          </p>
 
           {/* Metadata row */}
           <div className="flex items-center gap-2.5 mt-1.5 flex-wrap">
@@ -72,18 +133,50 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
           </div>
         </button>
 
-        {/* Defer — visible on hover / always on mobile */}
-        <button
-          onClick={() => onDefer(todo.id)}
-          className="opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-60 text-xs text-on-surface-variant hover:text-on-surface px-2 py-1 rounded-lg hover:bg-surface-container transition-all duration-200 cursor-pointer flex-shrink-0"
-          aria-label={`Defer "${todo.title}"`}
-        >
-          Later
-        </button>
+        {/* Defer button with popover */}
+        <div className="relative flex-shrink-0">
+          <button
+            onClick={() => setShowDeferMenu(!showDeferMenu)}
+            className="opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-60 text-xs text-on-surface-variant hover:text-on-surface px-2 py-1 rounded-lg hover:bg-surface-container transition-all duration-200 cursor-pointer"
+            aria-label={`Defer "${todo.title}"`}
+          >
+            Later
+          </button>
+
+          {showDeferMenu && (
+            <>
+              {/* Invisible click-away backdrop */}
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowDeferMenu(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
+                <button
+                  onClick={() => handleDeferOption(tomorrow())}
+                  className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  Tomorrow
+                </button>
+                <button
+                  onClick={() => handleDeferOption(nextWeek())}
+                  className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  Next week
+                </button>
+                <button
+                  onClick={() => handleDeferOption(nextMonth())}
+                  className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  Next month
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {/* Inline edit panel */}
-      {expanded && (
+      {expanded && !completing && (
         <div className="ml-8.5 pb-4 space-y-4">
           {/* Title edit */}
           <input

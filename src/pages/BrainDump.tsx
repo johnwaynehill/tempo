@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
 
 export function BrainDumpPage() {
   const [text, setText] = useState('')
   const [sending, setSending] = useState(false)
+  const [sentCount, setSentCount] = useState<number | null>(null)
   const { addTodo } = useTodos()
 
   const lineCount = text.split('\n').filter((l) => l.trim()).length
@@ -18,6 +20,7 @@ export function BrainDumpPage() {
 
     setSending(true)
     await Promise.all(items.map((title) => addTodo({ title })))
+    setSentCount(items.length)
     setText('')
     setSending(false)
   }
@@ -33,9 +36,28 @@ export function BrainDumpPage() {
         </p>
       </div>
 
+      {/* Confirmation banner */}
+      {sentCount !== null && (
+        <div className="mb-6 bg-primary/8 rounded-xl px-5 py-4 flex items-center justify-between">
+          <p className="text-on-surface text-sm">
+            Sent {sentCount} item{sentCount !== 1 ? 's' : ''} to Inbox.
+          </p>
+          <Link
+            to="/inbox"
+            className="text-primary text-sm font-medium hover:underline"
+          >
+            View Inbox
+          </Link>
+        </div>
+      )}
+
       <textarea
         value={text}
-        onChange={(e) => setText(e.target.value)}
+        onChange={(e) => {
+          setText(e.target.value)
+          // Clear the sent banner when user starts typing again
+          if (sentCount !== null) setSentCount(null)
+        }}
         placeholder="Buy groceries&#10;Email dentist&#10;Research that thing&#10;..."
         className="w-full bg-surface-container-lowest rounded-xl p-5 text-on-surface placeholder:text-on-surface-variant/40 outline-none text-[15px] leading-relaxed min-h-[40vh] resize-none"
       />

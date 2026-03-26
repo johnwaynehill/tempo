@@ -25,7 +25,7 @@ export function InboxPage() {
                 key={todo.id}
                 todo={todo}
                 onComplete={completeTodo}
-                onDefer={moveToBacklog}
+                onDefer={(id) => moveToBacklog(id)}
                 showEnergy={false}
               />
             ))}
