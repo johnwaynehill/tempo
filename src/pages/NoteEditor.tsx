@@ -1,15 +1,17 @@
 import { useParams, Link, useNavigate } from 'react-router'
-import { useRef, useCallback } from 'react'
+import { useRef, useCallback, useState } from 'react'
 import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
+import { LinkPicker } from '@/components/ui/LinkPicker'
 
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { notes, loading, updateNote, removeNote } = useNotes()
-  const { todos } = useTodos()
+  const { todos, updateTodo, addTodo } = useTodos()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const [showTodoPicker, setShowTodoPicker] = useState(false)
 
   const note = notes.find((n) => n.id === id)
   const linkedTodo = note?.linked_todo_id
@@ -99,9 +101,9 @@ export function NoteEditorPage() {
         })}
       </p>
 
-      {/* Linked todo chip */}
-      {linkedTodo && (
-        <div className="mb-6 flex items-center gap-2">
+      {/* Linked todo chip — or Link Todo button */}
+      <div className="mb-6">
+        {linkedTodo ? (
           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
             linkedTodo.status === 'done'
               ? 'bg-primary/10 text-primary line-through'
@@ -112,14 +114,44 @@ export function NoteEditorPage() {
             }`} />
             {linkedTodo.title}
           </span>
-        </div>
-      )}
+        ) : (
+          <button
+            onClick={() => setShowTodoPicker(true)}
+            className="text-xs text-on-surface-variant hover:text-on-surface px-3 py-1.5 rounded-lg bg-surface-container-high hover:bg-surface-container-highest transition-colors duration-200 cursor-pointer"
+          >
+            + Link Todo
+          </button>
+        )}
+      </div>
 
       {/* Editor */}
       <MilkdownEditor
         defaultValue={note.content}
         onChange={handleContentChange}
       />
+
+      {/* Todo picker modal */}
+      {showTodoPicker && (
+        <LinkPicker
+          items={todos
+            .filter((t) => t.status !== 'done' && !t.note_id)
+            .map((t) => ({ id: t.id, title: t.title }))}
+          placeholder="Search todos..."
+          createLabel="New todo"
+          onClose={() => setShowTodoPicker(false)}
+          onSelect={async (todoId) => {
+            await updateNote(id!, { linked_todo_id: todoId })
+            await updateTodo(todoId, { note_id: id! })
+            setShowTodoPicker(false)
+          }}
+          onCreate={async (title) => {
+            const todoId = await addTodo({ title: title || note.title, status: 'inbox' })
+            await updateNote(id!, { linked_todo_id: todoId })
+            await updateTodo(todoId, { note_id: id! })
+            setShowTodoPicker(false)
+          }}
+        />
+      )}
     </div>
   )
 }

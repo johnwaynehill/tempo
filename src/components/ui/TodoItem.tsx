@@ -4,6 +4,7 @@ import type { Todo, TodoSize } from '@/types'
 import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
+import { LinkPicker } from '@/components/ui/LinkPicker'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
   small: 'Small',
@@ -22,6 +23,7 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
   const [expanded, setExpanded] = useState(false)
   const [completing, setCompleting] = useState(false)
   const [showDeferMenu, setShowDeferMenu] = useState(false)
+  const [showNotePicker, setShowNotePicker] = useState(false)
   const { updateTodo, pinToToday, moveToBacklog, removeTodo } = useTodos()
   const { notes, addNote, updateNote } = useNotes()
   const navigate = useNavigate()
@@ -324,12 +326,7 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
               </button>
             ) : (
               <button
-                onClick={async () => {
-                  const noteId = await addNote(todo.title)
-                  await updateTodo(todo.id, { note_id: noteId })
-                  await updateNote(noteId, { linked_todo_id: todo.id })
-                  navigate(`/notes/${noteId}`)
-                }}
+                onClick={() => setShowNotePicker(true)}
                 className="text-xs px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant font-medium hover:text-on-surface transition-colors duration-200 cursor-pointer"
               >
                 Link Note
@@ -343,6 +340,28 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
             </button>
           </div>
         </div>
+      )}
+
+      {/* Note picker modal */}
+      {showNotePicker && (
+        <LinkPicker
+          items={notes.filter((n) => !n.linked_todo_id).map((n) => ({ id: n.id, title: n.title }))}
+          placeholder="Search notes..."
+          createLabel="New note"
+          onClose={() => setShowNotePicker(false)}
+          onSelect={async (noteId) => {
+            await updateTodo(todo.id, { note_id: noteId })
+            await updateNote(noteId, { linked_todo_id: todo.id })
+            setShowNotePicker(false)
+          }}
+          onCreate={async (title) => {
+            const noteId = await addNote(title || todo.title)
+            await updateTodo(todo.id, { note_id: noteId })
+            await updateNote(noteId, { linked_todo_id: todo.id })
+            setShowNotePicker(false)
+            navigate(`/notes/${noteId}`)
+          }}
+        />
       )}
     </div>
   )
