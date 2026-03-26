@@ -28,10 +28,11 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
 
   const handleComplete = () => {
     setCompleting(true)
-    // Let the animation play, then fire the actual completion
+    // Let the checkbox fill + strikethrough show (200ms),
+    // then fade out (500ms), then fire the actual completion
     setTimeout(() => {
       onComplete(todo.id)
-    }, 500)
+    }, 700)
   }
 
   const handleDeferOption = (until: Date) => {
@@ -63,9 +64,9 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
 
   return (
     <div
-      className={`transition-all duration-500 ${
+      className={`transition-all duration-500 ease-out ${
         completing
-          ? 'opacity-0 translate-x-2 max-h-0 overflow-hidden'
+          ? 'opacity-0 translate-x-4'
           : 'opacity-100 translate-x-0'
       }`}
     >
