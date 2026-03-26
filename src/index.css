@@ -1,0 +1,91 @@
+@import 'tailwindcss';
+
+/*
+ * Tempo Design System: "The Quiet Rhythm"
+ * Tokens derived from Docs/Design.md
+ */
+
+@theme {
+  /* --- Surface Hierarchy (The "No-Line" Rule) --- */
+  --color-surface: #f9f9f8;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #f3f4f3;
+  --color-surface-container: #edeeed;
+  --color-surface-container-high: #e7e8e7;
+  --color-surface-container-highest: #e1e2e1;
+
+  /* --- Primary (Muted Sage) --- */
+  --color-primary: #4f645b;
+  --color-primary-dim: #43574f;
+  --color-on-primary: #ffffff;
+  --color-primary-container: #d1ddd6;
+
+  /* --- On-Surface --- */
+  --color-on-surface: #2f3333;
+  --color-on-surface-variant: #5b605f;
+
+  /* --- Secondary --- */
+  --color-secondary-container: #dce5df;
+
+  /* --- Outline --- */
+  --color-outline-variant: #afb3b2;
+
+  /* --- Error (never pure red) --- */
+  --color-error: #a83836;
+
+  /* --- Typography --- */
+  --font-display: 'Manrope', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* --- Spacing Scale (from Design.md "Tempo" spacing) --- */
+  --spacing-18: 6.25rem;
+  --spacing-20: 7rem;
+
+  /* --- Border Radius --- */
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+}
+
+/* --- Base Styles --- */
+
+html {
+  font-family: var(--font-body);
+  color: var(--color-on-surface);
+  background-color: var(--color-surface);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+}
+
+/* Headings use display font */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+/* --- Scrollbar --- */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-outline-variant);
+  border-radius: 3px;
+}
+
+/* --- Focus Styles (accessible but subtle) --- */
+
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
