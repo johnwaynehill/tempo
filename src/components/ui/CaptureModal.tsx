@@ -1,4 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
+import { useNavigate } from 'react-router'
+import { useTodos } from '@/hooks/useTodos'
+import { useNotes } from '@/hooks/useNotes'
 
 type CaptureType = 'todo' | 'note'
 
@@ -9,7 +12,11 @@ interface CaptureModalProps {
 export function CaptureModal({ onClose }: CaptureModalProps) {
   const [type, setType] = useState<CaptureType>('todo')
   const [title, setTitle] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
+  const { addTodo } = useTodos()
+  const { addNote } = useNotes()
+  const navigate = useNavigate()
 
   useEffect(() => {
     inputRef.current?.focus()
@@ -24,12 +31,19 @@ export function CaptureModal({ onClose }: CaptureModalProps) {
     return () => window.removeEventListener('keydown', handler)
   }, [onClose])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!title.trim()) return
+    if (!title.trim() || submitting) return
 
-    // TODO: Write to Firestore (inbox for todos, notes collection for notes)
-    console.log('Captured:', { type, title: title.trim() })
+    setSubmitting(true)
+
+    if (type === 'todo') {
+      await addTodo({ title: title.trim() })
+    } else {
+      const id = await addNote(title.trim())
+      // Navigate to the new note so you can start writing immediately
+      navigate(`/notes/${id}`)
+    }
 
     onClose()
   }
@@ -78,10 +92,10 @@ export function CaptureModal({ onClose }: CaptureModalProps) {
           <div className="flex justify-end mt-4">
             <button
               type="submit"
-              disabled={!title.trim()}
+              disabled={!title.trim() || submitting}
               className="px-5 py-2 rounded-xl bg-gradient-to-br from-primary to-primary-dim text-on-primary text-sm font-medium disabled:opacity-40 transition-all duration-200 hover:shadow-md cursor-pointer"
             >
-              Capture
+              {submitting ? 'Saving...' : 'Capture'}
             </button>
           </div>
         </form>
