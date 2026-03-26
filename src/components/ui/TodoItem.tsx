@@ -280,15 +280,23 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
             {todo.status !== 'today_pinned' && (
               <button
                 onClick={() => { pinToToday(todo.id); setExpanded(false) }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-colors duration-200 cursor-pointer"
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
+                  todo.status === 'inbox'
+                    ? 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                    : 'bg-primary/10 text-primary hover:bg-primary/20'
+                }`}
               >
                 Pin to Today
               </button>
             )}
-            {todo.status !== 'backlog' && todo.status !== 'inbox' && (
+            {todo.status !== 'backlog' && (
               <button
                 onClick={() => { moveToBacklog(todo.id); setExpanded(false) }}
-                className="text-xs px-3 py-1.5 rounded-lg bg-surface-container-high text-on-surface-variant font-medium hover:text-on-surface transition-colors duration-200 cursor-pointer"
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
+                  todo.status === 'inbox'
+                    ? 'bg-gradient-to-br from-primary to-primary-dim text-on-primary hover:shadow-md'
+                    : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                }`}
               >
                 Move to Backlog
               </button>
