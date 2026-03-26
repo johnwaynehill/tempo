@@ -2,12 +2,21 @@ import { useState } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
+import { usePreferences } from '@/hooks/usePreferences'
+import type { UserPreferences } from '@/types'
 
 export function SettingsPage() {
   const { user } = useAuth()
   const { todos } = useTodos()
   const { notes } = useNotes()
+  const { preferences, updatePreferences } = usePreferences()
   const [exporting, setExporting] = useState(false)
+
+  const themeOptions: { value: UserPreferences['theme']; label: string }[] = [
+    { value: 'light', label: 'Light' },
+    { value: 'dark', label: 'Dark' },
+    { value: 'system', label: 'System' },
+  ]
 
   const handleExportJSON = async () => {
     setExporting(true)
@@ -147,11 +156,23 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-on-surface text-sm font-medium">Theme</p>
-              <p className="text-on-surface-variant text-xs">Light mode only for now</p>
+              <p className="text-on-surface-variant text-xs">Choose your vibe</p>
             </div>
-            <span className="text-xs text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-lg">
-              Coming soon
-            </span>
+            <div className="flex gap-1.5">
+              {themeOptions.map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => updatePreferences({ theme: opt.value })}
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                    preferences.theme === opt.value
+                      ? 'bg-primary text-on-primary'
+                      : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <div>
