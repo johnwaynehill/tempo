@@ -1,0 +1,26 @@
+FROM node:20-alpine AS build
+
+WORKDIR /app
+
+# Firebase env vars must be present at build time (Vite inlines them)
+ARG VITE_FIREBASE_API_KEY
+ARG VITE_FIREBASE_AUTH_DOMAIN
+ARG VITE_FIREBASE_PROJECT_ID
+ARG VITE_FIREBASE_STORAGE_BUCKET
+ARG VITE_FIREBASE_MESSAGING_SENDER_ID
+ARG VITE_FIREBASE_APP_ID
+
+COPY package.json package-lock.json .npmrc ./
+RUN npm ci --legacy-peer-deps
+
+COPY . .
+RUN npm run build
+
+# --- Production stage ---
+FROM node:20-alpine
+WORKDIR /app
+RUN npm install -g serve
+COPY --from=build /app/dist ./dist
+
+EXPOSE 3000
+CMD ["serve", "dist", "-s", "-l", "tcp://0.0.0.0:3000"]
