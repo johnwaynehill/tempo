@@ -5,6 +5,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { CodaImportModal } from '@/components/ui/CodaImportModal'
 import type { UserPreferences } from '@/types'
 
 export function SettingsPage() {
@@ -15,6 +16,7 @@ export function SettingsPage() {
   const { canInstall, isInstalled, install } = useInstallPrompt()
   const online = useOnlineStatus()
   const [exporting, setExporting] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const themeOptions: { value: UserPreferences['theme']; label: string }[] = [
     { value: 'light', label: 'Light' },
@@ -70,27 +72,7 @@ export function SettingsPage() {
     URL.revokeObjectURL(url)
   }
 
-  const handleImportCSV = () => {
-    const input = document.createElement('input')
-    input.type = 'file'
-    input.accept = '.csv'
-    input.onchange = async (e) => {
-      const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
-
-      const text = await file.text()
-      const lines = text.split('\n').filter((l) => l.trim())
-
-      // Skip header row, parse each line as a todo title
-      // Simple CSV: assumes first column is the task title
-      const rows = lines.slice(1)
-      console.log(`Importing ${rows.length} items from CSV...`, rows)
-
-      // TODO: Parse CSV columns and batch create todos
-      alert(`Parsed ${rows.length} rows. CSV import mapping coming soon — check console for preview.`)
-    }
-    input.click()
-  }
+  const handleImportCSV = () => setShowImportModal(true)
 
   return (
     <div>
@@ -233,6 +215,10 @@ export function SettingsPage() {
           </div>
         </div>
       </section>
+
+      {showImportModal && (
+        <CodaImportModal onClose={() => setShowImportModal(false)} />
+      )}
     </div>
   )
 }
