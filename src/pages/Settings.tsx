@@ -3,6 +3,8 @@ import { useAuth } from '@/context/AuthContext'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { usePreferences } from '@/hooks/usePreferences'
+import { useInstallPrompt } from '@/hooks/useInstallPrompt'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import type { UserPreferences } from '@/types'
 
 export function SettingsPage() {
@@ -10,6 +12,8 @@ export function SettingsPage() {
   const { todos } = useTodos()
   const { notes } = useNotes()
   const { preferences, updatePreferences } = usePreferences()
+  const { canInstall, isInstalled, install } = useInstallPrompt()
+  const online = useOnlineStatus()
   const [exporting, setExporting] = useState(false)
 
   const themeOptions: { value: UserPreferences['theme']; label: string }[] = [
@@ -182,6 +186,50 @@ export function SettingsPage() {
             <span className="text-xs text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-lg">
               Coming soon
             </span>
+          </div>
+        </div>
+      </section>
+
+      {/* App */}
+      <section className="mb-10">
+        <h2 className="font-display text-lg font-semibold text-on-surface mb-4">App</h2>
+        <div className="bg-surface-container-lowest rounded-xl p-5 space-y-4">
+          {/* Install prompt */}
+          {canInstall && (
+            <button
+              onClick={install}
+              className="w-full text-left flex items-center justify-between cursor-pointer"
+            >
+              <div>
+                <p className="text-on-surface text-sm font-medium">Install Tempo</p>
+                <p className="text-on-surface-variant text-xs">Add to your home screen for quick access</p>
+              </div>
+              <span className="px-4 py-1.5 rounded-lg bg-primary text-on-primary text-xs font-medium">
+                Install
+              </span>
+            </button>
+          )}
+
+          {/* Status */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Status</p>
+              <p className="text-on-surface-variant text-xs">
+                {isInstalled ? 'Installed as PWA' : 'Running in browser'}
+              </p>
+            </div>
+            <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
+              online ? 'text-primary' : 'text-on-surface-variant'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${online ? 'bg-primary' : 'bg-outline-variant'}`} />
+              {online ? 'Online' : 'Offline'}
+            </span>
+          </div>
+
+          {/* Version */}
+          <div className="flex items-center justify-between">
+            <p className="text-on-surface-variant text-xs">Version</p>
+            <p className="text-on-surface-variant text-xs font-mono">0.8.0</p>
           </div>
         </div>
       </section>

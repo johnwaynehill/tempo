@@ -2,6 +2,8 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
 import { useTheme } from '@/hooks/useTheme'
 import { AppShell } from '@/components/layout/AppShell'
+import { OfflineBanner } from '@/components/ui/OfflineBanner'
+import { UpdatePrompt } from '@/components/ui/UpdatePrompt'
 import { LoginPage } from '@/pages/Login'
 import { TodayPage } from '@/pages/Today'
 import { InboxPage } from '@/pages/Inbox'
@@ -34,15 +36,22 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
-        <p className="text-on-surface-variant text-sm">Loading...</p>
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3">
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-dim flex items-center justify-center">
+          <span className="text-on-primary font-display font-bold text-xl">T</span>
+        </div>
+        <p className="text-on-surface-variant text-xs tracking-wide">Loading...</p>
       </div>
     )
   }
 
   return (
-    <BrowserRouter>
-      {user ? <AuthenticatedApp /> : <LoginPage />}
-    </BrowserRouter>
+    <>
+      <OfflineBanner />
+      <UpdatePrompt />
+      <BrowserRouter>
+        {user ? <AuthenticatedApp /> : <LoginPage />}
+      </BrowserRouter>
+    </>
   )
 }
