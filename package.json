@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "generate-icons": "node scripts/generate-icons.mjs"
+    "generate-icons": "node scripts/generate-icons.mjs",
+    "start": "serve dist -s -l tcp://0.0.0.0:$PORT"
   },
   "dependencies": {
     "@milkdown/core": "^7.19.2",
@@ -25,6 +26,7 @@
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
     "react-router": "^7.13.2",
+    "serve": "^14.2.6",
     "uuid": "^13.0.0"
   },
   "devDependencies": {
