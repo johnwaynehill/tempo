@@ -5,6 +5,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
+import { useNotifications } from '@/hooks/useNotifications'
 import { CodaImportModal } from '@/components/ui/CodaImportModal'
 import type { UserPreferences } from '@/types'
 
@@ -15,6 +16,7 @@ export function SettingsPage() {
   const { preferences, updatePreferences } = usePreferences()
   const { canInstall, isInstalled, install } = useInstallPrompt()
   const online = useOnlineStatus()
+  const { permission, isSupported, isGranted, requestPermission } = useNotifications()
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
 
@@ -163,11 +165,47 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-on-surface text-sm font-medium">Notifications</p>
-              <p className="text-on-surface-variant text-xs">Gentle reminders (Mac only)</p>
+              <p className="text-on-surface-variant text-xs">
+                {!isSupported
+                  ? 'Not supported in this browser'
+                  : permission === 'denied'
+                    ? 'Blocked by browser — enable in system settings'
+                    : 'Gentle reminders (Mac only)'}
+              </p>
             </div>
-            <span className="text-xs text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-lg">
-              Coming soon
-            </span>
+            {isSupported && permission !== 'denied' ? (
+              <button
+                onClick={async () => {
+                  if (!isGranted) {
+                    const result = await requestPermission()
+                    if (result === 'granted') {
+                      updatePreferences({ notifications_enabled: true })
+                    }
+                  } else {
+                    updatePreferences({
+                      notifications_enabled: !preferences.notifications_enabled,
+                    })
+                  }
+                }}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
+                  preferences.notifications_enabled && isGranted
+                    ? 'bg-primary'
+                    : 'bg-surface-container-high'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface-container-lowest shadow transition-transform duration-200 ${
+                    preferences.notifications_enabled && isGranted
+                      ? 'translate-x-5'
+                      : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            ) : (
+              <span className="text-xs text-on-surface-variant bg-surface-container-high px-3 py-1 rounded-lg">
+                Unavailable
+              </span>
+            )}
           </div>
         </div>
       </section>

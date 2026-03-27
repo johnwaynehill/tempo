@@ -6,8 +6,11 @@ import { FAB } from './FAB'
 import { ShortcutsSheet } from '@/components/ui/ShortcutsSheet'
 import { useKeyboardShortcuts, type Shortcut } from '@/hooks/useKeyboardShortcuts'
 import { useNotes } from '@/hooks/useNotes'
+import { useReminderScheduler } from '@/hooks/useReminderScheduler'
 
 export function AppShell() {
+  // Background: check for due reminders and fire notifications
+  useReminderScheduler()
   const navigate = useNavigate()
   const { addNote } = useNotes()
   const [captureOpen, setCaptureOpen] = useState(false)
