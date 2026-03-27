@@ -5,6 +5,7 @@ import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { LinkPicker } from '@/components/ui/LinkPicker'
+import { ReminderPicker } from '@/components/ui/ReminderPicker'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
   small: 'Small',
@@ -24,6 +25,7 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
   const [completing, setCompleting] = useState(false)
   const [showDeferMenu, setShowDeferMenu] = useState(false)
   const [showNotePicker, setShowNotePicker] = useState(false)
+  const [showReminderPicker, setShowReminderPicker] = useState(false)
   const { updateTodo, pinToToday, moveToBacklog, removeTodo } = useTodos()
   const { notes, addNote, updateNote } = useNotes()
   const navigate = useNavigate()
@@ -136,6 +138,11 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
             {todo.due_date && (
               <span className="text-xs text-on-surface-variant">
                 {todo.due_date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            )}
+            {todo.reminder_at && (
+              <span className="text-xs text-primary/70">
+                🔔 {todo.reminder_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
               </span>
             )}
             {linkedNote && (
@@ -332,6 +339,26 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
                 Link Note
               </button>
             )}
+            <div className="relative">
+              <button
+                onClick={() => setShowReminderPicker(!showReminderPicker)}
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
+                  todo.reminder_at
+                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                    : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                {todo.reminder_at ? 'Reminder set' : 'Remind'}
+              </button>
+              {showReminderPicker && (
+                <ReminderPicker
+                  currentReminder={todo.reminder_at}
+                  onSet={(date) => updateTodo(todo.id, { reminder_at: date })}
+                  onClear={() => updateTodo(todo.id, { reminder_at: undefined })}
+                  onClose={() => setShowReminderPicker(false)}
+                />
+              )}
+            </div>
             <button
               onClick={() => removeTodo(todo.id)}
               className="text-xs px-3 py-1.5 rounded-lg text-error/70 hover:text-error hover:bg-error/5 font-medium transition-colors duration-200 cursor-pointer ml-auto"
