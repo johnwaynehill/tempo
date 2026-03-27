@@ -58,7 +58,7 @@ export function ReminderPicker({ currentReminder, onSet, onClear, onClose }: Rem
       {/* Click-away backdrop */}
       <div className="fixed inset-0 z-40" onClick={onClose} />
 
-      <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-2 min-w-[220px]">
+      <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-2 min-w-[220px]">
         {/* Current reminder display */}
         {currentReminder && (
           <div className="px-4 py-2 border-b border-outline-variant/10">
