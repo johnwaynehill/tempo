@@ -7,7 +7,7 @@ interface EnergySelectorProps {
 
 export function EnergySelector({ value, onChange }: EnergySelectorProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 flex-wrap">
       <span className="text-xs text-on-surface-variant font-medium mr-1">Energy</span>
       {ENERGY_LEVELS.map((level) => (
         <button

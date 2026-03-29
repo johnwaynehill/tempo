@@ -235,6 +235,17 @@ html {
   animation: gentle-appear 0.5s ease-out;
 }
 
+/* --- Scrollbar hide utility --- */
+
+.scrollbar-hide {
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 /* --- iOS PWA safe areas --- */
 
 @supports (padding-top: env(safe-area-inset-top)) {

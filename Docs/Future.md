@@ -2,19 +2,23 @@
 
 ## Notes Updates
 **Select text to format**
-- [ ] User can select text on screen to change the format of the text. Selecting displays a small menu above or below the text based on where the text is on the screen.
+- [x] User can select text on screen to change the format of the text. Selecting displays a small menu above or below the text based on where the text is on the screen.
 - [ ] all markdown is available with smart defaults; scrolls within left/right.
-- [ ] add confirmation for Delete note
+- [x] add confirmation for Delete note
+- [ ] Add Create Note button to Notes page which creates and opens the note for direct editing within 3 seconds
+- [ ] On mobile devices, add the Markdown editor bar above the keyboard
 
 ## ToDo Updates
 **Detail in Popup**
 - [x] instead of openning the details of a ToDo inline, use a popup that allows me to focus just on that 1 ToDo
-- [ ] Make "All done" more celebratory
+- [x] Make "All done" more celebratory
+- [ ] Add dropdown to Project section of ToDo detail panel
+- [ ] Add typeahead to Project section of ToDo detail panel 
 
 ## Backlog Updates
-- [ ] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
+- [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
 - [ ] Make Projects folders instead of collabsable items
-  - [ ] Add to the Sidebar + Menu
+  - [ ] Add Projects to the Sidebar for Desktop. Consider how to add on Mobile.
 
 ## Habit Tracker
 - [ ] Start a new habit

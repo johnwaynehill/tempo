@@ -4,7 +4,8 @@ import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
 import { scoreTodo } from '@/lib/scoring'
 import { usePreferences } from '@/hooks/usePreferences'
-import type { EnergyLevel, Todo } from '@/types'
+import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
+import { FilterDropdown } from '@/components/ui/FilterDropdown'
 
 type SortMode = 'score' | 'due' | 'recent'
 
@@ -13,6 +14,13 @@ const SORT_LABELS: Record<SortMode, string> = {
   due: 'Due date',
   recent: 'Recent',
 }
+
+const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'score', label: 'Priority' },
+  { value: 'due', label: 'Due date' },
+  { value: 'recent', label: 'Recent' },
+]
 
 function sortTodos(todos: Todo[], mode: SortMode, energy?: EnergyLevel): Todo[] {
   const sorted = [...todos]
@@ -95,6 +103,8 @@ export function BacklogPage() {
   const { preferences } = usePreferences()
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
+  const [energyOpen, setEnergyOpen] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
 
   const filtered = energyFilter
     ? backlog.filter((t) => t.energy_level === energyFilter)
@@ -139,10 +149,32 @@ export function BacklogPage() {
         </p>
       </div>
 
-      {/* Controls row */}
-      <div className="flex items-start justify-between gap-4 mb-8">
-        {/* Energy filter */}
-        <div className="flex-1">
+      {/* Mobile filter menus */}
+      <div className="sm:hidden flex gap-2 mb-6">
+        <FilterDropdown
+          label="Energy"
+          options={ENERGY_OPTIONS}
+          value={energyFilter}
+          clearLabel="All levels"
+          open={energyOpen}
+          onToggle={() => { setEnergyOpen(!energyOpen); setSortOpen(false) }}
+          onClose={() => setEnergyOpen(false)}
+          onChange={(level) => setEnergyFilter(level)}
+        />
+        <FilterDropdown
+          label="Priority"
+          options={SORT_OPTIONS}
+          value={sortMode !== 'score' ? sortMode : undefined}
+          open={sortOpen}
+          onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false) }}
+          onClose={() => setSortOpen(false)}
+          onChange={(mode) => setSortMode(mode ?? 'score')}
+        />
+      </div>
+
+      {/* Desktop: always-visible controls */}
+      <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-4 mb-8">
+        <div className="min-w-0">
           <EnergySelector
             value={energyFilter}
             onChange={(level) =>
@@ -150,9 +182,7 @@ export function BacklogPage() {
             }
           />
         </div>
-
-        {/* Sort picker */}
-        <div className="flex gap-1.5 flex-shrink-0 pt-0.5">
+        <div className="flex gap-1.5 flex-shrink-0">
           {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
             <button
               key={mode}
