@@ -133,6 +133,14 @@ h1, h2, h3, h4, h5, h6 {
 .milkdown-format-toolbar {
   position: absolute;
   z-index: 50;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+}
+
+.milkdown-format-toolbar[data-show='true'] {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .milkdown-format-toolbar-scroll {
