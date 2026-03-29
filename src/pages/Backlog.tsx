@@ -5,6 +5,7 @@ import { useTodos } from '@/hooks/useTodos'
 import { scoreTodo } from '@/lib/scoring'
 import { usePreferences } from '@/hooks/usePreferences'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
+import { FilterDropdown } from '@/components/ui/FilterDropdown'
 
 type SortMode = 'score' | 'due' | 'recent'
 
@@ -13,6 +14,13 @@ const SORT_LABELS: Record<SortMode, string> = {
   due: 'Due date',
   recent: 'Recent',
 }
+
+const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'score', label: 'Priority' },
+  { value: 'due', label: 'Due date' },
+  { value: 'recent', label: 'Recent' },
+]
 
 function sortTodos(todos: Todo[], mode: SortMode, energy?: EnergyLevel): Todo[] {
   const sorted = [...todos]
@@ -143,87 +151,25 @@ export function BacklogPage() {
 
       {/* Mobile filter menus */}
       <div className="sm:hidden flex gap-2 mb-6">
-        {/* Energy dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => { setEnergyOpen(!energyOpen); setSortOpen(false) }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              energyFilter
-                ? 'bg-primary/10 text-primary'
-                : 'bg-surface-container-high text-on-surface-variant'
-            }`}
-          >
-            {energyFilter ? ENERGY_LABELS[energyFilter] : 'Energy'}
-            <svg className={`w-3 h-3 transition-transform duration-200 ${energyOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="currentColor">
-              <path d="M3 5l3 3 3-3" />
-            </svg>
-          </button>
-          {energyOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setEnergyOpen(false)} />
-              <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
-                {energyFilter && (
-                  <button
-                    onClick={() => { setEnergyFilter(undefined); setEnergyOpen(false) }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    All levels
-                  </button>
-                )}
-                {ENERGY_LEVELS.map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => { setEnergyFilter(level); setEnergyOpen(false) }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
-                      energyFilter === level
-                        ? 'text-primary font-medium bg-primary/5'
-                        : 'text-on-surface hover:bg-surface-container-low'
-                    }`}
-                  >
-                    {ENERGY_LABELS[level]}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Sort dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => { setSortOpen(!sortOpen); setEnergyOpen(false) }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
-              sortMode !== 'score'
-                ? 'bg-primary/10 text-primary'
-                : 'bg-surface-container-high text-on-surface-variant'
-            }`}
-          >
-            {SORT_LABELS[sortMode]}
-            <svg className={`w-3 h-3 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="currentColor">
-              <path d="M3 5l3 3 3-3" />
-            </svg>
-          </button>
-          {sortOpen && (
-            <>
-              <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
-              <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
-                {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => { setSortMode(mode); setSortOpen(false) }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
-                      sortMode === mode
-                        ? 'text-primary font-medium bg-primary/5'
-                        : 'text-on-surface hover:bg-surface-container-low'
-                    }`}
-                  >
-                    {SORT_LABELS[mode]}
-                  </button>
-                ))}
-              </div>
-            </>
-          )}
-        </div>
+        <FilterDropdown
+          label="Energy"
+          options={ENERGY_OPTIONS}
+          value={energyFilter}
+          clearLabel="All levels"
+          open={energyOpen}
+          onToggle={() => { setEnergyOpen(!energyOpen); setSortOpen(false) }}
+          onClose={() => setEnergyOpen(false)}
+          onChange={(level) => setEnergyFilter(level)}
+        />
+        <FilterDropdown
+          label="Priority"
+          options={SORT_OPTIONS}
+          value={sortMode !== 'score' ? sortMode : undefined}
+          open={sortOpen}
+          onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false) }}
+          onClose={() => setSortOpen(false)}
+          onChange={(mode) => setSortMode(mode ?? 'score')}
+        />
       </div>
 
       {/* Desktop: always-visible controls */}
