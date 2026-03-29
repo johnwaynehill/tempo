@@ -3,14 +3,14 @@ import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
-import { suggestTodayTodos } from '@/lib/scoring'
+import { useTodaySet } from '@/hooks/useTodaySet'
 
 export function TodayPage() {
-  const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading } = useTodos()
+  const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading: todosLoading } = useTodos()
   const { preferences, updatePreferences } = usePreferences()
+  const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
 
-  const suggested = suggestTodayTodos(todos, preferences.current_energy, pinned.length)
-  const todayTodos = [...pinned, ...suggested]
+  const loading = todosLoading || setLoading
 
   // Count items completed today
   const todayCompletedCount = useMemo(() => {
@@ -65,6 +65,8 @@ export function TodayPage() {
                   if (todo.status === 'today_pinned') {
                     deferTodo(id, until)
                   } else {
+                    // Remove from the daily set and dismiss
+                    dismissFromSet(id)
                     dismissFromToday(id)
                   }
                 }}
