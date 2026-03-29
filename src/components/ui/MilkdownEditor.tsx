@@ -6,6 +6,7 @@ import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { indent } from '@milkdown/kit/plugin/indent'
 import { trailing } from '@milkdown/kit/plugin/trailing'
+import { formatToolbar, configureFormatToolbar } from '@/lib/milkdown-toolbar-plugin'
 import { nord } from '@milkdown/theme-nord'
 import '@milkdown/theme-nord/style.css'
 
@@ -25,12 +26,14 @@ function MilkdownInner({ defaultValue, onChange }: MilkdownEditorProps) {
           onChange(markdown)
         })
       })
+      .config(configureFormatToolbar)
       .use(commonmark)
       .use(history)
       .use(listener)
       .use(clipboard)
       .use(indent)
       .use(trailing)
+      .use(formatToolbar)
   }, [])
 
   return <Milkdown />
