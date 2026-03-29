@@ -9,7 +9,7 @@ interface ProjectPickerProps {
 export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value ?? '')
-  const [highlightIndex, setHighlightIndex] = useState(0)
+  const [highlightIndex, setHighlightIndex] = useState(-1)
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Sync query with external value when dropdown is closed
@@ -24,26 +24,27 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
     return projects.filter((p) => p.toLowerCase().includes(q))
   }, [projects, query])
 
-  const exactMatch = projects.some(
-    (p) => p.toLowerCase() === query.trim().toLowerCase(),
-  )
-  const showCreate = query.trim().length > 0 && !exactMatch
-
-  // Build the selectable options list
-  const options: { type: 'create' | 'existing'; label: string }[] = []
-  if (showCreate) options.push({ type: 'create', label: query.trim() })
-  for (const p of filtered) options.push({ type: 'existing', label: p })
-
   // Reset highlight when options change
   useEffect(() => {
-    setHighlightIndex(0)
-  }, [filtered.length, showCreate])
+    setHighlightIndex(-1)
+  }, [filtered.length])
 
   const select = (project: string | null) => {
     onChange(project)
     setQuery(project ?? '')
     setOpen(false)
     inputRef.current?.blur()
+  }
+
+  // Save whatever is in the input
+  const commitQuery = () => {
+    const trimmed = query.trim()
+    if (trimmed) {
+      if (trimmed !== (value ?? '')) onChange(trimmed)
+    } else if (value) {
+      onChange(null)
+    }
+    setOpen(false)
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -58,19 +59,18 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
     switch (e.key) {
       case 'ArrowDown':
         e.preventDefault()
-        setHighlightIndex((i) => Math.min(i + 1, options.length - 1))
+        setHighlightIndex((i) => Math.min(i + 1, filtered.length - 1))
         break
       case 'ArrowUp':
         e.preventDefault()
-        setHighlightIndex((i) => Math.max(i - 1, 0))
+        setHighlightIndex((i) => Math.max(i - 1, -1))
         break
       case 'Enter':
         e.preventDefault()
-        if (options.length > 0) {
-          const opt = options[highlightIndex]
-          select(opt.label)
-        } else if (query.trim()) {
-          select(query.trim())
+        if (highlightIndex >= 0 && highlightIndex < filtered.length) {
+          select(filtered[highlightIndex])
+        } else {
+          commitQuery()
         }
         break
       case 'Escape':
@@ -80,10 +80,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
         setQuery(value ?? '')
         break
       case 'Tab':
-        setOpen(false)
-        if (query.trim() && query.trim() !== (value ?? '')) {
-          select(query.trim() || null)
-        }
+        commitQuery()
         break
     }
   }
@@ -96,9 +93,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
   const handleBlur = () => {
     // Small delay to allow click events on dropdown items to fire first
     setTimeout(() => {
-      if (!open) return
-      setOpen(false)
-      setQuery(value ?? '')
+      commitQuery()
     }, 150)
   }
 
@@ -136,32 +131,25 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
         )}
       </div>
 
-      {/* Dropdown */}
-      {open && options.length > 0 && (
+      {/* Dropdown — only shows existing projects as suggestions */}
+      {open && filtered.length > 0 && (
         <>
-          <div className="fixed inset-0 z-40" onMouseDown={() => { setOpen(false); setQuery(value ?? '') }} />
+          <div className="fixed inset-0 z-40" onMouseDown={() => commitQuery()} />
           <div className="absolute left-0 right-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 max-h-[200px] overflow-y-auto">
-            {options.map((option, i) => (
+            {filtered.map((project, i) => (
               <button
-                key={`${option.type}-${option.label}`}
+                key={project}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => select(option.label)}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer flex items-center gap-2 ${
+                onClick={() => select(project)}
+                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
                   i === highlightIndex
                     ? 'bg-surface-container-low'
-                    : ''
-                } ${
-                  option.type === 'create'
-                    ? 'text-primary font-medium'
-                    : value === option.label
+                    : value === project
                       ? 'text-primary font-medium bg-primary/5'
                       : 'text-on-surface hover:bg-surface-container-low'
                 }`}
               >
-                {option.type === 'create' && (
-                  <span className="text-primary text-base leading-none">+</span>
-                )}
-                {option.type === 'create' ? `Create "${option.label}"` : option.label}
+                {project}
               </button>
             ))}
           </div>
