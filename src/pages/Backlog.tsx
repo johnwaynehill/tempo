@@ -4,7 +4,7 @@ import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
 import { scoreTodo } from '@/lib/scoring'
 import { usePreferences } from '@/hooks/usePreferences'
-import type { EnergyLevel, Todo } from '@/types'
+import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
 
 type SortMode = 'score' | 'due' | 'recent'
 
@@ -95,6 +95,8 @@ export function BacklogPage() {
   const { preferences } = usePreferences()
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
+  const [energyOpen, setEnergyOpen] = useState(false)
+  const [sortOpen, setSortOpen] = useState(false)
 
   const filtered = energyFilter
     ? backlog.filter((t) => t.energy_level === energyFilter)
@@ -139,10 +141,94 @@ export function BacklogPage() {
         </p>
       </div>
 
-      {/* Controls row */}
-      <div className="flex items-start justify-between gap-4 mb-8">
-        {/* Energy filter */}
-        <div className="flex-1">
+      {/* Mobile filter menus */}
+      <div className="sm:hidden flex gap-2 mb-6">
+        {/* Energy dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => { setEnergyOpen(!energyOpen); setSortOpen(false) }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              energyFilter
+                ? 'bg-primary/10 text-primary'
+                : 'bg-surface-container-high text-on-surface-variant'
+            }`}
+          >
+            {energyFilter ? ENERGY_LABELS[energyFilter] : 'Energy'}
+            <svg className={`w-3 h-3 transition-transform duration-200 ${energyOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="currentColor">
+              <path d="M3 5l3 3 3-3" />
+            </svg>
+          </button>
+          {energyOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setEnergyOpen(false)} />
+              <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
+                {energyFilter && (
+                  <button
+                    onClick={() => { setEnergyFilter(undefined); setEnergyOpen(false) }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface-variant hover:bg-surface-container-low transition-colors cursor-pointer"
+                  >
+                    All levels
+                  </button>
+                )}
+                {ENERGY_LEVELS.map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => { setEnergyFilter(level); setEnergyOpen(false) }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                      energyFilter === level
+                        ? 'text-primary font-medium bg-primary/5'
+                        : 'text-on-surface hover:bg-surface-container-low'
+                    }`}
+                  >
+                    {ENERGY_LABELS[level]}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Sort dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => { setSortOpen(!sortOpen); setEnergyOpen(false) }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              sortMode !== 'score'
+                ? 'bg-primary/10 text-primary'
+                : 'bg-surface-container-high text-on-surface-variant'
+            }`}
+          >
+            {SORT_LABELS[sortMode]}
+            <svg className={`w-3 h-3 transition-transform duration-200 ${sortOpen ? 'rotate-180' : ''}`} viewBox="0 0 12 12" fill="currentColor">
+              <path d="M3 5l3 3 3-3" />
+            </svg>
+          </button>
+          {sortOpen && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setSortOpen(false)} />
+              <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
+                {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => { setSortMode(mode); setSortOpen(false) }}
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                      sortMode === mode
+                        ? 'text-primary font-medium bg-primary/5'
+                        : 'text-on-surface hover:bg-surface-container-low'
+                    }`}
+                  >
+                    {SORT_LABELS[mode]}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop: always-visible controls */}
+      <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-4 mb-8">
+        <div className="min-w-0">
           <EnergySelector
             value={energyFilter}
             onChange={(level) =>
@@ -150,9 +236,7 @@ export function BacklogPage() {
             }
           />
         </div>
-
-        {/* Sort picker */}
-        <div className="flex gap-1.5 flex-shrink-0 pt-0.5">
+        <div className="flex gap-1.5 flex-shrink-0">
           {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
             <button
               key={mode}

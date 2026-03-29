@@ -52,7 +52,7 @@ export function AppShell() {
       <Sidebar />
 
       <main className="flex-1 min-w-0 pb-20 md:pb-0">
-        <div className="max-w-2xl mx-auto px-5 md:px-10 py-8 md:py-12">
+        <div className="max-w-2xl mx-auto px-5 md:px-10 py-8 md:py-12 pt-[max(2rem,env(safe-area-inset-top))]">
           <Outlet />
         </div>
       </main>

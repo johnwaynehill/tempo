@@ -82,7 +82,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
 
       {/* Drawer panel */}
       <div
-        className={`relative w-full md:w-[520px] md:max-h-[85vh] bg-surface-container-lowest rounded-t-2xl md:rounded-2xl shadow-xl overflow-y-auto transition-transform duration-200 ease-out ${
+        className={`relative w-full max-h-[90vh] md:w-[520px] md:max-h-[85vh] bg-surface-container-lowest rounded-t-2xl md:rounded-2xl shadow-xl overflow-y-auto transition-transform duration-200 ease-out ${
           visible
             ? 'translate-y-0'
             : 'translate-y-8 md:translate-y-4'
@@ -94,7 +94,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
           <div className="w-8 h-1 rounded-full bg-outline-variant/30" />
         </div>
 
-        <div className="p-6 pb-8 md:pb-6 space-y-6">
+        <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 space-y-7">
           {/* Title */}
           <div>
             <input
@@ -147,16 +147,16 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
           </div>
 
           {/* Fields */}
-          <div className="space-y-4">
+          <div className="space-y-5">
             {/* Energy */}
             <div>
               <label className="text-xs text-on-surface-variant mb-2 block font-medium">Energy</label>
-              <div className="flex gap-1.5 flex-wrap">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                 {ENERGY_LEVELS.map((level) => (
                   <button
                     key={level}
                     onClick={() => setField('energy_level', todo.energy_level === level ? null : level)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer min-h-[44px] shrink-0 ${
                       todo.energy_level === level
                         ? 'bg-primary text-on-primary'
                         : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -171,12 +171,12 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             {/* Size */}
             <div>
               <label className="text-xs text-on-surface-variant mb-2 block font-medium">Size</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                 {(['small', 'medium', 'large'] as TodoSize[]).map((size) => (
                   <button
                     key={size}
                     onClick={() => setField('size', todo.size === size ? null : size)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer min-h-[44px] shrink-0 ${
                       todo.size === size
                         ? 'bg-primary text-on-primary'
                         : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -191,12 +191,12 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             {/* Impact */}
             <div>
               <label className="text-xs text-on-surface-variant mb-2 block font-medium">Impact</label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                 {[1, 2, 3, 4, 5].map((n) => (
                   <button
                     key={n}
                     onClick={() => setField('impact', todo.impact === n ? null : n)}
-                    className={`w-9 h-9 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                    className={`w-11 h-11 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer shrink-0 ${
                       todo.impact === n
                         ? 'bg-primary text-on-primary'
                         : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
