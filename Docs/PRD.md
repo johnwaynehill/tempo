@@ -1,10 +1,17 @@
 # Product Requirements Document
 ## Tempo — ADHD-First Personal Productivity PWA
 
-**Version:** 0.3
+**Version:** 0.4
 **Author:** Staff PM / UX (Claude)
-**Date:** 2026-03-27
-**Status:** v1 Complete — v2 Planning
+**Date:** 2026-03-29
+**Status:** v1 Complete — v2 In Progress
+
+**Changelog (v0.3 → v0.4):**
+- Marked shipped v2 items: floating formatting toolbar (US-24), delete note confirmation (US-25), celebratory empty states (US-26), backlog filter contrast (US-27), project typeahead in todo detail
+- Added new user stories: US-33 (Create Note button), US-34 (mobile Markdown editor bar), US-35 (calendar view), US-36 (today fixed daily set), US-37 (mobile responsiveness / PWA safe areas)
+- Updated Firestore collections to include `today_set` document
+- Updated v2 roadmap to reflect current progress
+- Updated technical architecture: Vite (not Next.js), Railway (not Vercel)
 
 **Changelog (v0.2 → v0.3):**
 - Added v2 user stories (US-24 through US-32): floating formatting toolbar, celebratory states, project folders, habit tracker, visualizations, voice input, work/personal modes
@@ -130,6 +137,11 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 - `US-30` Todo visualizations — charts for completed todos by project, on-time vs. late, and trends by day/week/month.
 - `US-31` Voice input with transcription — capture todos and notes by voice, transcribed to text.
 - `US-32` Work/Personal modes — switch between isolated contexts (separate databases) with a visible mode indicator; each mode has its own todos, notes, and settings.
+- `US-33` Create Note button — add a dedicated "Create Note" button on the Notes page that creates and opens a new note for editing within 3 seconds.
+- `US-34` Mobile Markdown editor bar — on mobile devices, display the Markdown formatting toolbar above the keyboard for easy access while editing notes.
+- `US-35` Calendar view — see tasks on a calendar with support for recurring work and personal meetings to visualize daily/weekly rhythm.
+- `US-36` Today fixed daily set — the Today view generates a fixed set of 5 todos each day that shrinks as items are completed (no backfill), so progress feels tangible.
+- `US-37` Mobile responsiveness & PWA safe areas — proper safe-area insets for iOS PWA, 44px touch targets, horizontal-scroll filter controls, and responsive drawer sizing.
 
 ---
 
@@ -260,6 +272,7 @@ Note {
 /users/{uid}/todos/{todoId}           ← One document per todo
 /users/{uid}/notes/{noteId}           ← One document per note
 /users/{uid}/settings/preferences     ← Single doc: energy, theme, notification prefs
+/users/{uid}/settings/today_set       ← Daily set: { date: string, todo_ids: string[] }
 ```
 
 ---
@@ -296,15 +309,15 @@ The original PRD proposed GitHub Contents API. This was replaced because:
 
 | Layer | Choice | Rationale |
 |-------|--------|-----------|
-| Framework | Next.js (React) | Large ecosystem, strong PWA support, Vercel deploys |
-| Hosting | Vercel (free tier) | Zero-config, global CDN, accessible from any device |
+| Framework | Vite 8 + React 19 + TypeScript | Fast builds, modern tooling, strong ecosystem |
+| Hosting | Railway (custom domain) | Docker-based, consolidates with other projects |
 | Data | Firebase Firestore | Real-time sync, offline built-in, free tier |
 | Auth | Firebase Auth (Google sign-in) | One-tap, secures Firestore rules |
 | Offline | Firestore persistence | Built-in IndexedDB cache, no extra code |
 | Markdown editor | Milkdown (ProseMirror-based) | WYSIWYG Markdown, keyboard shortcuts, mobile-friendly, lightweight |
-| Styling | Tailwind CSS | Fast, consistent, dark mode built-in |
+| Styling | Tailwind CSS v4 | CSS-based theme tokens, dark mode built-in |
 | Notifications | Web Push API | Mac only in v1 (iOS PWA doesn't support) |
-| PWA | next-pwa | Service worker, installable on Mac + iPhone |
+| PWA | vite-plugin-pwa | Service worker via Workbox, installable on Mac + iPhone |
 
 ### Data Flow
 ```
@@ -380,21 +393,27 @@ service cloud.firestore {
 
 ### v2 Roadmap
 
-| Feature | Priority | Notes |
-|---------|----------|-------|
-| Floating formatting toolbar (Notes) | P2 | Select text → contextual toolbar with all Markdown options |
-| Delete note confirmation | P2 | Simple confirm dialog before permanent delete |
-| Celebratory empty states | P2 | More rewarding "All done" / "Inbox zero" moments |
-| Backlog filter pill contrast fix | P2 | UX polish — clearer selected vs. unselected state |
-| Projects as sidebar folders | P2 | First-class project navigation, not just collapsible groups |
-| Habit tracker | P3 | Daily habit tracking with GitHub-style contribution grid |
-| Todo visualizations | P3 | Charts: completed by project, on-time, trends over time |
-| Voice input + transcription | P3 | Capture by voice, transcribed to text |
-| Work/Personal modes | P3 | Isolated contexts with separate databases and mode indicator |
-| Recurring todos | P3 | |
-| Inline todo syntax in notes | P3 | `- [ ]` in notes auto-syncs to todo list |
-| Weekly review screen | P3 | |
-| iOS push notifications | P3 | When Apple supports Web Push on PWAs |
+| Feature | Priority | Status | Notes |
+|---------|----------|--------|-------|
+| Floating formatting toolbar (Notes) | P2 | ✅ Shipped | Select text → contextual toolbar with all Markdown options |
+| Delete note confirmation | P2 | ✅ Shipped | Simple confirm dialog before permanent delete |
+| Celebratory empty states | P2 | ✅ Shipped | More rewarding "All done" / "Inbox zero" moments |
+| Backlog filter pill contrast fix | P2 | ✅ Shipped | UX polish — clearer selected vs. unselected state |
+| Project typeahead in todo detail | P2 | ✅ Shipped | Combobox with autocomplete for existing projects, implicit create on blur |
+| Today fixed daily set (US-36) | P2 | ✅ Shipped | 5 todos per day, list shrinks as items complete, no backfill |
+| Mobile responsiveness & PWA safe areas (US-37) | P2 | ✅ Shipped | Safe-area insets, 44px touch targets, responsive drawers & filters |
+| Projects as sidebar folders | P2 | | First-class project navigation, not just collapsible groups |
+| Create Note button (US-33) | P2 | | One-tap note creation from Notes page |
+| Mobile Markdown editor bar (US-34) | P2 | | Formatting toolbar above keyboard on mobile |
+| Calendar view (US-35) | P3 | | Tasks on calendar with recurring meeting support |
+| Habit tracker | P3 | | Daily habit tracking with GitHub-style contribution grid |
+| Todo visualizations | P3 | | Charts: completed by project, on-time, trends over time |
+| Voice input + transcription | P3 | | Capture by voice, transcribed to text |
+| Work/Personal modes | P3 | | Isolated contexts with separate databases and mode indicator |
+| Recurring todos | P3 | | |
+| Inline todo syntax in notes | P3 | | `- [ ]` in notes auto-syncs to todo list |
+| Weekly review screen | P3 | | |
+| iOS push notifications | P3 | | When Apple supports Web Push on PWAs |
 
 ---
 
@@ -419,7 +438,7 @@ All previously open questions have been resolved:
 |---|----------|------------|
 | OQ-1 | iOS PWA file access | Resolved: Firestore handles sync; no file system access needed |
 | OQ-2 | Notes and todos same folder? | Resolved: Both in Firestore, separate collections |
-| OQ-3 | Web-accessible URL? | Resolved: Vercel hosting |
+| OQ-3 | Web-accessible URL? | Resolved: Railway hosting (custom domain) |
 | OQ-4 | Today view manual or auto? | Resolved: Hybrid — auto-suggest with pin/dismiss |
 | OQ-5 | Coda fields/columns? | Resolved: Full mapping complete |
 | OQ-6 | Obsidian compatibility? | Resolved: Tempo replaces Obsidian; export provides .md files on demand |
@@ -439,4 +458,4 @@ All previously open questions have been resolved:
 
 ---
 
-*End of PRD v0.2*
+*End of PRD v0.4*

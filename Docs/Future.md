@@ -12,8 +12,11 @@
 **Detail in Popup**
 - [x] instead of openning the details of a ToDo inline, use a popup that allows me to focus just on that 1 ToDo
 - [x] Make "All done" more celebratory
-- [ ] Add dropdown to Project section of ToDo detail panel
-- [ ] Add typeahead to Project section of ToDo detail panel 
+- [x] Add dropdown to Project section of ToDo detail panel
+- [x] Add typeahead to Project section of ToDo detail panel
+
+**Today View**
+- [x] Fixed daily set of 5 todos — list shrinks as items are completed, no backfill
 
 ## Backlog Updates
 - [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
@@ -44,8 +47,7 @@
 
 
 ## Inbox
-- [ ] Make 'inbox zero' more celebratory
-- [ ]
+- [x] Make 'inbox zero' more celebratory
 
 ## Modes
 Ability to switch contexts between Work and Personal modes; each with thier own database
