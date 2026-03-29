@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import type { Todo, TodoSize } from '@/types'
 import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
@@ -6,6 +6,7 @@ import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { LinkPicker } from '@/components/ui/LinkPicker'
 import { ReminderPicker } from '@/components/ui/ReminderPicker'
+import { ProjectPicker } from '@/components/ui/ProjectPicker'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
   small: 'Small',
@@ -21,7 +22,7 @@ interface TodoDetailDrawerProps {
 }
 
 export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDetailDrawerProps) {
-  const { updateTodo, pinToToday, moveToBacklog, removeTodo } = useTodos()
+  const { todos, updateTodo, pinToToday, moveToBacklog, removeTodo } = useTodos()
   const { notes, addNote, updateNote } = useNotes()
   const navigate = useNavigate()
   const titleRef = useRef<HTMLInputElement>(null)
@@ -31,6 +32,15 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [visible, setVisible] = useState(false)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
+
+  // Derive unique project names from all todos
+  const projects = useMemo(() => {
+    const set = new Set<string>()
+    for (const t of todos) {
+      if (t.project) set.add(t.project)
+    }
+    return [...set].sort((a, b) => a.localeCompare(b))
+  }, [todos])
 
   const setField = (field: string, value: unknown) => {
     updateTodo(todo.id, { [field]: value })
@@ -212,12 +222,10 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="text-xs text-on-surface-variant mb-2 block font-medium">Project</label>
-                <input
-                  type="text"
-                  defaultValue={todo.project ?? ''}
-                  placeholder="e.g. Tempo"
-                  onBlur={(e) => setField('project', e.target.value.trim() || null)}
-                  className="w-full bg-surface-container rounded-lg px-3 py-2 text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40"
+                <ProjectPicker
+                  value={todo.project ?? null}
+                  projects={projects}
+                  onChange={(project) => setField('project', project)}
                 />
               </div>
               <div>
