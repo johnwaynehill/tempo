@@ -37,9 +37,7 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-dim flex items-center justify-center">
-          <span className="text-on-primary font-display font-bold text-xl">T</span>
-        </div>
+        <img src="/favicon.svg" alt="Tempo" className="w-12 h-12" />
         <p className="text-on-surface-variant text-xs tracking-wide">Loading...</p>
       </div>
     )

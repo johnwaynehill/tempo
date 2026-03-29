@@ -6,6 +6,7 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-surface flex items-center justify-center px-6">
       <div className="max-w-sm w-full text-center">
+        <img src="/favicon.svg" alt="Tempo" className="w-16 h-16 mx-auto mb-4" />
         <h1 className="font-display text-4xl font-bold text-primary tracking-tight mb-3">
           Tempo
         </h1>

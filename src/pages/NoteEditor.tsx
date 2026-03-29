@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router'
-import { useRef, useCallback, useState } from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
@@ -12,6 +12,8 @@ export function NoteEditorPage() {
   const { todos, updateTodo, addTodo } = useTodos()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
   const [showTodoPicker, setShowTodoPicker] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [confirmVisible, setConfirmVisible] = useState(false)
 
   const note = notes.find((n) => n.id === id)
   const linkedTodo = note?.linked_todo_id
@@ -38,11 +40,33 @@ export function NoteEditorPage() {
     }
   }
 
-  const handleDelete = async () => {
+  const handleDeleteClick = () => setShowDeleteConfirm(true)
+
+  const confirmDelete = async () => {
     if (!id) return
     await removeNote(id)
     navigate('/notes')
   }
+
+  const closeConfirm = () => {
+    setConfirmVisible(false)
+    setTimeout(() => setShowDeleteConfirm(false), 200)
+  }
+
+  useEffect(() => {
+    if (showDeleteConfirm) {
+      requestAnimationFrame(() => setConfirmVisible(true))
+    }
+  }, [showDeleteConfirm])
+
+  useEffect(() => {
+    if (!showDeleteConfirm) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeConfirm()
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [showDeleteConfirm])
 
   if (loading) {
     return (
@@ -74,7 +98,7 @@ export function NoteEditorPage() {
           &larr; Notes
         </Link>
         <button
-          onClick={handleDelete}
+          onClick={handleDeleteClick}
           className="text-xs text-error/70 hover:text-error px-3 py-1.5 rounded-lg hover:bg-error/5 transition-colors duration-200 cursor-pointer"
         >
           Delete
@@ -151,6 +175,45 @@ export function NoteEditorPage() {
             setShowTodoPicker(false)
           }}
         />
+      )}
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div
+          className={`fixed inset-0 z-[60] flex items-center justify-center transition-opacity duration-200 ${
+            confirmVisible ? 'opacity-100' : 'opacity-0'
+          }`}
+          onClick={closeConfirm}
+        >
+          <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm" />
+          <div
+            className={`relative bg-surface-container-lowest rounded-2xl shadow-xl p-6 w-[min(360px,calc(100vw-2rem))] transition-transform duration-200 ease-out ${
+              confirmVisible ? 'translate-y-0' : 'translate-y-4'
+            }`}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="font-display text-lg font-semibold text-on-surface mb-2">
+              Delete note?
+            </h2>
+            <p className="text-on-surface-variant text-sm mb-6">
+              This will permanently delete &ldquo;{note.title}&rdquo;. This can&rsquo;t be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={closeConfirm}
+                className="px-4 py-2 rounded-xl text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors duration-200 cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 rounded-xl text-sm font-medium bg-error/10 text-error hover:bg-error/20 transition-colors duration-200 cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -16,9 +16,12 @@ export function Sidebar() {
     <aside className="hidden md:flex flex-col w-56 bg-surface-container-low h-screen sticky top-0 p-6 justify-between">
       {/* Brand */}
       <div>
-        <h1 className="font-display text-xl font-bold text-primary mb-10 tracking-tight">
-          Tempo
-        </h1>
+        <div className="flex items-center gap-2.5 mb-10">
+          <img src="/favicon.svg" alt="" className="w-7 h-7" />
+          <h1 className="font-display text-xl font-bold text-primary tracking-tight">
+            Tempo
+          </h1>
+        </div>
 
         {/* Navigation */}
         <nav className="flex flex-col gap-1">

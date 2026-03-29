@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
-  <title>Tempo App Icon</title>
-  <desc>Rounded-square sage tile with bold T monogram and period.</desc>
+  <title>Tempo App Icon Editable</title>
+  <desc>Figma-friendly editable SVG matching the current Tempo icon design.</desc>
 
   <defs>
     <linearGradient id="tempo-bg" x1="52" y1="36" x2="470" y2="470" gradientUnits="userSpaceOnUse">

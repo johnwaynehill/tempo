@@ -1,10 +1,16 @@
 # Product Requirements Document
 ## Tempo — ADHD-First Personal Productivity PWA
 
-**Version:** 0.2
+**Version:** 0.3
 **Author:** Staff PM / UX (Claude)
-**Date:** 2026-03-25
-**Status:** In Review
+**Date:** 2026-03-27
+**Status:** v1 Complete — v2 Planning
+
+**Changelog (v0.2 → v0.3):**
+- Added v2 user stories (US-24 through US-32): floating formatting toolbar, celebratory states, project folders, habit tracker, visualizations, voice input, work/personal modes
+- Added v2 Roadmap table with prioritized feature list
+- Updated Information Architecture to reflect v2 additions
+- Marked todo detail drawer as shipped (US-28 partial)
 
 **Changelog (v0.1 → v0.2):**
 - Replaced iCloud/GitHub sync with Firebase Firestore (real-time, offline-first)
@@ -115,6 +121,15 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 - `US-21` Simple tags/areas for grouping todos.
 - `US-22` Weekly review screen.
 - `US-23` iOS push notifications (when Apple supports Web Push on PWAs).
+- `US-24` Floating formatting toolbar — select text in a note to reveal a contextual toolbar (bold, italic, heading, code, link, etc.) that scrolls horizontally for all Markdown options.
+- `US-25` Delete note confirmation — prompt before permanently deleting a note.
+- `US-26` Celebratory "All done" and "Inbox zero" states — replace plain text with a rewarding moment (animation, confetti, or encouraging message variety).
+- `US-27` Backlog filter clarity — improve selected/unselected energy filter pill contrast so it's obvious which is active.
+- `US-28` Projects as first-class folders — promote projects from collapsible groups to sidebar navigation items with their own filtered views.
+- `US-29` Habit tracker — create, track, and visualize daily habits with a GitHub-style contribution grid (all-habits overview + per-habit detail with history and edit/delete).
+- `US-30` Todo visualizations — charts for completed todos by project, on-time vs. late, and trends by day/week/month.
+- `US-31` Voice input with transcription — capture todos and notes by voice, transcribed to text.
+- `US-32` Work/Personal modes — switch between isolated contexts (separate databases) with a visible mode indicator; each mode has its own todos, notes, and settings.
 
 ---
 
@@ -126,13 +141,16 @@ Tempo
 │   └── Energy selector (persistent in header)
 ├── Inbox             ← Unprocessed captures
 ├── Backlog           ← Full todo list (collapsed by default)
-│   └── [Area/Project groups]
+│   └── [Project folders]              ← v2: promoted to sidebar nav
 │   └── Energy filter
 ├── Notes
 │   ├── [Note list]
-│   └── [WYSIWYG Markdown editor]
+│   └── [WYSIWYG Markdown editor]      ← v2: floating formatting toolbar
+├── Habits            ← v2: daily habit tracker + contribution grid
+├── Insights          ← v2: todo visualizations (completed, by project, trends)
 ├── Brain Dump        ← Quick scratchpad → Inbox
 └── Settings
+    ├── Mode selector (Work / Personal) ← v2: isolated databases
     ├── Notification preferences (Mac)
     ├── Import from Coda (CSV)
     └── Export data (JSON + .md)
@@ -359,6 +377,24 @@ service cloud.firestore {
 | Keyboard shortcuts (Mac) | P1 | |
 | Data export (JSON + .md) | P1 | Portability + AI readability |
 | Brain dump / scratchpad | P2 | |
+
+### v2 Roadmap
+
+| Feature | Priority | Notes |
+|---------|----------|-------|
+| Floating formatting toolbar (Notes) | P2 | Select text → contextual toolbar with all Markdown options |
+| Delete note confirmation | P2 | Simple confirm dialog before permanent delete |
+| Celebratory empty states | P2 | More rewarding "All done" / "Inbox zero" moments |
+| Backlog filter pill contrast fix | P2 | UX polish — clearer selected vs. unselected state |
+| Projects as sidebar folders | P2 | First-class project navigation, not just collapsible groups |
+| Habit tracker | P3 | Daily habit tracking with GitHub-style contribution grid |
+| Todo visualizations | P3 | Charts: completed by project, on-time, trends over time |
+| Voice input + transcription | P3 | Capture by voice, transcribed to text |
+| Work/Personal modes | P3 | Isolated contexts with separate databases and mode indicator |
+| Recurring todos | P3 | |
+| Inline todo syntax in notes | P3 | `- [ ]` in notes auto-syncs to todo list |
+| Weekly review screen | P3 | |
+| iOS push notifications | P3 | When Apple supports Web Push on PWAs |
 
 ---
 

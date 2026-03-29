@@ -46,7 +46,7 @@ export function TodayPage() {
       <div className="mb-8">
         <EnergySelector
           value={preferences.current_energy}
-          onChange={(level) => updatePreferences({ current_energy: level })}
+          onChange={(level) => updatePreferences({ current_energy: preferences.current_energy === level ? undefined : level })}
         />
       </div>
 
@@ -73,7 +73,15 @@ export function TodayPage() {
           </div>
 
           {todayTodos.length === 0 && (
-            <div className="text-center py-20">
+            <div className="text-center py-20 animate-gentle-appear">
+              <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12l5 5L19 7" />
+                </svg>
+              </div>
+              <p className="text-on-surface font-display font-semibold text-base mb-1">
+                {todayCompletedCount === 0 ? 'Clear skies' : 'All done'}
+              </p>
               <p className="text-on-surface-variant text-sm">
                 {emptyMessage}
               </p>
