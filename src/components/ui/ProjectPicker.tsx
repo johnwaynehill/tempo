@@ -10,9 +10,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState(value ?? '')
   const [highlightIndex, setHighlightIndex] = useState(0)
-  const [dropUp, setDropUp] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const containerRef = useRef<HTMLDivElement>(null)
 
   // Sync query with external value when dropdown is closed
   useEffect(() => {
@@ -91,14 +89,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
   }
 
   const handleFocus = () => {
-    // Check if there's enough room below for the dropdown
-    if (containerRef.current) {
-      const rect = containerRef.current.getBoundingClientRect()
-      const spaceBelow = window.innerHeight - rect.bottom
-      setDropUp(spaceBelow < 220)
-    }
     setOpen(true)
-    // Select all text on focus for easy replacement
     inputRef.current?.select()
   }
 
@@ -112,7 +103,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
   }
 
   return (
-    <div className="relative" ref={containerRef}>
+    <div className="relative">
       <div className="relative">
         <input
           ref={inputRef}
@@ -149,9 +140,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
       {open && options.length > 0 && (
         <>
           <div className="fixed inset-0 z-40" onMouseDown={() => { setOpen(false); setQuery(value ?? '') }} />
-          <div className={`absolute left-0 right-0 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 max-h-[200px] overflow-y-auto ${
-            dropUp ? 'bottom-full mb-1' : 'top-full mt-1'
-          }`}>
+          <div className="absolute left-0 right-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 max-h-[200px] overflow-y-auto">
             {options.map((option, i) => (
               <button
                 key={`${option.type}-${option.label}`}
