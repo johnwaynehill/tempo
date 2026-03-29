@@ -53,6 +53,13 @@ export interface Note {
   updated_at: Date
 }
 
+// --- Today Set ---
+
+export interface TodaySet {
+  date: string       // ISO date string, e.g. "2026-03-29"
+  todo_ids: string[] // IDs of the todos selected for the day
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {

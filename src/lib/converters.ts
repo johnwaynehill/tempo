@@ -5,7 +5,7 @@ import {
   type FirestoreDataConverter,
   Timestamp,
 } from 'firebase/firestore'
-import type { Todo, Note, UserPreferences } from '@/types'
+import type { Todo, Note, UserPreferences, TodaySet } from '@/types'
 
 // --- Helpers ---
 
@@ -119,6 +119,28 @@ export const preferencesConverter: FirestoreDataConverter<UserPreferences> = {
       current_energy: d.current_energy ?? undefined,
       theme: d.theme ?? 'system',
       notifications_enabled: d.notifications_enabled ?? false,
+    }
+  },
+}
+
+// --- Today Set Converter ---
+
+export const todaySetConverter: FirestoreDataConverter<TodaySet> = {
+  toFirestore(set: TodaySet): DocumentData {
+    return {
+      date: set.date,
+      todo_ids: set.todo_ids,
+    }
+  },
+
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options?: SnapshotOptions,
+  ): TodaySet {
+    const d = snapshot.data(options)
+    return {
+      date: d.date ?? '',
+      todo_ids: d.todo_ids ?? [],
     }
   },
 }
