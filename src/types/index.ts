@@ -92,6 +92,21 @@ export interface Habit {
   updated_at: Date
 }
 
+// --- Calendar Event ---
+
+export interface CalendarEvent {
+  id: string
+  title: string
+  start_time: Date
+  end_time: Date
+  all_day: boolean
+  description?: string
+  location?: string
+  color?: 'primary' | 'tertiary' | 'error' | 'neutral'
+  created_at: Date
+  updated_at: Date
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {

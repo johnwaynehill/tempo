@@ -88,6 +88,63 @@ export function toISODateString(date: Date): string {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
 }
 
+/** Check if a date is today */
+export function isToday(date: Date): boolean {
+  return isSameDay(date, new Date())
+}
+
+/** Check if two dates are in the same month */
+export function isSameMonth(a: Date, b: Date): boolean {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth()
+}
+
+/** Get calendar grid days for a month view (6 rows x 7 cols, Mon-Sun) */
+export function getCalendarGridDays(year: number, month: number): Date[] {
+  const firstOfMonth = new Date(year, month, 1)
+  const lastOfMonth = new Date(year, month + 1, 0)
+
+  // Day of week for first of month (shift to Mon=0 ... Sun=6)
+  const startDow = (firstOfMonth.getDay() + 6) % 7
+
+  // Start from the Monday before (or on) the first of the month
+  const gridStart = new Date(firstOfMonth)
+  gridStart.setDate(gridStart.getDate() - startDow)
+
+  // Always show 6 weeks (42 cells) for consistent grid height
+  const days: Date[] = []
+  const current = new Date(gridStart)
+  for (let i = 0; i < 42; i++) {
+    days.push(new Date(current))
+    current.setDate(current.getDate() + 1)
+  }
+
+  // If the 6th row is entirely in the next month, trim to 5 rows
+  const row6Start = days[35]
+  if (row6Start.getMonth() !== month && row6Start.getMonth() !== firstOfMonth.getMonth()) {
+    // Check if we actually need the 6th row
+    const lastDayInRow5 = days[34]
+    if (lastDayInRow5 >= lastOfMonth) {
+      return days.slice(0, 35)
+    }
+  }
+
+  return days
+}
+
+/** Format time as "9:00 AM" or "2:30 PM" */
+export function formatTime(date: Date): string {
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+/** Get month name (e.g. "March") */
+export function monthName(date: Date): string {
+  return date.toLocaleDateString('en-US', { month: 'long' })
+}
+
 /** Day name abbreviation (Mon, Tue, etc.) */
 export function dayAbbrev(date: Date): string {
   return date.toLocaleDateString('en-US', { weekday: 'short' })

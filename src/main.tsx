@@ -4,6 +4,7 @@ import { AuthProvider } from '@/context/AuthContext'
 import { TodosProvider } from '@/context/TodosContext'
 import { NotesProvider } from '@/context/NotesContext'
 import { HabitsProvider } from '@/context/HabitsContext'
+import { EventsProvider } from '@/context/EventsContext'
 import { PreferencesProvider } from '@/context/PreferencesContext'
 import App from './App'
 import './index.css'
@@ -15,7 +16,9 @@ createRoot(document.getElementById('root')!).render(
         <TodosProvider>
           <NotesProvider>
             <HabitsProvider>
-              <App />
+              <EventsProvider>
+                <App />
+              </EventsProvider>
             </HabitsProvider>
           </NotesProvider>
         </TodosProvider>
