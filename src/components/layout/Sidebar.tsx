@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react'
 import { NavLink } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
+import { useProjects } from '@/hooks/useProjects'
 
 const navItems = [
   { to: '/today', label: 'Today', icon: '◉' },
@@ -9,14 +11,32 @@ const navItems = [
   { to: '/braindump', label: 'Brain Dump', icon: '⚡' },
 ] as const
 
+const COLLAPSED_KEY = 'tempo-sidebar-projects-collapsed'
+
 export function Sidebar() {
   const { user, signOut } = useAuth()
+  const { projects, projectCounts } = useProjects()
+
+  const [collapsed, setCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(COLLAPSED_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLLAPSED_KEY, String(collapsed))
+    } catch { /* ignore */ }
+  }, [collapsed])
 
   return (
     <aside className="hidden md:flex flex-col w-56 bg-surface-container-low h-screen sticky top-0 p-6 justify-between">
-      {/* Brand */}
-      <div>
-        <div className="flex items-center gap-2.5 mb-10">
+      {/* Top section: brand + nav + projects (scrollable) */}
+      <div className="flex flex-col min-h-0 flex-1">
+        {/* Brand */}
+        <div className="flex items-center gap-2.5 mb-10 flex-shrink-0">
           <img src="/favicon.svg" alt="" className="w-7 h-7" />
           <h1 className="font-display text-xl font-bold text-primary tracking-tight">
             Tempo
@@ -24,7 +44,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation */}
-        <nav className="flex flex-col gap-1">
+        <nav className="flex flex-col gap-1 flex-shrink-0">
           {navItems.map(({ to, label, icon }) => (
             <NavLink
               key={to}
@@ -42,10 +62,61 @@ export function Sidebar() {
             </NavLink>
           ))}
         </nav>
+
+        {/* Projects section */}
+        {projects.length > 0 && (
+          <div className="mt-6 min-h-0 flex flex-col">
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className="flex items-center gap-2 px-3 py-1.5 mb-1 cursor-pointer group flex-shrink-0"
+            >
+              <svg
+                className={`w-3 h-3 text-on-surface-variant transition-transform duration-200 ${
+                  collapsed ? '' : 'rotate-90'
+                }`}
+                viewBox="0 0 12 12"
+                fill="currentColor"
+              >
+                <path d="M4 2l5 4-5 4V2z" />
+              </svg>
+              <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+                Projects
+              </span>
+            </button>
+
+            {!collapsed && (
+              <div className="flex flex-col gap-0.5 overflow-y-auto flex-1 min-h-0">
+                {projects.map((name) => (
+                  <NavLink
+                    key={name}
+                    to={`/projects/${encodeURIComponent(name)}`}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors duration-200 ${
+                        isActive
+                          ? 'bg-surface-container-lowest text-primary font-medium'
+                          : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                      }`
+                    }
+                  >
+                    <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 4.5A1.5 1.5 0 013.5 3h2.379a1.5 1.5 0 011.06.44l.622.62a1.5 1.5 0 001.06.44H12.5A1.5 1.5 0 0114 6v5.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 11.5v-7z" />
+                    </svg>
+                    <span className="truncate flex-1">{name}</span>
+                    {(projectCounts[name] ?? 0) > 0 && (
+                      <span className="text-xs text-on-surface-variant/60 flex-shrink-0">
+                        {projectCounts[name]}
+                      </span>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* User + Settings */}
-      <div className="flex flex-col gap-3">
+      {/* User + Settings (always at bottom) */}
+      <div className="flex flex-col gap-3 flex-shrink-0 pt-4">
         <NavLink
           to="/settings"
           className={({ isActive }) =>

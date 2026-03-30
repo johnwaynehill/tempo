@@ -12,6 +12,7 @@ import { NotesPage } from '@/pages/Notes'
 import { NoteEditorPage } from '@/pages/NoteEditor'
 import { BrainDumpPage } from '@/pages/BrainDump'
 import { SettingsPage } from '@/pages/Settings'
+import { ProjectDetailPage } from '@/pages/ProjectDetail'
 
 function AuthenticatedApp() {
   return (
@@ -22,6 +23,7 @@ function AuthenticatedApp() {
         <Route path="/backlog" element={<BacklogPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/notes/:id" element={<NoteEditorPage />} />
+        <Route path="/projects/:projectSlug" element={<ProjectDetailPage />} />
         <Route path="/braindump" element={<BrainDumpPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
