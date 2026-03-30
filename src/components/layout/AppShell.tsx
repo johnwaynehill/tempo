@@ -27,8 +27,9 @@ export function AppShell() {
       { label: '3', description: 'Go to Backlog',     key: '3', action: () => navigate('/backlog') },
       { label: '4', description: 'Go to Notes',       key: '4', action: () => navigate('/notes') },
       { label: '5', description: 'Go to Brain Dump',  key: '5', action: () => navigate('/braindump') },
-      { label: '6', description: 'Go to Insights',    key: '6', action: () => navigate('/insights') },
-      { label: '7', description: 'Go to Review',      key: '7', action: () => navigate('/review') },
+      { label: '6', description: 'Go to Habits',      key: '6', action: () => navigate('/habits') },
+      { label: '7', description: 'Go to Insights',    key: '7', action: () => navigate('/insights') },
+      { label: '8', description: 'Go to Review',      key: '8', action: () => navigate('/review') },
       { label: ',', description: 'Go to Settings',    key: ',', action: () => navigate('/settings') },
       // Actions
       { label: 'C', description: 'Quick capture',     key: 'c', action: openCapture },
