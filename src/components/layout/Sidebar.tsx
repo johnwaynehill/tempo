@@ -10,6 +10,7 @@ const navItems = [
   { to: '/notes', label: 'Notes', icon: '¶' },
   { to: '/braindump', label: 'Brain Dump', icon: '⚡' },
   { to: '/habits', label: 'Habits', icon: '↺' },
+  { to: '/calendar', label: 'Calendar', icon: '▦' },
 ] as const
 
 const PROJECTS_COLLAPSED_KEY = 'tempo-sidebar-projects-collapsed'

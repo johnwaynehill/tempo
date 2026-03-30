@@ -5,7 +5,7 @@ import {
   type FirestoreDataConverter,
   Timestamp,
 } from 'firebase/firestore'
-import type { Todo, Note, Habit, UserPreferences, TodaySet, WeeklyReview } from '@/types'
+import type { Todo, Note, Habit, CalendarEvent, UserPreferences, TodaySet, WeeklyReview } from '@/types'
 
 // --- Helpers ---
 
@@ -132,6 +132,43 @@ export const habitConverter: FirestoreDataConverter<Habit> = {
       frequency: d.frequency ?? 'daily',
       archived: d.archived ?? false,
       completions: d.completions ?? {},
+      created_at: toDate(d.created_at) ?? new Date(),
+      updated_at: toDate(d.updated_at) ?? new Date(),
+    }
+  },
+}
+
+// --- Calendar Event Converter ---
+
+export const eventConverter: FirestoreDataConverter<CalendarEvent> = {
+  toFirestore(event: CalendarEvent): DocumentData {
+    return {
+      title: event.title,
+      start_time: Timestamp.fromDate(event.start_time),
+      end_time: Timestamp.fromDate(event.end_time),
+      all_day: event.all_day,
+      description: event.description ?? null,
+      location: event.location ?? null,
+      color: event.color ?? null,
+      created_at: Timestamp.fromDate(event.created_at),
+      updated_at: Timestamp.fromDate(event.updated_at),
+    }
+  },
+
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options?: SnapshotOptions,
+  ): CalendarEvent {
+    const d = snapshot.data(options)
+    return {
+      id: snapshot.id,
+      title: d.title,
+      start_time: toDate(d.start_time) ?? new Date(),
+      end_time: toDate(d.end_time) ?? new Date(),
+      all_day: d.all_day ?? false,
+      description: d.description ?? undefined,
+      location: d.location ?? undefined,
+      color: d.color ?? undefined,
       created_at: toDate(d.created_at) ?? new Date(),
       updated_at: toDate(d.updated_at) ?? new Date(),
     }
