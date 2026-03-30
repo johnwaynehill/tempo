@@ -7,6 +7,7 @@ import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useNotifications } from '@/hooks/useNotifications'
 import { CodaImportModal } from '@/components/ui/CodaImportModal'
+import { ObsidianImportModal } from '@/components/ui/ObsidianImportModal'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import type { UserPreferences } from '@/types'
 
@@ -20,6 +21,7 @@ export function SettingsPage() {
   const { permission, isSupported, isGranted, requestPermission } = useNotifications()
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showObsidianModal, setShowObsidianModal] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'updating'>('idle')
 
   const handleCheckForUpdates = useCallback(async () => {
@@ -140,6 +142,13 @@ export function SettingsPage() {
           >
             <p className="text-on-surface text-sm font-medium">Import from CSV</p>
             <p className="text-on-surface-variant text-xs mt-0.5">One-time migration from Coda or another tool</p>
+          </button>
+          <button
+            onClick={() => setShowObsidianModal(true)}
+            className="w-full text-left bg-surface-container-lowest rounded-xl p-5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer"
+          >
+            <p className="text-on-surface text-sm font-medium">Import from Obsidian</p>
+            <p className="text-on-surface-variant text-xs mt-0.5">Import .md notes from your Obsidian vault</p>
           </button>
           <button
             onClick={handleExportJSON}
@@ -317,6 +326,9 @@ export function SettingsPage() {
 
       {showImportModal && (
         <CodaImportModal onClose={() => setShowImportModal(false)} />
+      )}
+      {showObsidianModal && (
+        <ObsidianImportModal onClose={() => setShowObsidianModal(false)} />
       )}
     </div>
   )
