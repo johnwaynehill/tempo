@@ -7,6 +7,7 @@ import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { indent } from '@milkdown/kit/plugin/indent'
 import { trailing } from '@milkdown/kit/plugin/trailing'
 import { formatToolbar, configureFormatToolbar } from '@/lib/milkdown-toolbar-plugin'
+import { MobileFormatBar } from '@/components/ui/MobileFormatBar'
 import { nord } from '@milkdown/theme-nord'
 import '@milkdown/theme-nord/style.css'
 
@@ -45,6 +46,7 @@ export function MilkdownEditor(props: MilkdownEditorProps) {
       <div className="milkdown-editor-root">
         <MilkdownInner {...props} />
       </div>
+      <MobileFormatBar />
 
       {/* Strip Nord's container chrome so the editor is invisible — just text on the page */}
       <style>{`
