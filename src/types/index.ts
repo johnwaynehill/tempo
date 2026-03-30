@@ -60,6 +60,15 @@ export interface TodaySet {
   todo_ids: string[] // IDs of the todos selected for the day
 }
 
+// --- Weekly Review ---
+
+export interface WeeklyReview {
+  id: string           // week Monday ISO date, e.g. "2026-03-23"
+  reflection: string   // free-text reflection
+  created_at: Date
+  updated_at: Date
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {

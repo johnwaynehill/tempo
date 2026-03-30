@@ -5,7 +5,7 @@ import {
   type FirestoreDataConverter,
   Timestamp,
 } from 'firebase/firestore'
-import type { Todo, Note, UserPreferences, TodaySet } from '@/types'
+import type { Todo, Note, UserPreferences, TodaySet, WeeklyReview } from '@/types'
 
 // --- Helpers ---
 
@@ -141,6 +141,31 @@ export const todaySetConverter: FirestoreDataConverter<TodaySet> = {
     return {
       date: d.date ?? '',
       todo_ids: d.todo_ids ?? [],
+    }
+  },
+}
+
+// --- Weekly Review Converter ---
+
+export const reviewConverter: FirestoreDataConverter<WeeklyReview> = {
+  toFirestore(review: WeeklyReview): DocumentData {
+    return {
+      reflection: review.reflection,
+      created_at: Timestamp.fromDate(review.created_at),
+      updated_at: Timestamp.fromDate(review.updated_at),
+    }
+  },
+
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options?: SnapshotOptions,
+  ): WeeklyReview {
+    const d = snapshot.data(options)
+    return {
+      id: snapshot.id,
+      reflection: d.reflection ?? '',
+      created_at: toDate(d.created_at) ?? new Date(),
+      updated_at: toDate(d.updated_at) ?? new Date(),
     }
   },
 }

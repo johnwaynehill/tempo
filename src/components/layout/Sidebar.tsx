@@ -11,15 +11,29 @@ const navItems = [
   { to: '/braindump', label: 'Brain Dump', icon: '⚡' },
 ] as const
 
-const COLLAPSED_KEY = 'tempo-sidebar-projects-collapsed'
+const PROJECTS_COLLAPSED_KEY = 'tempo-sidebar-projects-collapsed'
+const REFLECT_COLLAPSED_KEY = 'tempo-sidebar-reflect-collapsed'
+
+const reflectItems = [
+  { to: '/insights', label: 'Insights', icon: '◎' },
+  { to: '/review', label: 'Review', icon: '↻' },
+] as const
 
 export function Sidebar() {
   const { user, signOut } = useAuth()
   const { projects, projectCounts } = useProjects()
 
-  const [collapsed, setCollapsed] = useState(() => {
+  const [projectsCollapsed, setProjectsCollapsed] = useState(() => {
     try {
-      return localStorage.getItem(COLLAPSED_KEY) === 'true'
+      return localStorage.getItem(PROJECTS_COLLAPSED_KEY) === 'true'
+    } catch {
+      return false
+    }
+  })
+
+  const [reflectCollapsed, setReflectCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem(REFLECT_COLLAPSED_KEY) === 'true'
     } catch {
       return false
     }
@@ -27,9 +41,15 @@ export function Sidebar() {
 
   useEffect(() => {
     try {
-      localStorage.setItem(COLLAPSED_KEY, String(collapsed))
+      localStorage.setItem(PROJECTS_COLLAPSED_KEY, String(projectsCollapsed))
     } catch { /* ignore */ }
-  }, [collapsed])
+  }, [projectsCollapsed])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(REFLECT_COLLAPSED_KEY, String(reflectCollapsed))
+    } catch { /* ignore */ }
+  }, [reflectCollapsed])
 
   return (
     <aside className="hidden md:flex flex-col w-56 bg-surface-container-low h-screen sticky top-0 p-6 justify-between">
@@ -67,12 +87,12 @@ export function Sidebar() {
         {projects.length > 0 && (
           <div className="mt-6 min-h-0 flex flex-col">
             <button
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={() => setProjectsCollapsed(!projectsCollapsed)}
               className="flex items-center gap-2 px-3 py-1.5 mb-1 cursor-pointer group flex-shrink-0"
             >
               <svg
                 className={`w-3 h-3 text-on-surface-variant transition-transform duration-200 ${
-                  collapsed ? '' : 'rotate-90'
+                  projectsCollapsed ? '' : 'rotate-90'
                 }`}
                 viewBox="0 0 12 12"
                 fill="currentColor"
@@ -84,7 +104,7 @@ export function Sidebar() {
               </span>
             </button>
 
-            {!collapsed && (
+            {!projectsCollapsed && (
               <div className="flex flex-col gap-0.5 overflow-y-auto flex-1 min-h-0">
                 {projects.map((name) => (
                   <NavLink
@@ -113,6 +133,48 @@ export function Sidebar() {
             )}
           </div>
         )}
+
+        {/* Reflect section */}
+        <div className="mt-6 flex-shrink-0">
+          <button
+            onClick={() => setReflectCollapsed(!reflectCollapsed)}
+            className="flex items-center gap-2 px-3 py-1.5 mb-1 cursor-pointer group"
+          >
+            <svg
+              className={`w-3 h-3 text-on-surface-variant transition-transform duration-200 ${
+                reflectCollapsed ? '' : 'rotate-90'
+              }`}
+              viewBox="0 0 12 12"
+              fill="currentColor"
+            >
+              <path d="M4 2l5 4-5 4V2z" />
+            </svg>
+            <span className="text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+              Reflect
+            </span>
+          </button>
+
+          {!reflectCollapsed && (
+            <div className="flex flex-col gap-0.5">
+              {reflectItems.map(({ to, label, icon }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-colors duration-200 ${
+                      isActive
+                        ? 'bg-surface-container-lowest text-primary font-medium'
+                        : 'text-on-surface-variant hover:bg-surface-container hover:text-on-surface'
+                    }`
+                  }
+                >
+                  <span className="text-base w-5 text-center">{icon}</span>
+                  {label}
+                </NavLink>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* User + Settings (always at bottom) */}
