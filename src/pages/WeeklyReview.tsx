@@ -185,6 +185,7 @@ export function WeeklyReviewPage() {
           Reflection
         </h2>
         <textarea
+          key={weekId}
           defaultValue={review?.reflection ?? ''}
           onChange={(e) => saveReflection(e.target.value)}
           placeholder="What went well this week?"
