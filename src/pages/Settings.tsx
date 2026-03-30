@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { useAuth } from '@/context/AuthContext'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
@@ -19,6 +19,32 @@ export function SettingsPage() {
   const { permission, isSupported, isGranted, requestPermission } = useNotifications()
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'updating'>('idle')
+
+  const handleCheckForUpdates = useCallback(async () => {
+    setUpdateStatus('checking')
+    try {
+      const registration = await navigator.serviceWorker?.getRegistration()
+      if (registration) {
+        await registration.update()
+        // Check if a new worker is waiting
+        if (registration.waiting) {
+          setUpdateStatus('updating')
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' })
+          window.location.reload()
+        } else {
+          setUpdateStatus('up-to-date')
+          setTimeout(() => setUpdateStatus('idle'), 3000)
+        }
+      } else {
+        setUpdateStatus('up-to-date')
+        setTimeout(() => setUpdateStatus('idle'), 3000)
+      }
+    } catch {
+      setUpdateStatus('up-to-date')
+      setTimeout(() => setUpdateStatus('idle'), 3000)
+    }
+  }, [])
 
   const themeOptions: { value: UserPreferences['theme']; label: string }[] = [
     { value: 'light', label: 'Light' },
@@ -250,6 +276,39 @@ export function SettingsPage() {
           <div className="flex items-center justify-between">
             <p className="text-on-surface-variant text-xs">Version</p>
             <p className="text-on-surface-variant text-xs font-mono">0.8.0</p>
+          </div>
+
+          {/* Check for updates */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Check for updates</p>
+              <p className="text-on-surface-variant text-xs">
+                {updateStatus === 'checking'
+                  ? 'Checking...'
+                  : updateStatus === 'up-to-date'
+                    ? 'You\'re on the latest version'
+                    : updateStatus === 'updating'
+                      ? 'Updating...'
+                      : 'Manually check for a new version'}
+              </p>
+            </div>
+            <button
+              onClick={handleCheckForUpdates}
+              disabled={updateStatus !== 'idle'}
+              className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer disabled:opacity-50 ${
+                updateStatus === 'up-to-date'
+                  ? 'bg-primary/10 text-primary'
+                  : 'bg-primary text-on-primary hover:shadow-md'
+              }`}
+            >
+              {updateStatus === 'checking'
+                ? 'Checking...'
+                : updateStatus === 'up-to-date'
+                  ? 'Up to date'
+                  : updateStatus === 'updating'
+                    ? 'Updating...'
+                    : 'Update'}
+            </button>
           </div>
         </div>
       </section>
