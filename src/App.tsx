@@ -13,6 +13,8 @@ import { NoteEditorPage } from '@/pages/NoteEditor'
 import { BrainDumpPage } from '@/pages/BrainDump'
 import { SettingsPage } from '@/pages/Settings'
 import { ProjectDetailPage } from '@/pages/ProjectDetail'
+import { InsightsPage } from '@/pages/Insights'
+import { WeeklyReviewPage } from '@/pages/WeeklyReview'
 
 function AuthenticatedApp() {
   return (
@@ -25,6 +27,8 @@ function AuthenticatedApp() {
         <Route path="/notes/:id" element={<NoteEditorPage />} />
         <Route path="/projects/:projectSlug" element={<ProjectDetailPage />} />
         <Route path="/braindump" element={<BrainDumpPage />} />
+        <Route path="/insights" element={<InsightsPage />} />
+        <Route path="/review" element={<WeeklyReviewPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/today" replace />} />
       </Route>
