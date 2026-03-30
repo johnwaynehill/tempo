@@ -116,6 +116,13 @@ export function TodosProvider({ children }: { children: ReactNode }) {
   const updateTodo = async (id: string, updates: Partial<Todo>) => {
     const data: Record<string, unknown> = { ...updates, updated_at: Timestamp.now() }
 
+    // Convert undefined values to null — Firestore ignores undefined
+    for (const key of Object.keys(data)) {
+      if (data[key] === undefined) {
+        data[key] = null
+      }
+    }
+
     // Convert Date fields to Timestamps for Firestore
     for (const key of ['due_date', 'defer_until', 'reminder_at', 'dismissed_from_today', 'completed_at'] as const) {
       if (key in data) {

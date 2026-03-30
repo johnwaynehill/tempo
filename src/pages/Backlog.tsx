@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
+import { useProjects } from '@/hooks/useProjects'
 import { scoreTodo } from '@/lib/scoring'
 import { usePreferences } from '@/hooks/usePreferences'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
@@ -58,29 +60,46 @@ function ProjectGroup({
   onDefer: (id: string, until?: Date) => void
 }) {
   const [open, setOpen] = useState(defaultOpen)
+  const isUngrouped = name === 'Ungrouped'
 
   return (
     <div className="mb-2">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-2 py-2.5 cursor-pointer group"
-      >
-        <svg
-          className={`w-3.5 h-3.5 text-on-surface-variant transition-transform duration-200 ${
-            open ? 'rotate-90' : ''
-          }`}
-          viewBox="0 0 12 12"
-          fill="currentColor"
+      <div className="flex items-center gap-2 py-2.5 group">
+        {/* Chevron toggle */}
+        <button
+          onClick={() => setOpen(!open)}
+          className="cursor-pointer p-0.5"
+          aria-label={open ? 'Collapse' : 'Expand'}
         >
-          <path d="M4 2l5 4-5 4V2z" />
-        </svg>
-        <span className="font-display text-sm font-semibold text-on-surface">
-          {name}
-        </span>
+          <svg
+            className={`w-3.5 h-3.5 text-on-surface-variant transition-transform duration-200 ${
+              open ? 'rotate-90' : ''
+            }`}
+            viewBox="0 0 12 12"
+            fill="currentColor"
+          >
+            <path d="M4 2l5 4-5 4V2z" />
+          </svg>
+        </button>
+
+        {/* Project name — links to project page (except Ungrouped) */}
+        {isUngrouped ? (
+          <span className="font-display text-sm font-semibold text-on-surface">
+            {name}
+          </span>
+        ) : (
+          <Link
+            to={`/projects/${encodeURIComponent(name)}`}
+            className="font-display text-sm font-semibold text-on-surface hover:text-primary transition-colors"
+          >
+            {name}
+          </Link>
+        )}
+
         <span className="text-xs text-on-surface-variant ml-1">
           {todos.length}
         </span>
-      </button>
+      </div>
 
       {open && (
         <div className="space-y-0 ml-1">
@@ -100,6 +119,7 @@ function ProjectGroup({
 
 export function BacklogPage() {
   const { backlog, completeTodo, deferTodo, loading } = useTodos()
+  const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
@@ -148,6 +168,27 @@ export function BacklogPage() {
           {backlog.length} total &middot; {filtered.length} showing
         </p>
       </div>
+
+      {/* Project pills — horizontal scroll row */}
+      {projects.length > 0 && (
+        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-6 -mx-1 px-1">
+          {projects.map((name) => (
+            <Link
+              key={name}
+              to={`/projects/${encodeURIComponent(name)}`}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0"
+            >
+              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 4.5A1.5 1.5 0 013.5 3h2.379a1.5 1.5 0 011.06.44l.622.62a1.5 1.5 0 001.06.44H12.5A1.5 1.5 0 0114 6v5.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 11.5v-7z" />
+              </svg>
+              {name}
+              {(projectCounts[name] ?? 0) > 0 && (
+                <span className="text-on-surface-variant/50">{projectCounts[name]}</span>
+              )}
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Mobile filter menus */}
       <div className="sm:hidden flex gap-2 mb-6">
