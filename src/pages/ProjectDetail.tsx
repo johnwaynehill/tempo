@@ -96,7 +96,7 @@ export function ProjectDetailPage() {
     navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true })
   }
 
-  // Delete project: set project to undefined on all matching todos
+  // Delete project: clear project field on all matching todos
   const handleDelete = async () => {
     const matching = todos.filter((t) => t.project === projectName)
     await Promise.all(matching.map((t) => updateTodo(t.id, { project: undefined })))
