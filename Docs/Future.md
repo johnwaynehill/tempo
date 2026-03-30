@@ -5,8 +5,10 @@
 - [x] User can select text on screen to change the format of the text. Selecting displays a small menu above or below the text based on where the text is on the screen.
 - [ ] all markdown is available with smart defaults; scrolls within left/right.
 - [x] add confirmation for Delete note
-- [ ] Add Create Note button to Notes page which creates and opens the note for direct editing within 3 seconds
-- [ ] On mobile devices, add the Markdown editor bar above the keyboard
+- [x] Add Create Note button to Notes page which creates and opens the note for direct editing within 3 seconds
+- [x] On mobile devices, add the Markdown editor bar above the keyboard
+- [x] Add Settings + profile pic to mobile Today header
+- [x] Add "Check for updates" button to Settings page
 
 ## ToDo Updates
 **Detail in Popup**
@@ -20,8 +22,8 @@
 
 ## Backlog Updates
 - [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
-- [ ] Make Projects folders instead of collabsable items
-  - [ ] Add Projects to the Sidebar for Desktop. Consider how to add on Mobile.
+- [x] Make Projects folders instead of collapsible items
+  - [x] Add Projects to the Sidebar for Desktop. Consider how to add on Mobile.
 
 ## Habit Tracker
 - [ ] Start a new habit

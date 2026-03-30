@@ -1,10 +1,16 @@
 # Product Requirements Document
 ## Tempo — ADHD-First Personal Productivity PWA
 
-**Version:** 0.4
+**Version:** 0.5
 **Author:** Staff PM / UX (Claude)
 **Date:** 2026-03-29
-**Status:** v1 Complete — v2 In Progress
+**Status:** v1 Complete — v2 Complete — v3 In Progress
+
+**Changelog (v0.4 → v0.5):**
+- Marked shipped: projects as sidebar folders (US-28), Create Note button (US-33), mobile Markdown editor bar (US-34)
+- Added new user stories: US-38 (mobile settings & profile in Today header), US-39 (manual PWA update check)
+- All P2 items now shipped — roadmap moves to P3
+- Updated version to 0.5, status to v3 In Progress
 
 **Changelog (v0.3 → v0.4):**
 - Marked shipped v2 items: floating formatting toolbar (US-24), delete note confirmation (US-25), celebratory empty states (US-26), backlog filter contrast (US-27), project typeahead in todo detail
@@ -142,6 +148,8 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 - `US-35` Calendar view — see tasks on a calendar with support for recurring work and personal meetings to visualize daily/weekly rhythm.
 - `US-36` Today fixed daily set — the Today view generates a fixed set of 5 todos each day that shrinks as items are completed (no backfill), so progress feels tangible.
 - `US-37` Mobile responsiveness & PWA safe areas — proper safe-area insets for iOS PWA, 44px touch targets, horizontal-scroll filter controls, and responsive drawer sizing.
+- `US-38` Mobile settings & profile — show a settings gear icon and user profile picture in the Today page header on mobile/PWA, since the sidebar is desktop-only.
+- `US-39` Manual PWA update check — add a "Check for updates" button in Settings that queries the service worker for pending updates and triggers a reload when available.
 
 ---
 
@@ -402,9 +410,11 @@ service cloud.firestore {
 | Project typeahead in todo detail | P2 | ✅ Shipped | Combobox with autocomplete for existing projects, implicit create on blur |
 | Today fixed daily set (US-36) | P2 | ✅ Shipped | 5 todos per day, list shrinks as items complete, no backfill |
 | Mobile responsiveness & PWA safe areas (US-37) | P2 | ✅ Shipped | Safe-area insets, 44px touch targets, responsive drawers & filters |
-| Projects as sidebar folders | P2 | | First-class project navigation, not just collapsible groups |
-| Create Note button (US-33) | P2 | | One-tap note creation from Notes page |
-| Mobile Markdown editor bar (US-34) | P2 | | Formatting toolbar above keyboard on mobile |
+| Projects as sidebar folders (US-28) | P2 | ✅ Shipped | Sidebar nav, project detail pages, rename/delete, backlog pills |
+| Create Note button (US-33) | P2 | ✅ Shipped | One-tap note creation from Notes page |
+| Mobile Markdown editor bar (US-34) | P2 | ✅ Shipped | Formatting toolbar above keyboard on mobile |
+| Mobile settings & profile (US-38) | P2 | ✅ Shipped | Settings gear + profile pic in Today header on mobile |
+| Manual PWA update check (US-39) | P2 | ✅ Shipped | "Check for updates" button in Settings page |
 | Calendar view (US-35) | P3 | | Tasks on calendar with recurring meeting support |
 | Habit tracker | P3 | | Daily habit tracking with GitHub-style contribution grid |
 | Todo visualizations | P3 | | Charts: completed by project, on-time, trends over time |
@@ -458,4 +468,4 @@ All previously open questions have been resolved:
 
 ---
 
-*End of PRD v0.4*
+*End of PRD v0.5*
