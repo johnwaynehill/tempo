@@ -128,6 +128,24 @@ export function TodayPage() {
           )}
         </>
       )}
+
+      {/* Reflect links (mobile only — desktop has sidebar) */}
+      <div className="md:hidden mt-12 flex gap-3">
+        <Link
+          to="/insights"
+          className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-surface-container-lowest text-on-surface-variant text-sm font-medium hover:bg-surface-container-low transition-colors"
+        >
+          <span className="text-base">◎</span>
+          Insights
+        </Link>
+        <Link
+          to="/review"
+          className="flex-1 flex items-center gap-2.5 px-4 py-3.5 rounded-xl bg-surface-container-lowest text-on-surface-variant text-sm font-medium hover:bg-surface-container-low transition-colors"
+        >
+          <span className="text-base">↻</span>
+          Review
+        </Link>
+      </div>
     </div>
   )
 }
