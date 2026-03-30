@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { Todo } from '@/types'
 import { ENERGY_LABELS } from '@/types'
+import { describeRecurrence } from '@/lib/recurrence'
 import { useNotes } from '@/hooks/useNotes'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 
@@ -87,6 +88,17 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
               {todo.due_date && (
                 <span className="text-xs text-on-surface-variant">
                   {todo.due_date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </span>
+              )}
+              {todo.recurrence && (
+                <span className="text-xs text-on-surface-variant flex items-center gap-1">
+                  <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M9.5 2.5L10.5 3.5L9.5 4.5" />
+                    <path d="M1.5 3.5h9" />
+                    <path d="M2.5 9.5L1.5 8.5L2.5 7.5" />
+                    <path d="M10.5 8.5h-9" />
+                  </svg>
+                  {describeRecurrence(todo.recurrence)}
                 </span>
               )}
               {todo.reminder_at && (

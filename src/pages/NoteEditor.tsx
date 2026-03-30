@@ -152,6 +152,34 @@ export function NoteEditorPage() {
       <MilkdownEditor
         defaultValue={note.content}
         onChange={handleContentChange}
+        onCheckboxToggle={async (text, checked) => {
+          if (!id || !text) return
+          const currentNote = notes.find((n) => n.id === id)
+          const map = currentNote?.inline_todo_map ?? {}
+
+          // Use the text as a simple key (first 50 chars)
+          const key = text.slice(0, 50)
+          const existingTodoId = map[key]
+
+          if (existingTodoId) {
+            // Toggle existing linked todo
+            const existingTodo = todos.find((t) => t.id === existingTodoId)
+            if (existingTodo) {
+              if (checked) {
+                await updateTodo(existingTodoId, { status: 'done', completed_at: new Date() })
+              } else {
+                await updateTodo(existingTodoId, { status: 'inbox', completed_at: undefined })
+              }
+            }
+          } else if (checked) {
+            // Create a new linked todo on first check
+            const todoId = await addTodo({ title: text, status: 'done', note_id: id })
+            await updateTodo(todoId, { completed_at: new Date() })
+            await updateNote(id, {
+              inline_todo_map: { ...map, [key]: todoId },
+            })
+          }
+        }}
       />
 
       {/* Todo picker modal */}

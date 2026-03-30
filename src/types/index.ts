@@ -21,6 +21,13 @@ export const ENERGY_LABELS: Record<EnergyLevel, string> = {
 
 export type TodoStatus = 'inbox' | 'today_pinned' | 'backlog' | 'deferred' | 'done'
 export type TodoSize = 'small' | 'medium' | 'large'
+export type RecurrenceFrequency = 'daily' | 'weekly' | 'monthly'
+
+export interface RecurrenceRule {
+  frequency: RecurrenceFrequency
+  days_of_week?: number[]  // 0=Sun, 1=Mon, ..., 6=Sat (for weekly)
+  day_of_month?: number    // 1-31 (for monthly)
+}
 
 export interface Todo {
   id: string
@@ -37,6 +44,8 @@ export interface Todo {
   defer_until?: Date
   reminder_at?: Date
   dismissed_from_today?: Date
+  recurrence?: RecurrenceRule
+  recurrence_parent_id?: string
   created_at: Date
   updated_at: Date
   completed_at?: Date
@@ -49,6 +58,7 @@ export interface Note {
   title: string
   content: string // Markdown source
   linked_todo_id?: string
+  inline_todo_map?: Record<string, string> // checkboxId -> todoId
   created_at: Date
   updated_at: Date
 }
