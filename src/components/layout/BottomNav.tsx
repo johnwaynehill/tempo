@@ -5,6 +5,7 @@ const navItems = [
   { to: '/inbox', label: 'Inbox', icon: '↓' },
   { to: '/backlog', label: 'Backlog', icon: '☰' },
   { to: '/notes', label: 'Notes', icon: '¶' },
+  { to: '/habits', label: 'Habits', icon: '↺' },
 ] as const
 
 export function BottomNav() {
