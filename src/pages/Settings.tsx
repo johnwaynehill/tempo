@@ -7,6 +7,7 @@ import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useNotifications } from '@/hooks/useNotifications'
 import { CodaImportModal } from '@/components/ui/CodaImportModal'
+import { MobileMenu } from '@/components/ui/MobileMenu'
 import type { UserPreferences } from '@/types'
 
 export function SettingsPage() {
@@ -104,10 +105,11 @@ export function SettingsPage() {
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-8 flex items-start justify-between gap-4">
         <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
           Settings
         </h1>
+        <MobileMenu />
       </div>
 
       {/* Account */}

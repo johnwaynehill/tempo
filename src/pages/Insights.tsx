@@ -5,6 +5,7 @@ import { StatCard } from '@/components/charts/StatCard'
 import { HorizontalBarChart } from '@/components/charts/HorizontalBarChart'
 import { VerticalBarSeries } from '@/components/charts/VerticalBarSeries'
 import { ProgressRing } from '@/components/charts/ProgressRing'
+import { MobileMenu } from '@/components/ui/MobileMenu'
 import { startOfDay } from '@/lib/dateUtils'
 
 type TimeRange = '7d' | '30d' | '90d' | 'all'
@@ -62,15 +63,18 @@ export function InsightsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-          Insights
-        </h1>
-        <p className="text-on-surface-variant text-sm">
-          {timeRange === 'all'
-            ? 'All time'
-            : `Last ${timeRange === '7d' ? '7 days' : timeRange === '30d' ? '30 days' : '90 days'}`}
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
+            Insights
+          </h1>
+          <p className="text-on-surface-variant text-sm">
+            {timeRange === 'all'
+              ? 'All time'
+              : `Last ${timeRange === '7d' ? '7 days' : timeRange === '30d' ? '30 days' : '90 days'}`}
+          </p>
+        </div>
+        <MobileMenu />
       </div>
 
       {/* Time range selector */}
