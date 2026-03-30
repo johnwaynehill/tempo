@@ -5,12 +5,28 @@ import { useTodos } from '@/hooks/useTodos'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
 import { LinkPicker } from '@/components/ui/LinkPicker'
 
+/** Extract task list items from markdown: returns [{ text, checked }] */
+function parseTaskItems(markdown: string): { text: string; checked: boolean }[] {
+  const items: { text: string; checked: boolean }[] = []
+  const regex = /^[-*]\s+\[([ x])\]\s+(.+)$/gm
+  let match
+  while ((match = regex.exec(markdown)) !== null) {
+    items.push({
+      checked: match[1] === 'x',
+      text: match[2].trim(),
+    })
+  }
+  return items
+}
+
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { notes, loading, updateNote, removeNote } = useNotes()
   const { todos, updateTodo, addTodo } = useTodos()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const syncTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const syncingRef = useRef(false)
   const [showTodoPicker, setShowTodoPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [confirmVisible, setConfirmVisible] = useState(false)
@@ -20,6 +36,47 @@ export function NoteEditorPage() {
     ? todos.find((t) => t.id === note.linked_todo_id)
     : undefined
 
+  // Sync task list items with Firestore todos
+  const syncTaskItems = useCallback(
+    async (markdown: string) => {
+      if (!id || syncingRef.current) return
+      syncingRef.current = true
+
+      try {
+        const currentNote = notes.find((n) => n.id === id)
+        const map = { ...(currentNote?.inline_todo_map ?? {}) }
+        const items = parseTaskItems(markdown)
+        let mapChanged = false
+
+        for (const item of items) {
+          const key = item.text.slice(0, 50)
+          const existingTodoId = map[key]
+
+          if (!existingTodoId) {
+            // New checkbox — create a todo in inbox
+            const todoId = await addTodo({
+              title: item.text,
+              status: item.checked ? 'done' : 'inbox',
+              note_id: id,
+            })
+            if (item.checked) {
+              await updateTodo(todoId, { completed_at: new Date() })
+            }
+            map[key] = todoId
+            mapChanged = true
+          }
+        }
+
+        if (mapChanged) {
+          await updateNote(id, { inline_todo_map: map })
+        }
+      } finally {
+        syncingRef.current = false
+      }
+    },
+    [id, notes, addTodo, updateTodo, updateNote],
+  )
+
   // Debounced auto-save (800ms after last keystroke)
   const handleContentChange = useCallback(
     (markdown: string) => {
@@ -28,8 +85,14 @@ export function NoteEditorPage() {
       saveTimerRef.current = setTimeout(() => {
         updateNote(id, { content: markdown })
       }, 800)
+
+      // Sync task items (debounced separately at 1200ms)
+      if (syncTimerRef.current) clearTimeout(syncTimerRef.current)
+      syncTimerRef.current = setTimeout(() => {
+        syncTaskItems(markdown)
+      }, 1200)
     },
-    [id, updateNote],
+    [id, updateNote, syncTaskItems],
   )
 
   const handleTitleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
@@ -155,29 +218,30 @@ export function NoteEditorPage() {
         onCheckboxToggle={async (text, checked) => {
           if (!id || !text) return
           const currentNote = notes.find((n) => n.id === id)
-          const map = currentNote?.inline_todo_map ?? {}
+          const map = { ...(currentNote?.inline_todo_map ?? {}) }
 
-          // Use the text as a simple key (first 50 chars)
           const key = text.slice(0, 50)
           const existingTodoId = map[key]
 
           if (existingTodoId) {
             // Toggle existing linked todo
-            const existingTodo = todos.find((t) => t.id === existingTodoId)
-            if (existingTodo) {
-              if (checked) {
-                await updateTodo(existingTodoId, { status: 'done', completed_at: new Date() })
-              } else {
-                await updateTodo(existingTodoId, { status: 'inbox', completed_at: undefined })
-              }
+            if (checked) {
+              await updateTodo(existingTodoId, { status: 'done', completed_at: new Date() })
+            } else {
+              await updateTodo(existingTodoId, { status: 'inbox', completed_at: undefined })
             }
-          } else if (checked) {
-            // Create a new linked todo on first check
-            const todoId = await addTodo({ title: text, status: 'done', note_id: id })
-            await updateTodo(todoId, { completed_at: new Date() })
-            await updateNote(id, {
-              inline_todo_map: { ...map, [key]: todoId },
+          } else {
+            // Create a new linked todo (checked = done, unchecked = inbox)
+            const todoId = await addTodo({
+              title: text,
+              status: checked ? 'done' : 'inbox',
+              note_id: id,
             })
+            if (checked) {
+              await updateTodo(todoId, { completed_at: new Date() })
+            }
+            map[key] = todoId
+            await updateNote(id, { inline_todo_map: map })
           }
         }}
       />
