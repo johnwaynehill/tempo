@@ -1,11 +1,14 @@
-import { MilkdownProvider, Milkdown, useEditor } from '@milkdown/react'
-import { Editor, rootCtx, defaultValueCtx } from '@milkdown/kit/core'
+import { useRef, useCallback, useEffect } from 'react'
+import { MilkdownProvider, Milkdown, useEditor, useInstance } from '@milkdown/react'
+import { Editor, rootCtx, defaultValueCtx, editorViewCtx } from '@milkdown/kit/core'
 import { commonmark } from '@milkdown/kit/preset/commonmark'
 import { history } from '@milkdown/kit/plugin/history'
 import { listener, listenerCtx } from '@milkdown/kit/plugin/listener'
 import { clipboard } from '@milkdown/kit/plugin/clipboard'
 import { indent } from '@milkdown/kit/plugin/indent'
 import { trailing } from '@milkdown/kit/plugin/trailing'
+import { extendListItemSchemaForTask, wrapInTaskListInputRule } from '@milkdown/kit/preset/gfm'
+import { remarkGFMPlugin } from '@milkdown/kit/preset/gfm'
 import { formatToolbar, configureFormatToolbar } from '@/lib/milkdown-toolbar-plugin'
 import { MobileFormatBar } from '@/components/ui/MobileFormatBar'
 import { nord } from '@milkdown/theme-nord'
@@ -14,9 +17,13 @@ import '@milkdown/theme-nord/style.css'
 interface MilkdownEditorProps {
   defaultValue: string
   onChange: (markdown: string) => void
+  onCheckboxToggle?: (text: string, checked: boolean) => void
 }
 
-function MilkdownInner({ defaultValue, onChange }: MilkdownEditorProps) {
+function MilkdownInner({ defaultValue, onChange, onCheckboxToggle }: MilkdownEditorProps) {
+  const onCheckboxToggleRef = useRef(onCheckboxToggle)
+  onCheckboxToggleRef.current = onCheckboxToggle
+
   useEditor((root) => {
     return Editor.make()
       .config(nord)
@@ -28,7 +35,10 @@ function MilkdownInner({ defaultValue, onChange }: MilkdownEditorProps) {
         })
       })
       .config(configureFormatToolbar)
+      .use(remarkGFMPlugin)
       .use(commonmark)
+      .use(extendListItemSchemaForTask)
+      .use(wrapInTaskListInputRule)
       .use(history)
       .use(listener)
       .use(clipboard)
@@ -37,14 +47,73 @@ function MilkdownInner({ defaultValue, onChange }: MilkdownEditorProps) {
       .use(formatToolbar)
   }, [])
 
+  // Attach click handler for task list checkboxes
+  const [loading, getInstance] = useInstance()
+
+  const handleClick = useCallback((e: MouseEvent) => {
+    if (loading) return
+    const target = e.target as HTMLElement
+
+    // Check if we clicked on a task list item
+    const li = target.closest('li[data-item-type="task"]') as HTMLElement | null
+    if (!li) return
+
+    // Only toggle if clicked near the checkbox area (left 28px)
+    const rect = li.getBoundingClientRect()
+    if (e.clientX - rect.left > 28) return
+
+    e.preventDefault()
+    e.stopPropagation()
+
+    const editor = getInstance()
+    if (!editor) return
+
+    const view = editor.ctx.get(editorViewCtx)
+    const { state } = view
+
+    // Find the position of this list item in the document
+    const pos = view.posAtDOM(li, 0)
+    const resolvedPos = state.doc.resolve(pos)
+
+    // Walk up to find the list_item node
+    let depth = resolvedPos.depth
+    while (depth >= 0 && resolvedPos.node(depth).type.name !== 'list_item') {
+      depth--
+    }
+
+    if (depth < 0) return
+
+    const node = resolvedPos.node(depth)
+    if (node.attrs.checked == null) return
+
+    const newChecked = !node.attrs.checked
+    const nodePos = resolvedPos.before(depth)
+
+    // Dispatch the transaction
+    const tr = state.tr.setNodeMarkup(nodePos, undefined, {
+      ...node.attrs,
+      checked: newChecked,
+    })
+    view.dispatch(tr)
+
+    // Extract text content for sync callback
+    const textContent = node.textContent.trim()
+    onCheckboxToggleRef.current?.(textContent, newChecked)
+  }, [loading, getInstance])
+
+  useEffect(() => {
+    document.addEventListener('click', handleClick, true)
+    return () => document.removeEventListener('click', handleClick, true)
+  }, [handleClick])
+
   return <Milkdown />
 }
 
-export function MilkdownEditor(props: MilkdownEditorProps) {
+export function MilkdownEditor({ defaultValue, onChange, onCheckboxToggle }: MilkdownEditorProps) {
   return (
     <MilkdownProvider>
       <div className="milkdown-editor-root">
-        <MilkdownInner {...props} />
+        <MilkdownInner defaultValue={defaultValue} onChange={onChange} onCheckboxToggle={onCheckboxToggle} />
       </div>
       <MobileFormatBar />
 
@@ -135,6 +204,37 @@ export function MilkdownEditor(props: MilkdownEditorProps) {
         .milkdown-editor-root .ProseMirror li {
           color: var(--color-on-surface);
           margin-bottom: 0.25rem;
+        }
+        .milkdown-editor-root .ProseMirror li[data-item-type="task"] {
+          list-style: none;
+          position: relative;
+          margin-left: -1.5rem;
+          padding-left: 1.75rem;
+        }
+        .milkdown-editor-root .ProseMirror li[data-item-type="task"]::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 0.35em;
+          width: 1.1rem;
+          height: 1.1rem;
+          border: 2px solid var(--color-outline-variant);
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.15s ease;
+        }
+        .milkdown-editor-root .ProseMirror li[data-item-type="task"][data-checked="true"]::before {
+          background: var(--color-primary);
+          border-color: var(--color-primary);
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='white' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M2.5 6L5 8.5L9.5 3.5'/%3E%3C/svg%3E");
+          background-size: 10px;
+          background-repeat: no-repeat;
+          background-position: center;
+        }
+        .milkdown-editor-root .ProseMirror li[data-item-type="task"][data-checked="true"] > p {
+          text-decoration: line-through;
+          color: var(--color-on-surface-variant);
+          opacity: 0.6;
         }
         .milkdown-editor-root .ProseMirror hr {
           border: none;

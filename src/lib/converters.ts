@@ -37,6 +37,8 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
       defer_until: toTimestampOrNull(todo.defer_until),
       reminder_at: toTimestampOrNull(todo.reminder_at),
       dismissed_from_today: toTimestampOrNull(todo.dismissed_from_today),
+      recurrence: todo.recurrence ?? null,
+      recurrence_parent_id: todo.recurrence_parent_id ?? null,
       created_at: Timestamp.fromDate(todo.created_at),
       updated_at: Timestamp.fromDate(todo.updated_at),
       completed_at: toTimestampOrNull(todo.completed_at),
@@ -63,6 +65,8 @@ export const todoConverter: FirestoreDataConverter<Todo> = {
       defer_until: toDate(d.defer_until),
       reminder_at: toDate(d.reminder_at),
       dismissed_from_today: toDate(d.dismissed_from_today),
+      recurrence: d.recurrence ?? undefined,
+      recurrence_parent_id: d.recurrence_parent_id ?? undefined,
       created_at: toDate(d.created_at) ?? new Date(),
       updated_at: toDate(d.updated_at) ?? new Date(),
       completed_at: toDate(d.completed_at),
@@ -78,6 +82,7 @@ export const noteConverter: FirestoreDataConverter<Note> = {
       title: note.title,
       content: note.content,
       linked_todo_id: note.linked_todo_id ?? null,
+      inline_todo_map: note.inline_todo_map ?? null,
       created_at: Timestamp.fromDate(note.created_at),
       updated_at: Timestamp.fromDate(note.updated_at),
     }
@@ -93,6 +98,7 @@ export const noteConverter: FirestoreDataConverter<Note> = {
       title: d.title,
       content: d.content ?? '',
       linked_todo_id: d.linked_todo_id ?? undefined,
+      inline_todo_map: d.inline_todo_map ?? undefined,
       created_at: toDate(d.created_at) ?? new Date(),
       updated_at: toDate(d.updated_at) ?? new Date(),
     }

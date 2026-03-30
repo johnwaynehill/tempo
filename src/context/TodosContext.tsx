@@ -19,7 +19,8 @@ import { v4 as uuid } from 'uuid'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/context/AuthContext'
 import { todoConverter } from '@/lib/converters'
-import type { Todo, TodoStatus, EnergyLevel, TodoSize } from '@/types'
+import { getNextOccurrence } from '@/lib/recurrence'
+import type { Todo, TodoStatus, EnergyLevel, TodoSize, RecurrenceRule } from '@/types'
 
 // --- Types ---
 
@@ -31,6 +32,8 @@ export interface AddTodoInput {
   energy_level?: EnergyLevel
   size?: TodoSize
   due_date?: Date
+  recurrence?: RecurrenceRule
+  note_id?: string
 }
 
 export interface TodosContextValue {
@@ -103,6 +106,8 @@ export function TodosProvider({ children }: { children: ReactNode }) {
       energy_level: input.energy_level,
       size: input.size,
       due_date: input.due_date,
+      recurrence: input.recurrence,
+      note_id: input.note_id,
       created_at: now,
       updated_at: now,
     }
@@ -135,10 +140,40 @@ export function TodosProvider({ children }: { children: ReactNode }) {
   }
 
   const completeTodo = async (id: string) => {
+    const todo = todos.find((t) => t.id === id)
+
+    // Mark current instance as done
     await updateTodo(id, {
       status: 'done',
       completed_at: new Date(),
     })
+
+    // If recurring, create the next occurrence
+    if (todo?.recurrence) {
+      const nextDue = getNextOccurrence(todo.recurrence, todo.due_date ?? new Date())
+      const nextId = uuid()
+      const now = new Date()
+      const nextTodo: Todo = {
+        id: nextId,
+        title: todo.title,
+        status: 'backlog',
+        project: todo.project,
+        size: todo.size,
+        impact: todo.impact,
+        energy_level: todo.energy_level,
+        due_date: nextDue,
+        recurrence: todo.recurrence,
+        recurrence_parent_id: todo.recurrence_parent_id ?? todo.id,
+        note_id: todo.note_id,
+        supports: todo.supports,
+        created_at: now,
+        updated_at: now,
+      }
+      await setDoc(
+        doc(todosRef(), nextId).withConverter(todoConverter),
+        nextTodo,
+      )
+    }
   }
 
   const deferTodo = async (id: string, until?: Date) => {

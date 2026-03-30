@@ -7,7 +7,9 @@ import { useNotes } from '@/hooks/useNotes'
 import { useProjects } from '@/hooks/useProjects'
 import { LinkPicker } from '@/components/ui/LinkPicker'
 import { ReminderPicker } from '@/components/ui/ReminderPicker'
+import { RecurrencePicker } from '@/components/ui/RecurrencePicker'
 import { ProjectPicker } from '@/components/ui/ProjectPicker'
+import { describeRecurrence } from '@/lib/recurrence'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
   small: 'Small',
@@ -31,6 +33,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
 
   const [showNotePicker, setShowNotePicker] = useState(false)
   const [showReminderPicker, setShowReminderPicker] = useState(false)
+  const [showRecurrencePicker, setShowRecurrencePicker] = useState(false)
   const [visible, setVisible] = useState(false)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
@@ -287,6 +290,27 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                     onSet={(date) => updateTodo(todo.id, { reminder_at: date })}
                     onClear={() => updateTodo(todo.id, { reminder_at: undefined })}
                     onClose={() => setShowReminderPicker(false)}
+                  />
+                )}
+              </div>
+
+              {/* Recurrence */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowRecurrencePicker(!showRecurrencePicker)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                    todo.recurrence
+                      ? 'bg-primary/10 text-primary hover:bg-primary/20'
+                      : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
+                  }`}
+                >
+                  {todo.recurrence ? describeRecurrence(todo.recurrence) : 'Repeat'}
+                </button>
+                {showRecurrencePicker && (
+                  <RecurrencePicker
+                    value={todo.recurrence}
+                    onChange={(rule) => updateTodo(todo.id, { recurrence: rule as any })}
+                    onClose={() => setShowRecurrencePicker(false)}
                   />
                 )}
               </div>
