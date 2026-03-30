@@ -3,7 +3,7 @@ import { NavLink } from 'react-router'
 const navItems = [
   { to: '/today', label: 'Today', icon: '◉' },
   { to: '/inbox', label: 'Inbox', icon: '↓' },
-  { to: '/backlog', label: 'Backlog', icon: '☰' },
+  { to: '/backlog', label: 'Backlog', icon: '☷' },
   { to: '/notes', label: 'Notes', icon: '¶' },
   { to: '/habits', label: 'Habits', icon: '↺' },
 ] as const

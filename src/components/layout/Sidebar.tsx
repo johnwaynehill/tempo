@@ -6,7 +6,7 @@ import { useProjects } from '@/hooks/useProjects'
 const navItems = [
   { to: '/today', label: 'Today', icon: '◉' },
   { to: '/inbox', label: 'Inbox', icon: '↓' },
-  { to: '/backlog', label: 'Backlog', icon: '☰' },
+  { to: '/backlog', label: 'Backlog', icon: '☷' },
   { to: '/notes', label: 'Notes', icon: '¶' },
   { to: '/braindump', label: 'Brain Dump', icon: '⚡' },
   { to: '/habits', label: 'Habits', icon: '↺' },
