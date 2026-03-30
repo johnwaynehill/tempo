@@ -69,6 +69,19 @@ export interface WeeklyReview {
   updated_at: Date
 }
 
+// --- Habit ---
+
+export interface Habit {
+  id: string
+  name: string
+  description?: string
+  frequency: 'daily'  // Future: 'weekly' | 'custom'
+  archived: boolean
+  completions: Record<string, boolean>  // { "2026-03-29": true }
+  created_at: Date
+  updated_at: Date
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {

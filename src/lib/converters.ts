@@ -5,7 +5,7 @@ import {
   type FirestoreDataConverter,
   Timestamp,
 } from 'firebase/firestore'
-import type { Todo, Note, UserPreferences, TodaySet, WeeklyReview } from '@/types'
+import type { Todo, Note, Habit, UserPreferences, TodaySet, WeeklyReview } from '@/types'
 
 // --- Helpers ---
 
@@ -93,6 +93,39 @@ export const noteConverter: FirestoreDataConverter<Note> = {
       title: d.title,
       content: d.content ?? '',
       linked_todo_id: d.linked_todo_id ?? undefined,
+      created_at: toDate(d.created_at) ?? new Date(),
+      updated_at: toDate(d.updated_at) ?? new Date(),
+    }
+  },
+}
+
+// --- Habit Converter ---
+
+export const habitConverter: FirestoreDataConverter<Habit> = {
+  toFirestore(habit: Habit): DocumentData {
+    return {
+      name: habit.name,
+      description: habit.description ?? null,
+      frequency: habit.frequency,
+      archived: habit.archived,
+      completions: habit.completions,
+      created_at: Timestamp.fromDate(habit.created_at),
+      updated_at: Timestamp.fromDate(habit.updated_at),
+    }
+  },
+
+  fromFirestore(
+    snapshot: QueryDocumentSnapshot,
+    options?: SnapshotOptions,
+  ): Habit {
+    const d = snapshot.data(options)
+    return {
+      id: snapshot.id,
+      name: d.name,
+      description: d.description ?? undefined,
+      frequency: d.frequency ?? 'daily',
+      archived: d.archived ?? false,
+      completions: d.completions ?? {},
       created_at: toDate(d.created_at) ?? new Date(),
       updated_at: toDate(d.updated_at) ?? new Date(),
     }

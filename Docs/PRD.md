@@ -4,7 +4,7 @@
 **Version:** 0.5
 **Author:** Staff PM / UX (Claude)
 **Date:** 2026-03-29
-**Status:** v1 Complete — v2 Complete — v3 In Progress
+**Status:** v1 Complete — v2 Complete — v3 In Progress (Insights + Review shipped)
 
 **Changelog (v0.4 → v0.5):**
 - Marked shipped: projects as sidebar folders (US-28), Create Note button (US-33), mobile Markdown editor bar (US-34)
@@ -417,12 +417,12 @@ service cloud.firestore {
 | Manual PWA update check (US-39) | P2 | ✅ Shipped | "Check for updates" button in Settings page |
 | Calendar view (US-35) | P3 | | Tasks on calendar with recurring meeting support |
 | Habit tracker | P3 | | Daily habit tracking with GitHub-style contribution grid |
-| Todo visualizations | P3 | | Charts: completed by project, on-time, trends over time |
+| Todo visualizations (US-30) | P3 | ✅ Shipped | Charts: completed by project, on-time, trends over time |
 | Voice input + transcription | P3 | | Capture by voice, transcribed to text |
 | Work/Personal modes | P3 | | Isolated contexts with separate databases and mode indicator |
 | Recurring todos | P3 | | |
 | Inline todo syntax in notes | P3 | | `- [ ]` in notes auto-syncs to todo list |
-| Weekly review screen | P3 | | |
+| Weekly review screen (US-22) | P3 | ✅ Shipped | Week navigator, summary cards, reflection textarea, mobile menu |
 | iOS push notifications | P3 | | When Apple supports Web Push on PWAs |
 
 ---
