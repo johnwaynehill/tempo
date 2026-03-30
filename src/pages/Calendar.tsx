@@ -19,7 +19,7 @@ const WEEKDAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 const EVENT_COLORS: Record<NonNullable<CalendarEvent['color']>, string> = {
   primary: 'bg-primary',
-  tertiary: 'bg-tertiary',
+  tertiary: 'bg-primary-dim',
   error: 'bg-error',
   neutral: 'bg-on-surface-variant',
 }
@@ -190,12 +190,12 @@ export function CalendarPage() {
 
                     {/* Dot indicators */}
                     {(hasEvents || hasTodos) && (
-                      <div className="flex items-center gap-0.5 mt-0.5">
+                      <div className="flex items-center gap-1 mt-1">
                         {hasEvents && (
                           <span className="w-1.5 h-1.5 rounded-full bg-primary" />
                         )}
                         {hasTodos && (
-                          <span className="w-1.5 h-1.5 rounded-full bg-tertiary" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-on-surface-variant" />
                         )}
                       </div>
                     )}
@@ -478,8 +478,8 @@ function EventFormModal({ date, event, onSave, onClose }: EventFormModalProps) {
   }
 
   const colorOptions: { value: CalendarEvent['color']; label: string; cls: string }[] = [
-    { value: 'primary', label: 'Blue', cls: 'bg-primary' },
-    { value: 'tertiary', label: 'Teal', cls: 'bg-tertiary' },
+    { value: 'primary', label: 'Green', cls: 'bg-primary' },
+    { value: 'tertiary', label: 'Sage', cls: 'bg-primary-dim' },
     { value: 'error', label: 'Red', cls: 'bg-error' },
     { value: 'neutral', label: 'Gray', cls: 'bg-on-surface-variant' },
   ]
