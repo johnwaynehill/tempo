@@ -49,7 +49,7 @@ export function ProjectDetailPage() {
   const projectName = decodeURIComponent(projectSlug ?? '')
   const navigate = useNavigate()
 
-  const { todos, backlog, completeTodo, deferTodo, updateTodo, loading } = useTodos()
+  const { todos, completeTodo, deferTodo, updateTodo, loading } = useTodos()
   const { preferences } = usePreferences()
 
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
@@ -61,10 +61,10 @@ export function ProjectDetailPage() {
   const [renameValue, setRenameValue] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
-  // All active (non-done) todos in this project
+  // All active (non-done) todos in this project — includes inbox, backlog, pinned, deferred
   const projectTodos = useMemo(
-    () => backlog.filter((t) => t.project === projectName),
-    [backlog, projectName],
+    () => todos.filter((t) => t.project === projectName && t.status !== 'done'),
+    [todos, projectName],
   )
 
   // Total including done
