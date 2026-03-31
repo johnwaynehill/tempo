@@ -42,10 +42,10 @@ export async function executeToolCall(
             ? new Date((input.due_date as string) + 'T00:00:00')
             : undefined,
         }
-        const id = await ctx.addTodo(addInput)
+        await ctx.addTodo(addInput)
         return {
           success: true,
-          message: `Created todo "${addInput.title}" (id: ${id}, status: ${addInput.status ?? 'inbox'})`,
+          message: `Created "${addInput.title}"`,
         }
       }
 
@@ -64,20 +64,20 @@ export async function executeToolCall(
         await ctx.updateTodo(todoId, updates)
         return {
           success: true,
-          message: `Updated ${name}: ${Object.keys(updates).join(', ')}`,
+          message: `Updated ${name}`,
         }
       }
 
       case 'complete_todo': {
         const name = todoTitle(ctx, input.todo_id as string)
         await ctx.completeTodo(input.todo_id as string)
-        return { success: true, message: `Completed ${name}` }
+        return { success: true, message: `Done: ${name}` }
       }
 
       case 'pin_to_today': {
         const name = todoTitle(ctx, input.todo_id as string)
         await ctx.pinToToday(input.todo_id as string)
-        return { success: true, message: `Pinned ${name} to Today` }
+        return { success: true, message: `Pinned: ${name}` }
       }
 
       case 'defer_todo': {
@@ -86,25 +86,19 @@ export async function executeToolCall(
           ? new Date((input.until as string) + 'T09:00:00')
           : undefined
         await ctx.deferTodo(input.todo_id as string, until)
-        return {
-          success: true,
-          message: `Deferred ${name}${until ? ` until ${input.until}` : ' until tomorrow'}`,
-        }
+        return { success: true, message: `Deferred: ${name}` }
       }
 
       case 'move_to_backlog': {
         const name = todoTitle(ctx, input.todo_id as string)
         await ctx.moveToBacklog(input.todo_id as string)
-        return { success: true, message: `Moved ${name} to Backlog` }
+        return { success: true, message: `Backlogged: ${name}` }
       }
 
       case 'dismiss_from_today': {
         const name = todoTitle(ctx, input.todo_id as string)
         await ctx.dismissFromToday(input.todo_id as string)
-        return {
-          success: true,
-          message: `Dismissed ${name} from Today`,
-        }
+        return { success: true, message: `Dismissed: ${name}` }
       }
 
       default:
