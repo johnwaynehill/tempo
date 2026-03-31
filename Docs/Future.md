@@ -26,26 +26,27 @@
   - [x] Add Projects to the Sidebar for Desktop. Consider how to add on Mobile.
 
 ## Habit Tracker
-- [ ] Start a new habit
-- [ ] Track each habit daily
-- [ ] GitHub style visualization for All Habits
-- [ ] Habit detail page
-  - [ ] Infomation about habit
-  - [ ] Habit history
-  - [ ] GitHub style visualization
-  - [ ] Edit habit
-  - [ ] Delete habit
+- [x] Start a new habit
+- [x] Track each habit daily
+- [x] GitHub style visualization for All Habits
+- [x] Habit detail page
+  - [x] Infomation about habit
+  - [x] Habit history
+  - [x] GitHub style visualization
+  - [x] Edit habit
+  - [x] Delete habit
+- [x] Add Habits to the mobile bottom navigation
 
-## Visulizations
-- [ ] Data visulizations to show To Dos
-  - [ ] Completed
-  - [ ] By Project
-  - [ ] Completed on Time
-  - [ ] Completed after due date
-  - [ ] By Day, Week, Month
+## Visualizations
+- [x] Data visualizations to show To Dos
+  - [x] Completed
+  - [x] By Project
+  - [x] Completed on Time
+  - [x] Completed after due date
+  - [x] By Day, Week, Month
 
 ## Voice Input with Transcription
-- ability to 
+Ability to input ToDos and Notes with Voice. Mac only for now. Use something like https://www.onresonant.com/ 
 
 
 ## Inbox
@@ -60,6 +61,15 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [ ] See which mode I'm in at any given time
 
 ## Calendar View
-- [ ] See tasks on a calendar
-- [ ] Add recuring work meetings to understand rythmn
-- [ ] Add recuring personal meetings to understand rythmn
+- [x] See tasks on a calendar
+- [x] Add recuring work meetings to understand rythmn
+- [x] Add recuring personal meetings to understand rythmn
+
+## Claude AI
+- [ ] Add Claude AI so that I can ask AI questions about my Todos, Notes, and Habits (likely on the Insights page). 
+- [ ] Use Claude to update the daily ToDos in Today.
+- [ ] Add ability to breakdown ToDos in an ADHD friendly way.
+  - Example prompts:
+  - 1. "I have to do [ToDo] but my executive function is at zero and I'm paralyze. Break this down into the most ridiculous, tiny, micro-steps. DO NOT give me the whole list. Just give me the first step, and make it so easy I can do it while I'm still sitting on the couch."
+  - 2. "I need to complete [ToDo]. My brain has zero dopamine for this and is fighting me. Give me 3 chaotic, highly stimulating ways to gamify this task or pair it with an immediate, short-term reward so my brain actually wants to start."
+  - 3. "I am stuck scrolling and cannot physically transition to doing [ToDo]. Act as my empathetic ADHD coach. Give me a 5-minute, low-energy 'transition protocol' to gently shift my nervous system out of freeze mode. Do not tell me to 'just do it' - focus on regulating my nervous system first."

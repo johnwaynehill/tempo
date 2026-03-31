@@ -415,13 +415,13 @@ service cloud.firestore {
 | Mobile Markdown editor bar (US-34) | P2 | ✅ Shipped | Formatting toolbar above keyboard on mobile |
 | Mobile settings & profile (US-38) | P2 | ✅ Shipped | Settings gear + profile pic in Today header on mobile |
 | Manual PWA update check (US-39) | P2 | ✅ Shipped | "Check for updates" button in Settings page |
-| Calendar view (US-35) | P3 | | Tasks on calendar with recurring meeting support |
-| Habit tracker | P3 | | Daily habit tracking with GitHub-style contribution grid |
+| Calendar view (US-35) | P3 | ✅ Shipped | Tasks on calendar with recurring meeting support |
+| Habit tracker (US-29) | P3 | ✅ Shipped | Daily habit tracking with GitHub-style contribution grid |
 | Todo visualizations (US-30) | P3 | ✅ Shipped | Charts: completed by project, on-time, trends over time |
 | Voice input + transcription | P3 | | Capture by voice, transcribed to text |
 | Work/Personal modes | P3 | | Isolated contexts with separate databases and mode indicator |
-| Recurring todos | P3 | | |
-| Inline todo syntax in notes | P3 | | `- [ ]` in notes auto-syncs to todo list |
+| Recurring todos (US-19) | P3 | ✅ Shipped | Auto-creates next occurrence on completion |
+| Inline todo syntax in notes (US-20) | P3 | ✅ Shipped | `- [ ]` in notes creates todos on click |
 | Weekly review screen (US-22) | P3 | ✅ Shipped | Week navigator, summary cards, reflection textarea, mobile menu |
 | iOS push notifications | P3 | | When Apple supports Web Push on PWAs |
 
