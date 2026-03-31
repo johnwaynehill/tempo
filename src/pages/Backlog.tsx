@@ -122,13 +122,22 @@ export function BacklogPage() {
   const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
+  const [projectFilter, setProjectFilter] = useState<string | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
   const [energyOpen, setEnergyOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
+  const [projectOpen, setProjectOpen] = useState(false)
 
-  const filtered = energyFilter
-    ? backlog.filter((t) => t.energy_level === energyFilter)
-    : backlog
+  const PROJECT_OPTIONS = projects.map((name) => ({
+    value: name,
+    label: `${name} (${projectCounts[name] ?? 0})`,
+  }))
+
+  const filtered = backlog.filter((t) => {
+    if (energyFilter && t.energy_level !== energyFilter) return false
+    if (projectFilter && t.project !== projectFilter) return false
+    return true
+  })
 
   const sorted = useMemo(
     () => sortTodos(filtered, sortMode, preferences.current_energy),
@@ -169,74 +178,100 @@ export function BacklogPage() {
         </p>
       </div>
 
-      {/* Project pills — horizontal scroll row */}
-      {projects.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-6 -mx-1 px-1">
-          {projects.map((name) => (
-            <Link
-              key={name}
-              to={`/projects/${encodeURIComponent(name)}`}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:bg-surface-container-high hover:text-on-surface transition-colors shrink-0"
-            >
-              <svg className="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M2 4.5A1.5 1.5 0 013.5 3h2.379a1.5 1.5 0 011.06.44l.622.62a1.5 1.5 0 001.06.44H12.5A1.5 1.5 0 0114 6v5.5a1.5 1.5 0 01-1.5 1.5h-9A1.5 1.5 0 012 11.5v-7z" />
-              </svg>
-              {name}
-              {(projectCounts[name] ?? 0) > 0 && (
-                <span className="text-on-surface-variant/50">{projectCounts[name]}</span>
-              )}
-            </Link>
-          ))}
-        </div>
-      )}
-
       {/* Mobile filter menus */}
-      <div className="sm:hidden flex gap-2 mb-6">
+      <div className="sm:hidden flex gap-2 mb-6 flex-wrap">
+        {projects.length > 0 && (
+          <FilterDropdown
+            label="Project"
+            options={PROJECT_OPTIONS}
+            value={projectFilter}
+            clearLabel="All projects"
+            open={projectOpen}
+            onToggle={() => { setProjectOpen(!projectOpen); setEnergyOpen(false); setSortOpen(false) }}
+            onClose={() => setProjectOpen(false)}
+            onChange={(project) => setProjectFilter(project)}
+          />
+        )}
         <FilterDropdown
           label="Energy"
           options={ENERGY_OPTIONS}
           value={energyFilter}
           clearLabel="All levels"
           open={energyOpen}
-          onToggle={() => { setEnergyOpen(!energyOpen); setSortOpen(false) }}
+          onToggle={() => { setEnergyOpen(!energyOpen); setSortOpen(false); setProjectOpen(false) }}
           onClose={() => setEnergyOpen(false)}
           onChange={(level) => setEnergyFilter(level)}
         />
         <FilterDropdown
-          label="Priority"
+          label="Sort"
           options={SORT_OPTIONS}
           value={sortMode !== 'score' ? sortMode : undefined}
           open={sortOpen}
-          onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false) }}
+          onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false); setProjectOpen(false) }}
           onClose={() => setSortOpen(false)}
           onChange={(mode) => setSortMode(mode ?? 'score')}
         />
       </div>
 
       {/* Desktop: always-visible controls */}
-      <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-4 mb-8">
-        <div className="min-w-0">
-          <EnergySelector
-            value={energyFilter}
-            onChange={(level) =>
-              setEnergyFilter(energyFilter === level ? undefined : level)
-            }
-          />
-        </div>
-        <div className="flex gap-1.5 flex-shrink-0">
-          {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
+      <div className="hidden sm:flex sm:flex-col sm:gap-4 mb-8">
+        {/* Project filter pills */}
+        {projects.length > 0 && (
+          <div className="flex gap-1.5 flex-wrap">
             <button
-              key={mode}
-              onClick={() => setSortMode(mode)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                sortMode === mode
+              onClick={() => setProjectFilter(undefined)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                !projectFilter
                   ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                  : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
               }`}
             >
-              {SORT_LABELS[mode]}
+              All
             </button>
-          ))}
+            {projects.map((name) => (
+              <button
+                key={name}
+                onClick={() => setProjectFilter(projectFilter === name ? undefined : name)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                  projectFilter === name
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                {name}
+                {(projectCounts[name] ?? 0) > 0 && (
+                  <span className="ml-1 opacity-60">{projectCounts[name]}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Energy + Sort row */}
+        <div className="flex items-start justify-between gap-4">
+          <div className="min-w-0">
+            <EnergySelector
+              value={energyFilter}
+              onChange={(level) =>
+                setEnergyFilter(energyFilter === level ? undefined : level)
+              }
+            />
+          </div>
+          <div className="flex gap-1.5 flex-shrink-0">
+            {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => setSortMode(mode)}
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                  sortMode === mode
+                    ? 'bg-primary text-on-primary'
+                    : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
+                }`}
+              >
+                {SORT_LABELS[mode]}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
