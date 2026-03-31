@@ -149,4 +149,61 @@ export const AI_TOOLS: ToolDefinition[] = [
       required: ['todo_id'],
     },
   },
+  {
+    name: 'create_note',
+    description:
+      'Create a new note with a title and Markdown content. Use this for summaries, reflections, plans, meeting notes, or any knowledge the user wants to capture.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        title: {
+          type: 'string',
+          description: 'The title of the note',
+        },
+        content: {
+          type: 'string',
+          description: 'The note body in Markdown format',
+        },
+      },
+      required: ['title', 'content'],
+    },
+  },
+  {
+    name: 'update_note',
+    description:
+      'Update an existing note. Can change the title, content, or both. Use this to append to or revise existing notes.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        note_id: {
+          type: 'string',
+          description: 'The ID of the note to update',
+        },
+        title: {
+          type: 'string',
+          description: 'New title (omit to keep current)',
+        },
+        content: {
+          type: 'string',
+          description: 'New content in Markdown (omit to keep current)',
+        },
+      },
+      required: ['note_id'],
+    },
+  },
+  {
+    name: 'read_note',
+    description:
+      'Read the full content of a note by ID. Use this when you need to see what a note contains before answering questions about it or summarizing it.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        note_id: {
+          type: 'string',
+          description: 'The ID of the note to read',
+        },
+      },
+      required: ['note_id'],
+    },
+  },
 ]

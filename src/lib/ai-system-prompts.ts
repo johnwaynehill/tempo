@@ -36,11 +36,19 @@ function serializeTodos(todos: Todo[]): string {
   return lines.join('\n')
 }
 
-function serializeNotes(notes: Note[]): string {
+function serializeNotes(notes: Note[], includeContent = false): string {
   if (notes.length === 0) return 'No notes.'
   const lines = [`${notes.length} notes:`]
   for (const n of notes.slice(0, 30)) {
-    lines.push(`- "${n.title}" (${toISODateString(n.updated_at)})`)
+    lines.push(`- ID:${n.id} | "${n.title}" (updated ${toISODateString(n.updated_at)})`)
+    if (includeContent && n.content) {
+      // Include a preview (first 200 chars) so Claude knows what's in each note
+      const preview = n.content.slice(0, 200).replace(/\n/g, ' ')
+      lines.push(`  Preview: ${preview}${n.content.length > 200 ? '...' : ''}`)
+    }
+  }
+  if (!includeContent) {
+    lines.push('\nUse the read_note tool to see full note content when needed.')
   }
   return lines.join('\n')
 }
@@ -82,7 +90,9 @@ function serializeEvents(events: CalendarEvent[]): string {
 
 const BASE_PERSONA = `You are an ADHD-specialized productivity assistant embedded in Tempo, a personal productivity app. You understand executive dysfunction, dopamine-driven motivation, task paralysis, and hyperfocus. You are warm, direct, and never judgmental. You speak concisely — no walls of text. When suggesting tasks, keep them small and achievable.
 
-You have tools to create, update, complete, pin, defer, and dismiss todos. Use them proactively when you suggest actions — don't just describe what you would do, actually do it. The user's app updates in real-time when you use tools, so they'll see changes immediately.
+You have tools to create, update, complete, pin, defer, and dismiss todos. You can also create notes, update notes, and read note content. Use them proactively when you suggest actions — don't just describe what you would do, actually do it. The user's app updates in real-time when you use tools, so they'll see changes immediately.
+
+When asked to summarize, reflect, or capture knowledge, use create_note to write it as a Markdown note. When asked about the content of a specific note, use read_note first to see it.
 
 Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.`
 
@@ -167,7 +177,7 @@ ${serializeEvents(events)}
 ${serializeHabits(habits)}
 
 ## Notes
-${serializeNotes(notes)}
+${serializeNotes(notes, true)}
 
 ## User Context
 ${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not set.'}

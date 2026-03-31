@@ -36,7 +36,7 @@ export function AIChatPage() {
     dismissFromToday,
     loading: todosLoading,
   } = useTodos()
-  const { notes } = useNotes()
+  const { notes, addNote, updateNote: updateNoteCtx } = useNotes()
   const { habits } = useHabits()
   const { events } = useEvents()
   const { preferences } = usePreferences()
@@ -51,6 +51,7 @@ export function AIChatPage() {
   const toolContext: ToolContext = useMemo(
     () => ({
       todos,
+      notes,
       addTodo,
       updateTodo,
       completeTodo,
@@ -58,8 +59,10 @@ export function AIChatPage() {
       deferTodo,
       moveToBacklog,
       dismissFromToday,
+      addNote,
+      updateNote: updateNoteCtx,
     }),
-    [todos, addTodo, updateTodo, completeTodo, pinToToday, deferTodo, moveToBacklog, dismissFromToday],
+    [todos, notes, addTodo, updateTodo, completeTodo, pinToToday, deferTodo, moveToBacklog, dismissFromToday, addNote, updateNoteCtx],
   )
 
   // Find the target todo for breakdown mode

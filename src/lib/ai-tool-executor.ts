@@ -1,9 +1,11 @@
 import type { AddTodoInput, TodosContextValue } from '@/context/TodosContext'
-import type { EnergyLevel, Todo, TodoSize } from '@/types'
+import type { NotesContextValue } from '@/context/NotesContext'
+import type { EnergyLevel, Note, Todo, TodoSize } from '@/types'
 
 // The subset of context methods the AI tool executor needs
 export interface ToolContext {
   todos: Todo[]
+  notes: Note[]
   addTodo: TodosContextValue['addTodo']
   updateTodo: TodosContextValue['updateTodo']
   completeTodo: TodosContextValue['completeTodo']
@@ -11,11 +13,18 @@ export interface ToolContext {
   deferTodo: TodosContextValue['deferTodo']
   moveToBacklog: TodosContextValue['moveToBacklog']
   dismissFromToday: TodosContextValue['dismissFromToday']
+  addNote: NotesContextValue['addNote']
+  updateNote: NotesContextValue['updateNote']
 }
 
 function todoTitle(ctx: ToolContext, id: string): string {
   const todo = ctx.todos.find((t) => t.id === id)
   return todo ? `"${todo.title}"` : id.slice(0, 8)
+}
+
+function noteTitle(ctx: ToolContext, id: string): string {
+  const note = ctx.notes.find((n) => n.id === id)
+  return note ? `"${note.title}"` : id.slice(0, 8)
 }
 
 export interface ToolResult {
@@ -99,6 +108,33 @@ export async function executeToolCall(
         const name = todoTitle(ctx, input.todo_id as string)
         await ctx.dismissFromToday(input.todo_id as string)
         return { success: true, message: `Dismissed: ${name}` }
+      }
+
+      case 'create_note': {
+        const title = input.title as string
+        const content = (input.content as string) ?? ''
+        await ctx.addNote(title, content)
+        return { success: true, message: `Created note "${title}"` }
+      }
+
+      case 'update_note': {
+        const noteId = input.note_id as string
+        const name = noteTitle(ctx, noteId)
+        const updates: Partial<Note> = {}
+        if (input.title !== undefined) updates.title = input.title as string
+        if (input.content !== undefined) updates.content = input.content as string
+        await ctx.updateNote(noteId, updates)
+        return { success: true, message: `Updated ${name}` }
+      }
+
+      case 'read_note': {
+        const noteId = input.note_id as string
+        const note = ctx.notes.find((n) => n.id === noteId)
+        if (!note) return { success: false, message: `Note ${noteId} not found` }
+        return {
+          success: true,
+          message: `Title: ${note.title}\n\n${note.content}`,
+        }
       }
 
       default:
