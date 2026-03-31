@@ -18,6 +18,7 @@ import { WeeklyReviewPage } from '@/pages/WeeklyReview'
 import { HabitsPage } from '@/pages/Habits'
 import { HabitDetailPage } from '@/pages/HabitDetail'
 import { CalendarPage } from '@/pages/Calendar'
+import { AIChatPage } from '@/pages/AIChat'
 
 function AuthenticatedApp() {
   return (
@@ -33,6 +34,7 @@ function AuthenticatedApp() {
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/habits/:habitId" element={<HabitDetailPage />} />
         <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/chat" element={<AIChatPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/review" element={<WeeklyReviewPage />} />
         <Route path="/settings" element={<SettingsPage />} />
