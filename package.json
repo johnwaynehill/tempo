@@ -12,6 +12,7 @@
     "start": "serve dist -s -l tcp://0.0.0.0:$PORT"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.81.0",
     "@milkdown/core": "^7.19.2",
     "@milkdown/ctx": "^7.19.2",
     "@milkdown/kit": "^7.19.2",

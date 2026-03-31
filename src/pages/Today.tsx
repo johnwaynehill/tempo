@@ -1,15 +1,19 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
+import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
+  const navigate = useNavigate()
   const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading: todosLoading } = useTodos()
   const { preferences, updatePreferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
+  const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
 
@@ -106,6 +110,31 @@ export function TodayPage() {
         </>
       )}
 
+      {/* AI Chat Bar */}
+      {AI_ENABLED && (
+        <div className="mt-8">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              const text = aiInput.trim()
+              if (!text) return
+              navigate(`/chat?mode=today&q=${encodeURIComponent(text)}`)
+            }}
+            className="flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 py-2.5 border border-outline-variant/15 focus-within:border-primary/30 transition-colors"
+          >
+            <svg className="w-4 h-4 text-primary/50 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
+              <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+            </svg>
+            <input
+              type="text"
+              value={aiInput}
+              onChange={(e) => setAiInput(e.target.value)}
+              placeholder="Ask Claude to help plan your day..."
+              className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40"
+            />
+          </form>
+        </div>
+      )}
     </div>
   )
 }

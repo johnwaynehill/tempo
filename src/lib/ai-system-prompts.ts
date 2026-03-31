@@ -1,0 +1,181 @@
+import type { Todo, Note, Habit, CalendarEvent } from '@/types'
+import { toISODateString } from '@/lib/dateUtils'
+import { describeRecurrence } from '@/lib/recurrence'
+
+// --- Context serialization ---
+
+function serializeTodo(t: Todo): string {
+  const parts = [`ID:${t.id}`, `"${t.title}"`, t.status]
+  if (t.project) parts.push(`project:${t.project}`)
+  if (t.energy_level) parts.push(`energy:${t.energy_level}`)
+  if (t.size) parts.push(`size:${t.size}`)
+  if (t.impact) parts.push(`impact:${t.impact}`)
+  if (t.due_date) parts.push(`due:${toISODateString(t.due_date)}`)
+  if (t.recurrence) parts.push(`recurs:${describeRecurrence(t.recurrence)}`)
+  return parts.join(' | ')
+}
+
+function serializeTodos(todos: Todo[]): string {
+  const active = todos.filter((t) => t.status !== 'done')
+  if (active.length === 0) return 'No active todos.'
+
+  const grouped: Record<string, Todo[]> = {}
+  for (const t of active) {
+    const key = t.status
+    if (!grouped[key]) grouped[key] = []
+    grouped[key].push(t)
+  }
+
+  const lines: string[] = [`${active.length} active todos:`]
+  for (const [status, items] of Object.entries(grouped)) {
+    lines.push(`\n### ${status} (${items.length})`)
+    for (const t of items) {
+      lines.push(`- ${serializeTodo(t)}`)
+    }
+  }
+  return lines.join('\n')
+}
+
+function serializeNotes(notes: Note[]): string {
+  if (notes.length === 0) return 'No notes.'
+  const lines = [`${notes.length} notes:`]
+  for (const n of notes.slice(0, 30)) {
+    lines.push(`- "${n.title}" (${toISODateString(n.updated_at)})`)
+  }
+  return lines.join('\n')
+}
+
+function serializeHabits(habits: Habit[]): string {
+  const active = habits.filter((h) => !h.archived)
+  if (active.length === 0) return 'No active habits.'
+  const today = toISODateString(new Date())
+  const lines = [`${active.length} active habits:`]
+  for (const h of active) {
+    const done = h.completions[today] ? 'done today' : 'not done today'
+    lines.push(`- "${h.name}" (${h.frequency}, ${done})`)
+  }
+  return lines.join('\n')
+}
+
+function serializeEvents(events: CalendarEvent[]): string {
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const endOfDay = new Date(today)
+  endOfDay.setHours(23, 59, 59, 999)
+
+  const todayEvents = events.filter(
+    (e) => e.start_time >= today && e.start_time <= endOfDay,
+  )
+  if (todayEvents.length === 0) return 'No events today.'
+
+  const lines = [`${todayEvents.length} events today:`]
+  for (const e of todayEvents) {
+    const time = e.all_day
+      ? 'All day'
+      : `${e.start_time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })} - ${e.end_time.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}`
+    lines.push(`- "${e.title}" (${time}${e.location ? `, ${e.location}` : ''})`)
+  }
+  return lines.join('\n')
+}
+
+// --- System prompts ---
+
+const BASE_PERSONA = `You are an ADHD-specialized productivity assistant embedded in Tempo, a personal productivity app. You understand executive dysfunction, dopamine-driven motivation, task paralysis, and hyperfocus. You are warm, direct, and never judgmental. You speak concisely — no walls of text. When suggesting tasks, keep them small and achievable.
+
+You have tools to create, update, complete, pin, defer, and dismiss todos. Use them proactively when you suggest actions — don't just describe what you would do, actually do it. The user's app updates in real-time when you use tools, so they'll see changes immediately.
+
+Today is ${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}.`
+
+export type BreakdownStyle = 'micro-steps' | 'gamify' | 'transition-protocol'
+
+const BREAKDOWN_INSTRUCTIONS: Record<BreakdownStyle, string> = {
+  'micro-steps': `The user's executive function is at zero and they're paralyzed. Break the task down into the most ridiculous, tiny, micro-steps. DO NOT give the whole list at once. Give ONE step at a time — make it so easy they can do it while still sitting on the couch. After each step, wait for them to say they did it before giving the next one. Use the create_todo tool to create each micro-step as a real todo (status: "today_pinned", size: "small", energy: "low").`,
+
+  'gamify': `The user's brain has zero dopamine for this task and is fighting them. Give them 3 chaotic, highly stimulating ways to gamify this task or pair it with an immediate, short-term reward so their brain actually wants to start. Be creative, fun, and a little unhinged. After suggesting, use the create_todo tool to create concrete action items based on the approach they like best.`,
+
+  'transition-protocol': `The user is stuck scrolling and cannot physically transition to doing the task. Act as their empathetic ADHD coach. Give them a 5-minute, low-energy "transition protocol" to gently shift their nervous system out of freeze mode. Do NOT tell them to "just do it." Focus on regulating their nervous system first: body movement, sensory grounding, environment shifting. Use the create_todo tool to create each step of the protocol as a tiny todo (status: "today_pinned", size: "small", energy: "low").`,
+}
+
+export interface BreakdownPromptInput {
+  todo: Todo
+  style: BreakdownStyle
+  currentEnergy?: string
+}
+
+export function buildBreakdownSystemPrompt(input: BreakdownPromptInput): string {
+  const { todo, style, currentEnergy } = input
+
+  return `${BASE_PERSONA}
+
+## Your Role
+You are helping the user get unstuck on a specific task using the "${style}" approach.
+
+## The Task
+${serializeTodo(todo)}
+
+## User Context
+${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not set.'}
+
+## Instructions
+${BREAKDOWN_INSTRUCTIONS[style]}
+
+Important: When you create todos with create_todo, they should inherit the project "${todo.project ?? ''}" from the parent task. Each created todo should be small, concrete, and immediately actionable.`
+}
+
+export function buildBreakdownFirstMessage(todo: Todo, style: BreakdownStyle): string {
+  switch (style) {
+    case 'micro-steps':
+      return `I have to do "${todo.title}" but my executive function is at zero and I'm paralyzed. Break this down into the most ridiculous, tiny, micro-steps. Just give me the first step, and make it so easy I can do it while I'm still sitting on the couch.`
+    case 'gamify':
+      return `I need to complete "${todo.title}". My brain has zero dopamine for this and is fighting me. Give me 3 chaotic, highly stimulating ways to gamify this task or pair it with an immediate, short-term reward so my brain actually wants to start.`
+    case 'transition-protocol':
+      return `I am stuck scrolling and cannot physically transition to doing "${todo.title}". Act as my empathetic ADHD coach. Give me a 5-minute, low-energy transition protocol to gently shift my nervous system out of freeze mode. Do not tell me to "just do it" — focus on regulating my nervous system first.`
+  }
+}
+
+export interface TodayCurationInput {
+  todos: Todo[]
+  notes: Note[]
+  habits: Habit[]
+  events: CalendarEvent[]
+  currentEnergy?: string
+  todayTodoIds: string[]
+}
+
+export function buildTodayCurationSystemPrompt(input: TodayCurationInput): string {
+  const { todos, notes, habits, events, currentEnergy, todayTodoIds } = input
+
+  const todayTodos = todayTodoIds
+    .map((id) => todos.find((t) => t.id === id))
+    .filter((t): t is Todo => t !== undefined)
+
+  return `${BASE_PERSONA}
+
+## Your Role
+You are helping the user plan and manage their day. You have full context of their todos, habits, and calendar. Use the tools to make changes directly — create todos, pin items to today, defer things, etc.
+
+## Current Today List (${todayTodos.length} items)
+${todayTodos.length > 0 ? todayTodos.map((t) => `- ${serializeTodo(t)}`).join('\n') : 'Empty — no todos pinned for today.'}
+
+## All Todos
+${serializeTodos(todos)}
+
+## Calendar
+${serializeEvents(events)}
+
+## Habits
+${serializeHabits(habits)}
+
+## Notes
+${serializeNotes(notes)}
+
+## User Context
+${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not set.'}
+
+## Guidelines
+- When the user asks you to plan their day, select 3-5 tasks that match their energy and create a balanced mix.
+- Pin tasks to today with pin_to_today. Create new tasks with create_todo if they mention something new.
+- Be opinionated but flexible. If they push back, adjust immediately.
+- Keep responses short and actionable. This is a productivity tool, not a therapy session.
+- If you notice overdue tasks or neglected projects, gently flag them.`
+}

@@ -34,6 +34,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [showNotePicker, setShowNotePicker] = useState(false)
   const [showReminderPicker, setShowReminderPicker] = useState(false)
   const [showRecurrencePicker, setShowRecurrencePicker] = useState(false)
+  const [showBreakdownPicker, setShowBreakdownPicker] = useState(false)
   const [visible, setVisible] = useState(false)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
@@ -312,6 +313,53 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                     onChange={(rule) => updateTodo(todo.id, { recurrence: rule as any })}
                     onClose={() => setShowRecurrencePicker(false)}
                   />
+                )}
+              </div>
+
+              {/* AI Breakdown */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer"
+                >
+                  <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+                  </svg>
+                  Unstick Me
+                </button>
+                {showBreakdownPicker && (
+                  <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[220px]">
+                    <button
+                      onClick={() => {
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps`)
+                        handleClose()
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    >
+                      <span className="font-medium">Micro-steps</span>
+                      <p className="text-xs text-on-surface-variant mt-0.5">Break it into tiny, easy steps</p>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=gamify`)
+                        handleClose()
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    >
+                      <span className="font-medium">Gamify it</span>
+                      <p className="text-xs text-on-surface-variant mt-0.5">Make it fun and stimulating</p>
+                    </button>
+                    <button
+                      onClick={() => {
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=transition-protocol`)
+                        handleClose()
+                      }}
+                      className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    >
+                      <span className="font-medium">Transition protocol</span>
+                      <p className="text-xs text-on-surface-variant mt-0.5">Gently shift out of freeze mode</p>
+                    </button>
+                  </div>
                 )}
               </div>
 
