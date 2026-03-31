@@ -66,10 +66,25 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [x] Add recuring personal meetings to understand rythmn
 
 ## Claude AI
-- [ ] Add Claude AI so that I can ask AI questions about my Todos, Notes, and Habits (likely on the Insights page). 
-- [ ] Use Claude to update the daily ToDos in Today.
-- [ ] Add ability to breakdown ToDos in an ADHD friendly way.
-  - Example prompts:
-  - 1. "I have to do [ToDo] but my executive function is at zero and I'm paralyze. Break this down into the most ridiculous, tiny, micro-steps. DO NOT give me the whole list. Just give me the first step, and make it so easy I can do it while I'm still sitting on the couch."
-  - 2. "I need to complete [ToDo]. My brain has zero dopamine for this and is fighting me. Give me 3 chaotic, highly stimulating ways to gamify this task or pair it with an immediate, short-term reward so my brain actually wants to start."
-  - 3. "I am stuck scrolling and cannot physically transition to doing [ToDo]. Act as my empathetic ADHD coach. Give me a 5-minute, low-energy 'transition protocol' to gently shift my nervous system out of freeze mode. Do not tell me to 'just do it' - focus on regulating my nervous system first."
+- [x] Add Claude AI so that I can ask AI questions about my Todos, Notes, and Habits
+  - [x] Chat bar on Today page for day planning
+  - [x] Claude has full context of all todos, notes (with previews), habits, and calendar events
+- [x] Use Claude to update the daily ToDos in Today.
+  - [x] Claude can create, pin, defer, dismiss, and complete todos via tool_use
+  - [x] Hard 5-item cap on Today list enforced in system prompt
+- [x] Add ability to breakdown ToDos in an ADHD friendly way.
+  - [x] "Unstick Me" button in Todo Detail Drawer with 3 modes:
+  - [x] 1. **Micro-steps** — "Break this down into the most ridiculous, tiny, micro-steps. Just give me the first step."
+  - [x] 2. **Gamify** — "Give me 3 chaotic, highly stimulating ways to gamify this task."
+  - [x] 3. **Transition protocol** — "Give me a 5-minute, low-energy transition protocol to shift out of freeze mode."
+- [x] Claude can create, update, and read Notes (summaries, reflections, plans)
+- [ ] Chat history persistence (currently ephemeral per session)
+- [ ] Proactive daily suggestions when opening Today page
+
+## Desktop App
+- [ ] Clean up left navigation Rail
+- [ ] Do UX pass with appropriate tools
+- [ ] Remove Projects from left nav rail
+- [ ] Change Backlog Project filter to something more user friendly
+  - There is already a set of filter pills, we shouldn't have two
+  - Backlog should default to show All Project ToDos; filter is an optional view
