@@ -15,17 +15,6 @@ import {
 } from '@/lib/ai-system-prompts'
 import type { ToolContext } from '@/lib/ai-tool-executor'
 
-// Tool call display name mapping
-const TOOL_LABELS: Record<string, string> = {
-  create_todo: 'Created',
-  update_todo: 'Updated',
-  complete_todo: 'Completed',
-  pin_to_today: 'Pinned to Today',
-  defer_todo: 'Deferred',
-  move_to_backlog: 'Moved to Backlog',
-  dismiss_from_today: 'Dismissed',
-}
-
 export function AIChatPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -61,6 +50,7 @@ export function AIChatPage() {
   // Build the tool context
   const toolContext: ToolContext = useMemo(
     () => ({
+      todos,
       addTodo,
       updateTodo,
       completeTodo,
@@ -69,7 +59,7 @@ export function AIChatPage() {
       moveToBacklog,
       dismissFromToday,
     }),
-    [addTodo, updateTodo, completeTodo, pinToToday, deferTodo, moveToBacklog, dismissFromToday],
+    [todos, addTodo, updateTodo, completeTodo, pinToToday, deferTodo, moveToBacklog, dismissFromToday],
   )
 
   // Find the target todo for breakdown mode
@@ -280,11 +270,9 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 // --- Tool Call Chip ---
 
 function ToolCallChip({ toolCall }: { toolCall: ToolCallDisplay }) {
-  const label = TOOL_LABELS[toolCall.toolName] ?? toolCall.toolName
-  const title =
-    (toolCall.input.title as string) ??
-    (toolCall.input.todo_id as string)?.slice(0, 8) ??
-    ''
+  // The result message from the executor already contains the human-readable info
+  // e.g. 'Pinned "Do taxes!" to Today' or 'Created todo "Buy milk"'
+  const displayText = toolCall.result
 
   return (
     <span
@@ -303,7 +291,7 @@ function ToolCallChip({ toolCall }: { toolCall: ToolCallDisplay }) {
           <path d="M3 3l6 6M9 3l-6 6" />
         </svg>
       )}
-      {label}{title ? `: ${title}` : ''}
+      {displayText}
     </span>
   )
 }

@@ -1,8 +1,9 @@
 import type { AddTodoInput, TodosContextValue } from '@/context/TodosContext'
-import type { EnergyLevel, TodoSize } from '@/types'
+import type { EnergyLevel, Todo, TodoSize } from '@/types'
 
 // The subset of context methods the AI tool executor needs
 export interface ToolContext {
+  todos: Todo[]
   addTodo: TodosContextValue['addTodo']
   updateTodo: TodosContextValue['updateTodo']
   completeTodo: TodosContextValue['completeTodo']
@@ -10,6 +11,11 @@ export interface ToolContext {
   deferTodo: TodosContextValue['deferTodo']
   moveToBacklog: TodosContextValue['moveToBacklog']
   dismissFromToday: TodosContextValue['dismissFromToday']
+}
+
+function todoTitle(ctx: ToolContext, id: string): string {
+  const todo = ctx.todos.find((t) => t.id === id)
+  return todo ? `"${todo.title}"` : id.slice(0, 8)
 }
 
 export interface ToolResult {
@@ -45,6 +51,7 @@ export async function executeToolCall(
 
       case 'update_todo': {
         const todoId = input.todo_id as string
+        const name = todoTitle(ctx, todoId)
         const updates: Record<string, unknown> = {}
         if (input.title !== undefined) updates.title = input.title
         if (input.project !== undefined) updates.project = input.project
@@ -57,41 +64,46 @@ export async function executeToolCall(
         await ctx.updateTodo(todoId, updates)
         return {
           success: true,
-          message: `Updated todo ${todoId}: ${Object.keys(updates).join(', ')}`,
+          message: `Updated ${name}: ${Object.keys(updates).join(', ')}`,
         }
       }
 
       case 'complete_todo': {
+        const name = todoTitle(ctx, input.todo_id as string)
         await ctx.completeTodo(input.todo_id as string)
-        return { success: true, message: `Completed todo ${input.todo_id}` }
+        return { success: true, message: `Completed ${name}` }
       }
 
       case 'pin_to_today': {
+        const name = todoTitle(ctx, input.todo_id as string)
         await ctx.pinToToday(input.todo_id as string)
-        return { success: true, message: `Pinned todo ${input.todo_id} to Today` }
+        return { success: true, message: `Pinned ${name} to Today` }
       }
 
       case 'defer_todo': {
+        const name = todoTitle(ctx, input.todo_id as string)
         const until = input.until
           ? new Date((input.until as string) + 'T09:00:00')
           : undefined
         await ctx.deferTodo(input.todo_id as string, until)
         return {
           success: true,
-          message: `Deferred todo ${input.todo_id}${until ? ` until ${input.until}` : ' until tomorrow'}`,
+          message: `Deferred ${name}${until ? ` until ${input.until}` : ' until tomorrow'}`,
         }
       }
 
       case 'move_to_backlog': {
+        const name = todoTitle(ctx, input.todo_id as string)
         await ctx.moveToBacklog(input.todo_id as string)
-        return { success: true, message: `Moved todo ${input.todo_id} to Backlog` }
+        return { success: true, message: `Moved ${name} to Backlog` }
       }
 
       case 'dismiss_from_today': {
+        const name = todoTitle(ctx, input.todo_id as string)
         await ctx.dismissFromToday(input.todo_id as string)
         return {
           success: true,
-          message: `Dismissed todo ${input.todo_id} from Today`,
+          message: `Dismissed ${name} from Today`,
         }
       }
 
