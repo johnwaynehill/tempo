@@ -9,7 +9,7 @@ if (!apiKey) {
 export const anthropic = new Anthropic({
   apiKey,
   // Proxy through Vite dev server to avoid CORS issues
-  baseURL: '/api/anthropic',
+  baseURL: `${window.location.origin}/api/anthropic`,
   dangerouslyAllowBrowser: true,
 })
 
