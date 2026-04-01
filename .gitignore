@@ -28,6 +28,9 @@ dist-ssr
 *.sln
 *.sw?
 
+# Firebase Functions build output
+functions/lib
+
 # Claude Code
 .claude/
 
