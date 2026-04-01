@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
-import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
 import { useProjects } from '@/hooks/useProjects'
@@ -8,14 +7,10 @@ import { scoreTodo } from '@/lib/scoring'
 import { usePreferences } from '@/hooks/usePreferences'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
+import { CalendarView } from '@/components/backlog/CalendarView'
 
 type SortMode = 'score' | 'due' | 'recent'
-
-const SORT_LABELS: Record<SortMode, string> = {
-  score: 'Priority',
-  due: 'Due date',
-  recent: 'Recent',
-}
+type ViewMode = 'list' | 'calendar'
 
 const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -32,7 +27,6 @@ function sortTodos(todos: Todo[], mode: SortMode, energy?: EnergyLevel): Todo[] 
       break
     case 'due':
       sorted.sort((a, b) => {
-        // Items with due dates first, then by date ascending
         if (!a.due_date && !b.due_date) return 0
         if (!a.due_date) return 1
         if (!b.due_date) return -1
@@ -65,7 +59,6 @@ function ProjectGroup({
   return (
     <div className="mb-2">
       <div className="flex items-center gap-2 py-2.5 group">
-        {/* Chevron toggle */}
         <button
           onClick={() => setOpen(!open)}
           className="cursor-pointer p-0.5"
@@ -82,7 +75,6 @@ function ProjectGroup({
           </svg>
         </button>
 
-        {/* Project name — links to project page (except Ungrouped) */}
         {isUngrouped ? (
           <span className="font-display text-sm font-semibold text-on-surface">
             {name}
@@ -121,12 +113,19 @@ export function BacklogPage() {
   const { backlog, completeTodo, deferTodo, loading } = useTodos()
   const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
+  const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [projectFilter, setProjectFilter] = useState<string | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
   const [energyOpen, setEnergyOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [projectOpen, setProjectOpen] = useState(false)
+
+  const closeAllDropdowns = () => {
+    setEnergyOpen(false)
+    setSortOpen(false)
+    setProjectOpen(false)
+  }
 
   const PROJECT_OPTIONS = projects.map((name) => ({
     value: name,
@@ -155,7 +154,6 @@ export function BacklogPage() {
       map.set(key, list)
     }
 
-    // Named projects first (alphabetical), ungrouped last
     const entries = [...map.entries()].sort((a, b) => {
       if (a[0] === 'Ungrouped') return 1
       if (b[0] === 'Ungrouped') return -1
@@ -167,19 +165,58 @@ export function BacklogPage() {
 
   const hasMultipleGroups = groups.length > 1
 
+  // Count active filters for badge
+  const activeFilterCount = (energyFilter ? 1 : 0) + (projectFilter ? 1 : 0)
+
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
           Backlog
         </h1>
         <p className="text-on-surface-variant text-sm">
-          {backlog.length} total &middot; {filtered.length} showing
+          {backlog.length} total{viewMode === 'list' && <> &middot; {filtered.length} showing</>}
         </p>
       </div>
 
-      {/* Mobile filter menus */}
-      <div className="sm:hidden flex gap-2 mb-6 flex-wrap">
+      {/* Unified toolbar */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        {/* View toggle — segmented control */}
+        <div className="flex rounded-lg bg-surface-container-high p-0.5">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer ${
+              viewMode === 'list'
+                ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M2 3h10M2 7h10M2 11h10" />
+            </svg>
+            List
+          </button>
+          <button
+            onClick={() => setViewMode('calendar')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer ${
+              viewMode === 'calendar'
+                ? 'bg-surface-container-lowest text-on-surface shadow-sm'
+                : 'text-on-surface-variant hover:text-on-surface'
+            }`}
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="1" y="2" width="12" height="11" rx="1.5" />
+              <path d="M1 5.5h12" />
+              <path d="M4.5 1v2M9.5 1v2" />
+            </svg>
+            Cal
+          </button>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1 min-w-0" />
+
+        {/* Filter dropdowns */}
         {projects.length > 0 && (
           <FilterDropdown
             label="Project"
@@ -192,6 +229,7 @@ export function BacklogPage() {
             onChange={(project) => setProjectFilter(project)}
           />
         )}
+
         <FilterDropdown
           label="Energy"
           options={ENERGY_OPTIONS}
@@ -202,85 +240,46 @@ export function BacklogPage() {
           onClose={() => setEnergyOpen(false)}
           onChange={(level) => setEnergyFilter(level)}
         />
-        <FilterDropdown
-          label="Sort"
-          options={SORT_OPTIONS}
-          value={sortMode !== 'score' ? sortMode : undefined}
-          open={sortOpen}
-          onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false); setProjectOpen(false) }}
-          onClose={() => setSortOpen(false)}
-          onChange={(mode) => setSortMode(mode ?? 'score')}
-        />
-      </div>
 
-      {/* Desktop: always-visible controls */}
-      <div className="hidden sm:flex sm:flex-col sm:gap-4 mb-8">
-        {/* Project filter pills */}
-        {projects.length > 0 && (
-          <div className="flex gap-1.5 flex-wrap">
-            <button
-              onClick={() => setProjectFilter(undefined)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                !projectFilter
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              All
-            </button>
-            {projects.map((name) => (
-              <button
-                key={name}
-                onClick={() => setProjectFilter(projectFilter === name ? undefined : name)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                  projectFilter === name
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {name}
-                {(projectCounts[name] ?? 0) > 0 && (
-                  <span className="ml-1 opacity-60">{projectCounts[name]}</span>
-                )}
-              </button>
-            ))}
-          </div>
+        {viewMode === 'list' && (
+          <FilterDropdown
+            label="Sort"
+            options={SORT_OPTIONS}
+            value={sortMode !== 'score' ? sortMode : undefined}
+            open={sortOpen}
+            onToggle={() => { setSortOpen(!sortOpen); setEnergyOpen(false); setProjectOpen(false) }}
+            onClose={() => setSortOpen(false)}
+            onChange={(mode) => setSortMode(mode ?? 'score')}
+          />
         )}
 
-        {/* Energy + Sort row */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <EnergySelector
-              value={energyFilter}
-              onChange={(level) =>
-                setEnergyFilter(energyFilter === level ? undefined : level)
-              }
-            />
-          </div>
-          <div className="flex gap-1.5 flex-shrink-0">
-            {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
-              <button
-                key={mode}
-                onClick={() => setSortMode(mode)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                  sortMode === mode
-                    ? 'bg-primary text-on-primary'
-                    : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {SORT_LABELS[mode]}
-              </button>
-            ))}
-          </div>
-        </div>
+        {/* Active filter indicator */}
+        {activeFilterCount > 0 && (
+          <button
+            onClick={() => { setEnergyFilter(undefined); setProjectFilter(undefined); closeAllDropdowns() }}
+            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+            title="Clear all filters"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 3l6 6M9 3l-6 6" />
+            </svg>
+            {activeFilterCount}
+          </button>
+        )}
       </div>
 
+      {/* Content */}
       {loading ? (
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
+      ) : viewMode === 'calendar' ? (
+        <CalendarView
+          todos={filtered}
+          onCompleteTodo={completeTodo}
+          onDeferTodo={deferTodo}
+        />
       ) : (
         <>
           {hasMultipleGroups ? (
-            // Grouped view — collapsible project sections
             groups.map(([name, todos]) => (
               <ProjectGroup
                 key={name}
@@ -292,7 +291,6 @@ export function BacklogPage() {
               />
             ))
           ) : (
-            // Flat view — only one group or no projects set
             <div className="space-y-0">
               {sorted.map((todo) => (
                 <TodoItem
@@ -308,7 +306,7 @@ export function BacklogPage() {
           {filtered.length === 0 && (
             <div className="text-center py-20">
               <p className="text-on-surface-variant text-sm">
-                {energyFilter ? 'No tasks at this energy level.' : 'Backlog is empty.'}
+                {activeFilterCount > 0 ? 'No tasks match these filters.' : 'Backlog is empty.'}
               </p>
             </div>
           )}

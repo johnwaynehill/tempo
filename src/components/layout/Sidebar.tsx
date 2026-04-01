@@ -14,7 +14,6 @@ const captureNav = [
 
 const trackNav = [
   { to: '/habits', label: 'Habits', icon: '↺' },
-  { to: '/calendar', label: 'Calendar', icon: '▦' },
 ] as const
 
 const reflectNav = [
