@@ -17,7 +17,6 @@ import { InsightsPage } from '@/pages/Insights'
 import { WeeklyReviewPage } from '@/pages/WeeklyReview'
 import { HabitsPage } from '@/pages/Habits'
 import { HabitDetailPage } from '@/pages/HabitDetail'
-import { CalendarPage } from '@/pages/Calendar'
 import { AIChatPage } from '@/pages/AIChat'
 
 function AuthenticatedApp() {
@@ -33,7 +32,7 @@ function AuthenticatedApp() {
         <Route path="/braindump" element={<BrainDumpPage />} />
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/habits/:habitId" element={<HabitDetailPage />} />
-        <Route path="/calendar" element={<CalendarPage />} />
+        <Route path="/calendar" element={<Navigate to="/backlog" replace />} />
         <Route path="/chat" element={<AIChatPage />} />
         <Route path="/insights" element={<InsightsPage />} />
         <Route path="/review" element={<WeeklyReviewPage />} />
