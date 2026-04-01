@@ -182,10 +182,10 @@ export function BacklogPage() {
       {/* Unified toolbar */}
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         {/* View toggle — segmented control */}
-        <div className="flex rounded-lg bg-surface-container-high p-0.5">
+        <div className="flex rounded-xl bg-surface-container-high p-1">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
               viewMode === 'list'
                 ? 'bg-surface-container-lowest text-on-surface shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -198,7 +198,7 @@ export function BacklogPage() {
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-colors duration-200 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
               viewMode === 'calendar'
                 ? 'bg-surface-container-lowest text-on-surface shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
