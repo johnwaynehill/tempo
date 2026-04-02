@@ -43,9 +43,12 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
     updateTodo(todo.id, { [field]: value })
   }
 
-  // Animate in
+  // Animate in and focus title
   useEffect(() => {
-    requestAnimationFrame(() => setVisible(true))
+    requestAnimationFrame(() => {
+      setVisible(true)
+      titleRef.current?.focus()
+    })
   }, [])
 
   // Close on Escape
@@ -121,17 +124,6 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               <p className="text-on-surface-variant text-xs mt-1">{todo.project}</p>
             )}
           </div>
-
-          {/* Primary action: Complete */}
-          <button
-            onClick={handleComplete}
-            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M2.5 6L5 8.5L9.5 3.5" />
-            </svg>
-            Complete
-          </button>
 
           {/* Quick actions row */}
           <div className="flex items-center gap-2 flex-wrap">
@@ -384,14 +376,26 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                 </button>
               )}
 
-              {/* Delete — pushed to the right */}
-              <button
-                onClick={() => handleAction(() => removeTodo(todo.id))}
-                className="px-3 py-1.5 rounded-lg text-error/70 hover:text-error hover:bg-error/5 text-xs font-medium transition-colors cursor-pointer ml-auto"
-              >
-                Delete
-              </button>
             </div>
+          </div>
+
+          {/* Bottom actions: Delete + Complete */}
+          <div className="border-t border-outline-variant/15 pt-4 flex items-center gap-3">
+            <button
+              onClick={() => handleAction(() => removeTodo(todo.id))}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-error/70 hover:text-error hover:bg-error/5 text-sm font-medium transition-colors cursor-pointer"
+            >
+              Delete
+            </button>
+            <button
+              onClick={handleComplete}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M2.5 6L5 8.5L9.5 3.5" />
+              </svg>
+              Complete
+            </button>
           </div>
         </div>
       </div>
