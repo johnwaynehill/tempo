@@ -1,5 +1,4 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { useTodos } from '@/hooks/useTodos'
 import { useProjects } from '@/hooks/useProjects'
@@ -40,71 +39,37 @@ function sortTodos(todos: Todo[], mode: SortMode, energy?: EnergyLevel): Todo[] 
   return sorted
 }
 
-function ProjectGroup({
+function ProjectSection({
   name,
   todos,
-  defaultOpen,
   onComplete,
   onDefer,
 }: {
   name: string
   todos: Todo[]
-  defaultOpen: boolean
   onComplete: (id: string) => void
   onDefer: (id: string, until?: Date) => void
 }) {
-  const [open, setOpen] = useState(defaultOpen)
-  const isUngrouped = name === 'Ungrouped'
-
   return (
-    <div className="mb-2">
-      <div className="flex items-center gap-2 py-2.5 group">
-        <button
-          onClick={() => setOpen(!open)}
-          className="cursor-pointer p-0.5"
-          aria-label={open ? 'Collapse' : 'Expand'}
-        >
-          <svg
-            className={`w-3.5 h-3.5 text-on-surface-variant transition-transform duration-200 ${
-              open ? 'rotate-90' : ''
-            }`}
-            viewBox="0 0 12 12"
-            fill="currentColor"
-          >
-            <path d="M4 2l5 4-5 4V2z" />
-          </svg>
-        </button>
-
-        {isUngrouped ? (
-          <span className="font-display text-sm font-semibold text-on-surface">
-            {name}
-          </span>
-        ) : (
-          <Link
-            to={`/projects/${encodeURIComponent(name)}`}
-            className="font-display text-sm font-semibold text-on-surface hover:text-primary transition-colors"
-          >
-            {name}
-          </Link>
-        )}
-
-        <span className="text-xs text-on-surface-variant ml-1">
+    <div className="mb-6">
+      <div className="flex items-center gap-2 mb-1 px-1">
+        <span className="font-display text-xs font-semibold text-on-surface-variant uppercase tracking-wider">
+          {name}
+        </span>
+        <span className="text-xs text-on-surface-variant/50">
           {todos.length}
         </span>
       </div>
-
-      {open && (
-        <div className="space-y-0 ml-1">
-          {todos.map((todo) => (
-            <TodoItem
-              key={todo.id}
-              todo={todo}
-              onComplete={onComplete}
-              onDefer={onDefer}
-            />
-          ))}
-        </div>
-      )}
+      <div className="space-y-0">
+        {todos.map((todo) => (
+          <TodoItem
+            key={todo.id}
+            todo={todo}
+            onComplete={onComplete}
+            onDefer={onDefer}
+          />
+        ))}
+      </div>
     </div>
   )
 }
@@ -281,11 +246,10 @@ export function BacklogPage() {
         <>
           {hasMultipleGroups ? (
             groups.map(([name, todos]) => (
-              <ProjectGroup
+              <ProjectSection
                 key={name}
                 name={name}
                 todos={todos}
-                defaultOpen={groups.length <= 3}
                 onComplete={completeTodo}
                 onDefer={deferTodo}
               />
