@@ -17,6 +17,7 @@ const trackNav = [
 ] as const
 
 const reflectNav = [
+  { to: '/completed', label: 'Completed', icon: '✓' },
   { to: '/insights', label: 'Insights', icon: '◎' },
   { to: '/review', label: 'Review', icon: '↻' },
 ] as const

@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
+import { useNotes } from '@/hooks/useNotes'
+import { CaptureModal } from '@/components/ui/CaptureModal'
 
-const menuItems = [
+const navItems = [
   {
     to: '/habits',
     label: 'Habits',
@@ -28,7 +30,9 @@ const menuItems = [
 export function MobileMenu() {
   const { user } = useAuth()
   const navigate = useNavigate()
+  const { addNote } = useNotes()
   const [open, setOpen] = useState(false)
+  const [showCapture, setShowCapture] = useState(false)
 
   return (
     <div className="relative md:hidden">
@@ -48,7 +52,40 @@ export function MobileMenu() {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div className="absolute right-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[200px]">
-            {menuItems.map(({ to, label, icon }) => (
+            {/* Create actions */}
+            <button
+              onClick={() => { setOpen(false); setShowCapture(true) }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            >
+              <span className="text-on-surface-variant">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="12" y1="5" x2="12" y2="19" />
+                  <line x1="5" y1="12" x2="19" y2="12" />
+                </svg>
+              </span>
+              New Todo
+            </button>
+            <button
+              onClick={async () => {
+                setOpen(false)
+                const id = await addNote('Untitled')
+                navigate(`/notes/${id}`)
+              }}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            >
+              <span className="text-on-surface-variant">
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </span>
+              New Note
+            </button>
+
+            <div className="border-t border-outline-variant/15 my-1.5" />
+
+            {/* Navigation */}
+            {navItems.map(({ to, label, icon }) => (
               <button
                 key={to}
                 onClick={() => { navigate(to); setOpen(false) }}
@@ -76,6 +113,8 @@ export function MobileMenu() {
           </div>
         </>
       )}
+
+      {showCapture && <CaptureModal onClose={() => setShowCapture(false)} />}
     </div>
   )
 }

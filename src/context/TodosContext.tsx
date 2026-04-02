@@ -52,6 +52,7 @@ export interface TodosContextValue {
   pinToToday: (id: string) => Promise<void>
   moveToBacklog: (id: string) => Promise<void>
   removeTodo: (id: string) => Promise<void>
+  uncompleteTodo: (id: string) => Promise<void>
 }
 
 // --- Context ---
@@ -205,6 +206,13 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(todosRef(), id))
   }
 
+  const uncompleteTodo = async (id: string) => {
+    await updateTodo(id, {
+      status: 'backlog',
+      completed_at: undefined,
+    })
+  }
+
   // --- Filtered views (memoized) ---
 
   const inbox = useMemo(() => todos.filter((t) => t.status === 'inbox'), [todos])
@@ -232,6 +240,7 @@ export function TodosProvider({ children }: { children: ReactNode }) {
     pinToToday,
     moveToBacklog,
     removeTodo,
+    uncompleteTodo,
   }
 
   return (

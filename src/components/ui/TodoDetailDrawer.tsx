@@ -120,17 +120,19 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             )}
           </div>
 
+          {/* Primary action: Complete */}
+          <button
+            onClick={handleComplete}
+            className="w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M2.5 6L5 8.5L9.5 3.5" />
+            </svg>
+            Complete
+          </button>
+
           {/* Quick actions row */}
           <div className="flex items-center gap-2 flex-wrap">
-            <button
-              onClick={handleComplete}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M2.5 6L5 8.5L9.5 3.5" />
-              </svg>
-              Complete
-            </button>
             {todo.status !== 'today_pinned' && (
               <button
                 onClick={() => handleAction(() => pinToToday(todo.id))}

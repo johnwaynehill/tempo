@@ -1,12 +1,12 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
-import { FAB } from './FAB'
 import { ShortcutsSheet } from '@/components/ui/ShortcutsSheet'
 import { useKeyboardShortcuts, type Shortcut } from '@/hooks/useKeyboardShortcuts'
 import { useNotes } from '@/hooks/useNotes'
 import { useReminderScheduler } from '@/hooks/useReminderScheduler'
+import { CaptureModal } from '@/components/ui/CaptureModal'
 
 export function AppShell() {
   // Background: check for due reminders and fire notifications
@@ -15,9 +15,6 @@ export function AppShell() {
   const { addNote } = useNotes()
   const [captureOpen, setCaptureOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
-
-  const openCapture = useCallback(() => setCaptureOpen(true), [])
-  const closeCapture = useCallback(() => setCaptureOpen(false), [])
 
   const shortcuts: Shortcut[] = useMemo(
     () => [
@@ -32,7 +29,7 @@ export function AppShell() {
       { label: '8', description: 'Go to Review',      key: '8', action: () => navigate('/review') },
       { label: ',', description: 'Go to Settings',    key: ',', action: () => navigate('/settings') },
       // Actions
-      { label: 'C', description: 'Quick capture',     key: 'c', action: openCapture },
+      { label: 'C', description: 'Quick capture',     key: 'c', action: () => setCaptureOpen(true) },
       {
         label: 'N',
         description: 'New note',
@@ -45,7 +42,7 @@ export function AppShell() {
       // Help
       { label: '?', description: 'Keyboard shortcuts', key: '?', shift: true, action: () => setShortcutsOpen((v) => !v) },
     ],
-    [navigate, openCapture, addNote],
+    [navigate, addNote],
   )
 
   useKeyboardShortcuts(shortcuts)
@@ -60,8 +57,9 @@ export function AppShell() {
         </div>
       </main>
 
-      <FAB open={captureOpen} onOpen={openCapture} onClose={closeCapture} />
       <BottomNav />
+
+      {captureOpen && <CaptureModal onClose={() => setCaptureOpen(false)} />}
 
       {shortcutsOpen && (
         <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />
