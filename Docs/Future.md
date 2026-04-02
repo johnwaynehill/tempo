@@ -16,9 +16,12 @@
 - [x] Make "All done" more celebratory
 - [x] Add dropdown to Project section of ToDo detail panel
 - [x] Add typeahead to Project section of ToDo detail panel
+- [ ] Need a way to see Completed ToDos; defaults to ToDos completed today, but should allow me to filter to see This Week, This Month, etc.
+  - [ ] Ability to mark a completed ToDo as not completed
 
-**Today View**
+## Today View
 - [x] Fixed daily set of 5 todos — list shrinks as items are completed, no backfill
+- [ ] Ability to drag-and-drop ToDos for sorting
 
 ## Backlog Updates
 - [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
@@ -78,13 +81,34 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
   - [x] 2. **Gamify** — "Give me 3 chaotic, highly stimulating ways to gamify this task."
   - [x] 3. **Transition protocol** — "Give me a 5-minute, low-energy transition protocol to shift out of freeze mode."
 - [x] Claude can create, update, and read Notes (summaries, reflections, plans)
+- [x] Firebase Cloud Function proxy for production (API key server-side, Firebase auth verified)
+- [x] 5-item Today cap enforced in both curation and breakdown modes
 - [ ] Chat history persistence (currently ephemeral per session)
 - [ ] Proactive daily suggestions when opening Today page
+- [ ] Remove Plus FAB from Claude pages.
 
 ## Desktop App
-- [ ] Clean up left navigation Rail
+- [x] Clean up left navigation Rail
+  - [x] Removed collapsible Projects and Reflect sections
+  - [x] Organized into 4 visual nav groups: Main, Capture, Track, Reflect
+  - [x] Slimmer sidebar (w-52)
+- [x] Remove Projects from left nav rail
+- [x] Change Backlog Project filter to something more user friendly
+  - [x] Unified toolbar: `[List | Cal]  [Project ▾]  [Energy ▾]  [Sort ▾]`
+  - [x] Same compact dropdown approach on mobile and desktop
+  - [x] Backlog defaults to show All Project ToDos; filter is optional
+- [x] Merged Calendar into Backlog as a view toggle (List / Calendar)
+- [x] Replaced collapsible project groups with flat section headers
 - [ ] Do UX pass with appropriate tools
-- [ ] Remove Projects from left nav rail
-- [ ] Change Backlog Project filter to something more user friendly
-  - There is already a set of filter pills, we shouldn't have two
-  - Backlog should default to show All Project ToDos; filter is an optional view
+
+## Bugs
+- [ ] The "new version available" toast's Update Button does not do anything in Prod
+- [ ] Complete button for a ToDo is in the wrong place. It should be its own, primary CTA on the detail view.
+
+## General Updates
+- [ ] Remove the floating FAB button and coresponding UI
+- [ ] Make Hamburger Menu universal for all views
+  - [ ] Add New ToDo
+  - [ ] Add New Note
+- [ ] Create new icon for Claude/AI
+  - [ ] Add to the bottom Nav Bar for iOS; (?, unsure)
