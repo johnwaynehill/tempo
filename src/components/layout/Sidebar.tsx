@@ -80,7 +80,7 @@ export function Sidebar() {
             }`
           }
         >
-          <span className="text-base w-5 text-center">⚙</span>
+          <span className="text-lg w-5 text-center">⚙</span>
           Settings
         </NavLink>
 
