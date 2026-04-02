@@ -19,6 +19,7 @@ const ANTHROPIC_BASE = 'https://api.anthropic.com'
 export const anthropicProxy = onRequest(
   {
     cors: true,
+    invoker: 'public',
     secrets: [anthropicApiKey],
     timeoutSeconds: 300,
     memory: '256MiB',
