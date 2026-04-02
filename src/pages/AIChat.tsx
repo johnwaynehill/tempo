@@ -75,6 +75,7 @@ export function AIChatPage() {
         todo: targetTodo,
         style,
         currentEnergy: preferences.current_energy,
+        todayCount: todayTodos.length,
       })
     }
     return buildTodayCurationSystemPrompt({

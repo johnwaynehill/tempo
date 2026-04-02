@@ -112,8 +112,8 @@ export interface BreakdownPromptInput {
   currentEnergy?: string
 }
 
-export function buildBreakdownSystemPrompt(input: BreakdownPromptInput): string {
-  const { todo, style, currentEnergy } = input
+export function buildBreakdownSystemPrompt(input: BreakdownPromptInput & { todayCount: number }): string {
+  const { todo, style, currentEnergy, todayCount } = input
 
   return `${BASE_PERSONA}
 
@@ -125,9 +125,13 @@ ${serializeTodo(todo)}
 
 ## User Context
 ${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not set.'}
+Currently ${todayCount} items pinned to Today.
 
 ## Instructions
 ${BREAKDOWN_INSTRUCTIONS[style]}
+
+## HARD LIMIT: Maximum 5 items in Today
+The Today list currently has ${todayCount} items. The absolute maximum is 5 — this is an ADHD app and more than 5 causes paralysis. You can add at most ${Math.max(0, 5 - todayCount)} more items with status "today_pinned". If Today is already full (5 items), create new todos with status "backlog" instead, or suggest the user dismiss something from Today first. NEVER exceed 5 total items in Today.
 
 Important: When you create todos with create_todo, they should inherit the project "${todo.project ?? ''}" from the parent task. Each created todo should be small, concrete, and immediately actionable.`
 }
