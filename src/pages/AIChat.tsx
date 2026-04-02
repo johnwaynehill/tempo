@@ -130,16 +130,7 @@ export function AIChatPage() {
     }
   }
 
-  // Mode header
-  const modeTitle = mode === 'breakdown'
-    ? `Breaking down: ${targetTodo?.title ?? 'Task'}`
-    : 'Plan Your Day'
-
-  const modeSubtitle = mode === 'breakdown'
-    ? style === 'micro-steps' ? 'Micro-steps mode'
-      : style === 'gamify' ? 'Gamify mode'
-        : 'Transition protocol'
-    : 'Ask Claude to help organize your day'
+  const isBreakdown = mode === 'breakdown'
 
   // Recent conversations for the list (exclude current)
   const recentConversations = conversations.filter((c) => c.id !== activeConv?.id)
@@ -147,41 +138,51 @@ export function AIChatPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-3rem)] -my-8 md:-my-12">
       {/* Header */}
-      <div className="flex items-center gap-3 py-4 flex-shrink-0">
-        <button
-          onClick={() => navigate(-1)}
-          className="p-2 -ml-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-          aria-label="Go back"
-        >
-          <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 4l-6 6 6 6" />
-          </svg>
-        </button>
-        <div className="min-w-0 flex-1">
-          <h1 className="font-display text-lg font-semibold text-on-surface truncate">
-            {modeTitle}
-          </h1>
-          <p className="text-on-surface-variant text-xs">{modeSubtitle}</p>
-        </div>
-
-        {/* New chat button (today mode only, when there are messages) */}
-        {mode === 'today' && activeConv && (
+      {isBreakdown ? (
+        /* Breakdown mode: compact header with back button */
+        <div className="flex items-center gap-3 py-4 flex-shrink-0">
           <button
-            onClick={handleNewChat}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-            title="Start new conversation"
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 rounded-xl text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="Go back"
           >
-            New chat
+            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 4l-6 6 6 6" />
+            </svg>
           </button>
-        )}
-
-        {/* AI sparkle icon */}
-        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-          <svg className="w-4 h-4 text-primary" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
-          </svg>
+          <div className="min-w-0 flex-1">
+            <h1 className="font-display text-lg font-semibold text-on-surface truncate">
+              {targetTodo?.title ?? 'Task'}
+            </h1>
+            <p className="text-on-surface-variant text-xs">
+              {style === 'micro-steps' ? 'Micro-steps' : style === 'gamify' ? 'Gamify' : 'Transition protocol'}
+            </p>
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Today mode: standard page header */
+        <div className="flex items-start justify-between gap-4 pb-4 pt-1 flex-shrink-0">
+          <div>
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
+              Claude
+            </h1>
+            <p className="text-on-surface-variant text-sm">
+              {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          {activeConv && (
+            <button
+              onClick={handleNewChat}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M8 3v10M3 8h10" />
+              </svg>
+              New chat
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Chat session — key forces re-mount when switching conversations */}
       <ChatSession
