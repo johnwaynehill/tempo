@@ -359,7 +359,8 @@ function ChatSession({
             <div className="text-center py-12">
               <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
                 <svg className="w-6 h-6 text-primary" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+                  <path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z" />
+                  <path d="M13 0C13 1.2 13.8 2 15 2C13.8 2 13 2.8 13 4C13 2.8 12.2 2 11 2C12.2 2 13 1.2 13 0Z" opacity="0.55" />
                 </svg>
               </div>
               <p className="text-on-surface font-display font-semibold text-base mb-1">
