@@ -136,7 +136,7 @@ export function AIChatPage() {
   const recentConversations = conversations.filter((c) => c.id !== activeConv?.id)
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-3rem)] -my-8 md:-my-12">
+    <div className="flex flex-col h-[calc(100vh-8rem)] md:h-[calc(100vh-6rem)] -mb-8 md:-mb-12">
       {/* Header */}
       {isBreakdown ? (
         /* Breakdown mode: compact header with back button */
