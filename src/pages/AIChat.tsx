@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
 import { useAIChat, type ChatMessage, type ToolCallDisplay } from '@/hooks/useAIChat'
+import { useChatHistory, type Conversation } from '@/hooks/useChatHistory'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { useHabits } from '@/hooks/useHabits'
@@ -14,6 +15,7 @@ import {
   type BreakdownStyle,
 } from '@/lib/ai-system-prompts'
 import type { ToolContext } from '@/lib/ai-tool-executor'
+import type Anthropic from '@anthropic-ai/sdk'
 
 export function AIChatPage() {
   const [searchParams] = useSearchParams()
@@ -42,10 +44,19 @@ export function AIChatPage() {
   const { preferences } = usePreferences()
   const { todayTodos } = useTodaySet(todos, pinned, preferences.current_energy)
 
+  // Chat history persistence
+  const {
+    findRecent,
+    saveConversation,
+    createId,
+    loading: historyLoading,
+  } = useChatHistory()
+
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const initialSentRef = useRef(false)
+  const conversationIdRef = useRef<string | null>(null)
 
   // Build the tool context
   const toolContext: ToolContext = useMemo(
@@ -88,15 +99,72 @@ export function AIChatPage() {
     })
   }, [mode, targetTodo, style, todos, notes, habits, events, preferences.current_energy, todayTodos])
 
+  // Try to restore a recent conversation for "today" mode
+  const restoredConversation = useMemo(() => {
+    if (historyLoading) return undefined
+    if (mode === 'today' && !initialQuery) {
+      return findRecent('today', true) // today's conversations only
+    }
+    return undefined
+  }, [mode, initialQuery, historyLoading, findRecent])
+
+  const initialMessages = restoredConversation?.displayMessages
+  const initialApiMessages = useMemo(() => {
+    if (!restoredConversation?.apiMessages) return undefined
+    try {
+      return JSON.parse(restoredConversation.apiMessages) as Anthropic.MessageParam[]
+    } catch {
+      return undefined
+    }
+  }, [restoredConversation])
+
+  // Set conversation ID from restored or generate new
+  if (restoredConversation && !conversationIdRef.current) {
+    conversationIdRef.current = restoredConversation.id
+  }
+
+  // Persist after each message exchange
+  const handleMessagesChange = useCallback(
+    (displayMessages: ChatMessage[], apiMessages: Anthropic.MessageParam[]) => {
+      if (!conversationIdRef.current) {
+        conversationIdRef.current = createId()
+      }
+
+      const title =
+        displayMessages.find((m) => m.role === 'user')?.content.slice(0, 80) ?? 'Chat'
+
+      const conv: Conversation = {
+        id: conversationIdRef.current,
+        mode: (mode as 'today' | 'breakdown') ?? 'today',
+        ...(todoId && { todoId }),
+        ...(style && { style }),
+        title,
+        displayMessages,
+        apiMessages: JSON.stringify(apiMessages),
+        created_at: restoredConversation?.created_at ?? new Date(),
+        updated_at: new Date(),
+      }
+
+      saveConversation(conv)
+    },
+    [mode, todoId, style, restoredConversation, createId, saveConversation],
+  )
+
   const { messages, isStreaming, error, sendMessage } = useAIChat({
     systemPrompt,
     toolContext,
+    initialMessages,
+    initialApiMessages,
+    onMessagesChange: handleMessagesChange,
   })
 
   // Auto-send first message for breakdown mode
   useEffect(() => {
     if (initialSentRef.current) return
-    if (todosLoading) return
+    if (todosLoading || historyLoading) return
+
+    // Don't auto-send if we restored a conversation
+    if (restoredConversation) return
 
     if (mode === 'breakdown' && targetTodo && style) {
       initialSentRef.current = true
@@ -106,7 +174,7 @@ export function AIChatPage() {
       initialSentRef.current = true
       sendMessage(decodeURIComponent(initialQuery))
     }
-  }, [mode, targetTodo, style, initialQuery, todosLoading])
+  }, [mode, targetTodo, style, initialQuery, todosLoading, historyLoading, restoredConversation])
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -119,6 +187,14 @@ export function AIChatPage() {
     if (!text || isStreaming) return
     setInputValue('')
     sendMessage(text)
+  }
+
+  const handleNewChat = () => {
+    conversationIdRef.current = null
+    initialSentRef.current = false
+    // Navigate to refresh state — strip query params to start fresh
+    navigate('/chat?mode=today', { replace: true })
+    window.location.reload()
   }
 
   // Mode header
@@ -151,6 +227,18 @@ export function AIChatPage() {
           </h1>
           <p className="text-on-surface-variant text-xs">{modeSubtitle}</p>
         </div>
+
+        {/* New chat button (today mode only, when there are messages) */}
+        {mode === 'today' && messages.length > 0 && (
+          <button
+            onClick={handleNewChat}
+            className="px-3 py-1.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            title="Start new conversation"
+          >
+            New chat
+          </button>
+        )}
+
         {/* AI sparkle icon */}
         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
           <svg className="w-4 h-4 text-primary" viewBox="0 0 16 16" fill="currentColor">
@@ -274,8 +362,6 @@ function MessageBubble({ message }: { message: ChatMessage }) {
 // --- Tool Call Chip ---
 
 function ToolCallChip({ toolCall }: { toolCall: ToolCallDisplay }) {
-  // The result message from the executor already contains the human-readable info
-  // e.g. 'Pinned "Do taxes!" to Today' or 'Created todo "Buy milk"'
   const displayText = toolCall.result
 
   return (

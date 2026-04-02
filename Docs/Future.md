@@ -3,7 +3,7 @@
 ## Notes Updates
 **Select text to format**
 - [x] User can select text on screen to change the format of the text. Selecting displays a small menu above or below the text based on where the text is on the screen.
-- [ ] all markdown is available with smart defaults; scrolls within left/right.
+- [x] all markdown is available with smart defaults; scrolls within left/right.
 - [x] add confirmation for Delete note
 - [x] Add Create Note button to Notes page which creates and opens the note for direct editing within 3 seconds
 - [x] On mobile devices, add the Markdown editor bar above the keyboard
@@ -16,8 +16,8 @@
 - [x] Make "All done" more celebratory
 - [x] Add dropdown to Project section of ToDo detail panel
 - [x] Add typeahead to Project section of ToDo detail panel
-- [ ] Need a way to see Completed ToDos; defaults to ToDos completed today, but should allow me to filter to see This Week, This Month, etc.
-  - [ ] Ability to mark a completed ToDo as not completed
+- [x] Need a way to see Completed ToDos; defaults to ToDos completed today, but should allow me to filter to see This Week, This Month, etc.
+  - [x] Ability to mark a completed ToDo as not completed
 
 ## Today View
 - [x] Fixed daily set of 5 todos — list shrinks as items are completed, no backfill
@@ -83,9 +83,9 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [x] Claude can create, update, and read Notes (summaries, reflections, plans)
 - [x] Firebase Cloud Function proxy for production (API key server-side, Firebase auth verified)
 - [x] 5-item Today cap enforced in both curation and breakdown modes
-- [ ] Chat history persistence (currently ephemeral per session)
+- [x] Chat history persistence (conversations saved to Firestore, restored on return)
 - [ ] Proactive daily suggestions when opening Today page
-- [ ] Remove Plus FAB from Claude pages.
+- [x] Remove Plus FAB from Claude pages.
 
 ## Desktop App
 - [x] Clean up left navigation Rail
@@ -102,13 +102,13 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [ ] Do UX pass with appropriate tools
 
 ## Bugs
-- [ ] The "new version available" toast's Update Button does not do anything in Prod
-- [ ] Complete button for a ToDo is in the wrong place. It should be its own, primary CTA on the detail view.
+- [x] The "new version available" toast's Update Button does not do anything in Prod
+- [x] Complete button for a ToDo is in the wrong place. It should be its own, primary CTA on the detail view.
 
 ## General Updates
-- [ ] Remove the floating FAB button and coresponding UI
-- [ ] Make Hamburger Menu universal for all views
-  - [ ] Add New ToDo
-  - [ ] Add New Note
+- [x] Remove the floating FAB button and coresponding UI
+- [x] Make Hamburger Menu universal for all views
+  - [x] Add New ToDo
+  - [x] Add New Note
 - [ ] Create new icon for Claude/AI
   - [ ] Add to the bottom Nav Bar for iOS; (?, unsure)

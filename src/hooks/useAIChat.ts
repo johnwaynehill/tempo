@@ -24,6 +24,9 @@ export interface ChatMessage {
 interface UseAIChatOptions {
   systemPrompt: string
   toolContext: ToolContext
+  initialMessages?: ChatMessage[]
+  initialApiMessages?: Anthropic.MessageParam[]
+  onMessagesChange?: (displayMessages: ChatMessage[], apiMessages: Anthropic.MessageParam[]) => void
 }
 
 export interface UseAIChatReturn {
@@ -31,19 +34,30 @@ export interface UseAIChatReturn {
   isStreaming: boolean
   error: string | null
   sendMessage: (text: string) => Promise<void>
+  getApiMessages: () => Anthropic.MessageParam[]
 }
 
 // --- Hook ---
 
 const MAX_TOOL_LOOPS = 10
 
-export function useAIChat({ systemPrompt, toolContext }: UseAIChatOptions): UseAIChatReturn {
-  const [messages, setMessages] = useState<ChatMessage[]>([])
+export function useAIChat({
+  systemPrompt,
+  toolContext,
+  initialMessages,
+  initialApiMessages,
+  onMessagesChange,
+}: UseAIChatOptions): UseAIChatReturn {
+  const [messages, setMessages] = useState<ChatMessage[]>(initialMessages ?? [])
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Keep the full Anthropic-format messages for API calls
-  const apiMessagesRef = useRef<Anthropic.MessageParam[]>([])
+  const apiMessagesRef = useRef<Anthropic.MessageParam[]>(initialApiMessages ?? [])
+  const onMessagesChangeRef = useRef(onMessagesChange)
+  onMessagesChangeRef.current = onMessagesChange
+
+  const getApiMessages = useCallback(() => apiMessagesRef.current, [])
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -58,7 +72,8 @@ export function useAIChat({ systemPrompt, toolContext }: UseAIChatOptions): UseA
         content: text,
         timestamp: new Date(),
       }
-      setMessages((prev) => [...prev, userMsg])
+      const updatedMessages = [...messages, userMsg]
+      setMessages(updatedMessages)
 
       // Add to API messages
       apiMessagesRef.current = [
@@ -67,7 +82,14 @@ export function useAIChat({ systemPrompt, toolContext }: UseAIChatOptions): UseA
       ]
 
       try {
-        await streamWithToolLoop(apiMessagesRef.current, systemPrompt, toolContext, setMessages)
+        await streamWithToolLoop(
+          apiMessagesRef.current,
+          systemPrompt,
+          toolContext,
+          setMessages,
+          onMessagesChangeRef,
+          apiMessagesRef,
+        )
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
         setError(msg)
@@ -76,10 +98,10 @@ export function useAIChat({ systemPrompt, toolContext }: UseAIChatOptions): UseA
         setIsStreaming(false)
       }
     },
-    [isStreaming, systemPrompt, toolContext],
+    [isStreaming, messages, systemPrompt, toolContext],
   )
 
-  return { messages, isStreaming, error, sendMessage }
+  return { messages, isStreaming, error, sendMessage, getApiMessages }
 }
 
 // --- Streaming with tool-use loop ---
@@ -89,6 +111,10 @@ async function streamWithToolLoop(
   systemPrompt: string,
   toolContext: ToolContext,
   setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>,
+  onMessagesChangeRef: React.MutableRefObject<
+    ((displayMessages: ChatMessage[], apiMessages: Anthropic.MessageParam[]) => void) | undefined
+  >,
+  apiMessagesRef: React.MutableRefObject<Anthropic.MessageParam[]>,
 ) {
   let loopCount = 0
 
@@ -205,13 +231,16 @@ async function streamWithToolLoop(
     }
 
     // Update final message
-    setMessages((prev) =>
-      prev.map((m) =>
+    setMessages((prev) => {
+      const updated = prev.map((m) =>
         m.id === assistantMsgId
           ? { ...m, content: textContent, toolCalls: [...toolCalls] }
           : m,
-      ),
-    )
+      )
+      // Notify persistence layer
+      onMessagesChangeRef.current?.(updated, apiMessagesRef.current)
+      return updated
+    })
 
     // Add final assistant message to API messages
     if (toolUseBlocks.length === 0) {

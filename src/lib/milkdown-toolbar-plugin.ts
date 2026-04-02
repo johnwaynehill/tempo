@@ -11,7 +11,10 @@ import {
   wrapInBulletListCommand,
   wrapInOrderedListCommand,
   toggleLinkCommand,
+  createCodeBlockCommand,
+  insertHrCommand,
 } from '@milkdown/kit/preset/commonmark'
+import { toggleStrikethroughCommand } from '@milkdown/kit/preset/gfm'
 
 // --- Tooltip plugin factory ---
 
@@ -29,6 +32,9 @@ const icons: Record<string, string> = {
   quote: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2h.75c0 2.25.25 4-2.75 4v3c0 1 0 1 1 1z"/></svg>',
   'bullet-list': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
   'ordered-list': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/><path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/></svg>',
+  strikethrough: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4H9a3 3 0 00-2.83 4"/><path d="M14 12a4 4 0 010 8H6"/><line x1="4" y1="12" x2="20" y2="12"/></svg>',
+  'code-block': '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><polyline points="9 8 5 12 9 16"/><polyline points="15 8 19 12 15 16"/></svg>',
+  hr: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/><circle cx="7" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/><circle cx="17" cy="12" r="1" fill="currentColor" stroke="none"/></svg>',
   link: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71"/></svg>',
 }
 
@@ -44,6 +50,7 @@ const buttonGroups: ButtonDef[][] = [
   [
     { command: 'bold', label: 'Bold', shortcut: 'Ctrl+B' },
     { command: 'italic', label: 'Italic', shortcut: 'Ctrl+I' },
+    { command: 'strikethrough', label: 'Strikethrough' },
     { command: 'code', label: 'Inline Code' },
   ],
   [
@@ -53,6 +60,8 @@ const buttonGroups: ButtonDef[][] = [
   ],
   [
     { command: 'quote', label: 'Blockquote' },
+    { command: 'code-block', label: 'Code Block' },
+    { command: 'hr', label: 'Horizontal Rule' },
   ],
   [
     { command: 'bullet-list', label: 'Bullet List' },
@@ -104,6 +113,7 @@ function updateActiveStates(toolbar: HTMLElement, view: EditorView) {
     ['bold', 'strong'],
     ['italic', 'emphasis'],
     ['code', 'code_inline'],
+    ['strikethrough', 'strikethrough'],
   ]
 
   for (const [cmd, markName] of markChecks) {
@@ -200,6 +210,15 @@ function dispatchCommand(ctx: Ctx, command: string) {
       break
     case 'ordered-list':
       commands.call(wrapInOrderedListCommand.key)
+      break
+    case 'strikethrough':
+      commands.call(toggleStrikethroughCommand.key)
+      break
+    case 'code-block':
+      commands.call(createCodeBlockCommand.key)
+      break
+    case 'hr':
+      commands.call(insertHrCommand.key)
       break
     case 'link': {
       const href = window.prompt('URL')
