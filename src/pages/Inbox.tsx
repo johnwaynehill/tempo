@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { TodoItem } from '@/components/ui/TodoItem'
+import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { useTodos } from '@/hooks/useTodos'
+import { useNewTodo } from '@/hooks/useNewTodo'
 
 export function InboxPage() {
-  const { inbox, completeTodo, moveToBacklog, loading } = useTodos()
+  const { inbox, completeTodo, deferTodo, moveToBacklog, loading } = useTodos()
+  const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
   const [processed, setProcessed] = useState(0)
   const [movingAll, setMovingAll] = useState(false)
 
@@ -26,14 +29,25 @@ export function InboxPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-          Inbox
-        </h1>
-        <p className="text-on-surface-variant text-sm">
-          {inbox.length} item{inbox.length !== 1 ? 's' : ''} to process
-          {processed > 0 && ` · ${processed} triaged`}
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
+            Inbox
+          </h1>
+          <p className="text-on-surface-variant text-sm">
+            {inbox.length} item{inbox.length !== 1 ? 's' : ''} to process
+            {processed > 0 && ` · ${processed} triaged`}
+          </p>
+        </div>
+        <button
+          onClick={createTodo}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          New todo
+        </button>
       </div>
 
       {loading ? (
@@ -84,6 +98,16 @@ export function InboxPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* New todo detail drawer */}
+      {newTodo && (
+        <TodoDetailDrawer
+          todo={newTodo}
+          onClose={closeNewTodo}
+          onComplete={completeTodo}
+          onDefer={deferTodo}
+        />
       )}
     </div>
   )

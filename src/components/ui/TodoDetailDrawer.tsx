@@ -58,6 +58,8 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   }, [])
 
   const handleClose = () => {
+    // Blur the title input to trigger save before closing
+    titleRef.current?.blur()
     setVisible(false)
     setTimeout(onClose, 200)
   }

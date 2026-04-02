@@ -3,17 +3,20 @@ import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { ShortcutsSheet } from '@/components/ui/ShortcutsSheet'
+import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { useKeyboardShortcuts, type Shortcut } from '@/hooks/useKeyboardShortcuts'
 import { useNotes } from '@/hooks/useNotes'
+import { useTodos } from '@/hooks/useTodos'
+import { useNewTodo } from '@/hooks/useNewTodo'
 import { useReminderScheduler } from '@/hooks/useReminderScheduler'
-import { CaptureModal } from '@/components/ui/CaptureModal'
 
 export function AppShell() {
   // Background: check for due reminders and fire notifications
   useReminderScheduler()
   const navigate = useNavigate()
   const { addNote } = useNotes()
-  const [captureOpen, setCaptureOpen] = useState(false)
+  const { completeTodo, deferTodo } = useTodos()
+  const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
 
   const shortcuts: Shortcut[] = useMemo(
@@ -29,7 +32,7 @@ export function AppShell() {
       { label: '8', description: 'Go to Review',      key: '8', action: () => navigate('/review') },
       { label: ',', description: 'Go to Settings',    key: ',', action: () => navigate('/settings') },
       // Actions
-      { label: 'C', description: 'Quick capture',     key: 'c', action: () => setCaptureOpen(true) },
+      { label: 'C', description: 'New todo',            key: 'c', action: () => createTodo() },
       {
         label: 'N',
         description: 'New note',
@@ -42,7 +45,7 @@ export function AppShell() {
       // Help
       { label: '?', description: 'Keyboard shortcuts', key: '?', shift: true, action: () => setShortcutsOpen((v) => !v) },
     ],
-    [navigate, addNote],
+    [navigate, addNote, createTodo],
   )
 
   useKeyboardShortcuts(shortcuts)
@@ -59,7 +62,14 @@ export function AppShell() {
 
       <BottomNav />
 
-      {captureOpen && <CaptureModal onClose={() => setCaptureOpen(false)} />}
+      {newTodo && (
+        <TodoDetailDrawer
+          todo={newTodo}
+          onClose={closeNewTodo}
+          onComplete={completeTodo}
+          onDefer={deferTodo}
+        />
+      )}
 
       {shortcutsOpen && (
         <ShortcutsSheet onClose={() => setShortcutsOpen(false)} />

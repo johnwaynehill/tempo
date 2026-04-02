@@ -2,7 +2,9 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
 import { useNotes } from '@/hooks/useNotes'
-import { CaptureModal } from '@/components/ui/CaptureModal'
+import { useTodos } from '@/hooks/useTodos'
+import { useNewTodo } from '@/hooks/useNewTodo'
+import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 
 const navItems = [
   {
@@ -31,8 +33,9 @@ export function MobileMenu() {
   const { user } = useAuth()
   const navigate = useNavigate()
   const { addNote } = useNotes()
+  const { completeTodo, deferTodo } = useTodos()
+  const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
   const [open, setOpen] = useState(false)
-  const [showCapture, setShowCapture] = useState(false)
 
   return (
     <div className="relative md:hidden">
@@ -54,7 +57,7 @@ export function MobileMenu() {
           <div className="absolute right-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[200px]">
             {/* Create actions */}
             <button
-              onClick={() => { setOpen(false); setShowCapture(true) }}
+              onClick={() => { setOpen(false); createTodo() }}
               className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
             >
               <span className="text-on-surface-variant">
@@ -114,7 +117,14 @@ export function MobileMenu() {
         </>
       )}
 
-      {showCapture && <CaptureModal onClose={() => setShowCapture(false)} />}
+      {newTodo && (
+        <TodoDetailDrawer
+          todo={newTodo}
+          onClose={closeNewTodo}
+          onComplete={completeTodo}
+          onDefer={deferTodo}
+        />
+      )}
     </div>
   )
 }
