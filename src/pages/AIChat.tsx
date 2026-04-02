@@ -15,6 +15,7 @@ import {
   type BreakdownStyle,
 } from '@/lib/ai-system-prompts'
 import type { ToolContext } from '@/lib/ai-tool-executor'
+import type { Todo } from '@/types'
 import type Anthropic from '@anthropic-ai/sdk'
 
 export function AIChatPage() {
@@ -44,19 +45,32 @@ export function AIChatPage() {
   const { preferences } = usePreferences()
   const { todayTodos } = useTodaySet(todos, pinned, preferences.current_energy)
 
-  // Chat history persistence
+  // Chat history
   const {
+    conversations,
     findRecent,
     saveConversation,
+    deleteConversation,
     createId,
     loading: historyLoading,
   } = useChatHistory()
 
-  const [inputValue, setInputValue] = useState('')
-  const messagesEndRef = useRef<HTMLDivElement>(null)
-  const inputRef = useRef<HTMLInputElement>(null)
-  const initialSentRef = useRef(false)
-  const conversationIdRef = useRef<string | null>(null)
+  // Active conversation state + key for re-mounting the chat session
+  const [activeConv, setActiveConv] = useState<Conversation | null>(null)
+  const [chatKey, setChatKey] = useState(0)
+  const autoLoadedRef = useRef(false)
+
+  // Auto-load most recent today conversation on first load
+  useEffect(() => {
+    if (autoLoadedRef.current || historyLoading) return
+    if (mode === 'today' && !initialQuery) {
+      const recent = findRecent('today', true)
+      if (recent) {
+        setActiveConv(recent)
+      }
+    }
+    autoLoadedRef.current = true
+  }, [historyLoading, mode, initialQuery, findRecent])
 
   // Build the tool context
   const toolContext: ToolContext = useMemo(
@@ -99,102 +113,21 @@ export function AIChatPage() {
     })
   }, [mode, targetTodo, style, todos, notes, habits, events, preferences.current_energy, todayTodos])
 
-  // Try to restore a recent conversation for "today" mode
-  const restoredConversation = useMemo(() => {
-    if (historyLoading) return undefined
-    if (mode === 'today' && !initialQuery) {
-      return findRecent('today', true) // today's conversations only
-    }
-    return undefined
-  }, [mode, initialQuery, historyLoading, findRecent])
-
-  const initialMessages = restoredConversation?.displayMessages
-  const initialApiMessages = useMemo(() => {
-    if (!restoredConversation?.apiMessages) return undefined
-    try {
-      return JSON.parse(restoredConversation.apiMessages) as Anthropic.MessageParam[]
-    } catch {
-      return undefined
-    }
-  }, [restoredConversation])
-
-  // Set conversation ID from restored or generate new
-  if (restoredConversation && !conversationIdRef.current) {
-    conversationIdRef.current = restoredConversation.id
-  }
-
-  // Persist after each message exchange
-  const handleMessagesChange = useCallback(
-    (displayMessages: ChatMessage[], apiMessages: Anthropic.MessageParam[]) => {
-      if (!conversationIdRef.current) {
-        conversationIdRef.current = createId()
-      }
-
-      const title =
-        displayMessages.find((m) => m.role === 'user')?.content.slice(0, 80) ?? 'Chat'
-
-      const conv: Conversation = {
-        id: conversationIdRef.current,
-        mode: (mode as 'today' | 'breakdown') ?? 'today',
-        ...(todoId && { todoId }),
-        ...(style && { style }),
-        title,
-        displayMessages,
-        apiMessages: JSON.stringify(apiMessages),
-        created_at: restoredConversation?.created_at ?? new Date(),
-        updated_at: new Date(),
-      }
-
-      saveConversation(conv)
-    },
-    [mode, todoId, style, restoredConversation, createId, saveConversation],
-  )
-
-  const { messages, isStreaming, error, sendMessage } = useAIChat({
-    systemPrompt,
-    toolContext,
-    initialMessages,
-    initialApiMessages,
-    onMessagesChange: handleMessagesChange,
-  })
-
-  // Auto-send first message for breakdown mode
-  useEffect(() => {
-    if (initialSentRef.current) return
-    if (todosLoading || historyLoading) return
-
-    // Don't auto-send if we restored a conversation
-    if (restoredConversation) return
-
-    if (mode === 'breakdown' && targetTodo && style) {
-      initialSentRef.current = true
-      const firstMsg = buildBreakdownFirstMessage(targetTodo, style)
-      sendMessage(firstMsg)
-    } else if (mode === 'today' && initialQuery) {
-      initialSentRef.current = true
-      sendMessage(decodeURIComponent(initialQuery))
-    }
-  }, [mode, targetTodo, style, initialQuery, todosLoading, historyLoading, restoredConversation])
-
-  // Auto-scroll to bottom on new messages
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    const text = inputValue.trim()
-    if (!text || isStreaming) return
-    setInputValue('')
-    sendMessage(text)
-  }
-
   const handleNewChat = () => {
-    conversationIdRef.current = null
-    initialSentRef.current = false
-    // Navigate to refresh state — strip query params to start fresh
-    navigate('/chat?mode=today', { replace: true })
-    window.location.reload()
+    setActiveConv(null)
+    setChatKey((k) => k + 1)
+  }
+
+  const handleSelectConversation = (conv: Conversation) => {
+    setActiveConv(conv)
+    setChatKey((k) => k + 1)
+  }
+
+  const handleDeleteConversation = async (id: string) => {
+    await deleteConversation(id)
+    if (activeConv?.id === id) {
+      handleNewChat()
+    }
   }
 
   // Mode header
@@ -207,6 +140,9 @@ export function AIChatPage() {
       : style === 'gamify' ? 'Gamify mode'
         : 'Transition protocol'
     : 'Ask Claude to help organize your day'
+
+  // Recent conversations for the list (exclude current)
+  const recentConversations = conversations.filter((c) => c.id !== activeConv?.id)
 
   return (
     <div className="flex flex-col h-[calc(100vh-6rem)] md:h-[calc(100vh-3rem)] -my-8 md:-my-12">
@@ -229,7 +165,7 @@ export function AIChatPage() {
         </div>
 
         {/* New chat button (today mode only, when there are messages) */}
-        {mode === 'today' && messages.length > 0 && (
+        {mode === 'today' && activeConv && (
           <button
             onClick={handleNewChat}
             className="px-3 py-1.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
@@ -247,21 +183,190 @@ export function AIChatPage() {
         </div>
       </div>
 
+      {/* Chat session — key forces re-mount when switching conversations */}
+      <ChatSession
+        key={`${chatKey}-${activeConv?.id ?? 'new'}`}
+        mode={mode}
+        todoId={todoId}
+        style={style}
+        initialQuery={initialQuery}
+        activeConversation={activeConv}
+        recentConversations={recentConversations}
+        systemPrompt={systemPrompt}
+        toolContext={toolContext}
+        targetTodo={targetTodo}
+        todosLoading={todosLoading}
+        historyLoading={historyLoading}
+        saveConversation={saveConversation}
+        createId={createId}
+        onSelectConversation={handleSelectConversation}
+        onDeleteConversation={handleDeleteConversation}
+      />
+    </div>
+  )
+}
+
+// --- Chat Session (re-mountable) ---
+
+interface ChatSessionProps {
+  mode: 'breakdown' | 'today' | null
+  todoId: string | null
+  style: BreakdownStyle | null
+  initialQuery: string | null
+  activeConversation: Conversation | null
+  recentConversations: Conversation[]
+  systemPrompt: string
+  toolContext: ToolContext
+  targetTodo: Todo | undefined
+  todosLoading: boolean
+  historyLoading: boolean
+  saveConversation: (conv: Conversation) => Promise<void>
+  createId: () => string
+  onSelectConversation: (conv: Conversation) => void
+  onDeleteConversation: (id: string) => void
+}
+
+function ChatSession({
+  mode,
+  todoId,
+  style,
+  initialQuery,
+  activeConversation,
+  recentConversations,
+  systemPrompt,
+  toolContext,
+  targetTodo,
+  todosLoading,
+  historyLoading,
+  saveConversation,
+  createId,
+  onSelectConversation,
+  onDeleteConversation,
+}: ChatSessionProps) {
+  const [inputValue, setInputValue] = useState('')
+  const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const initialSentRef = useRef(false)
+  const conversationIdRef = useRef<string | null>(activeConversation?.id ?? null)
+
+  // Parse initial state from active conversation
+  const initialMessages = activeConversation?.displayMessages
+  const initialApiMessages = useMemo(() => {
+    if (!activeConversation?.apiMessages) return undefined
+    try {
+      return JSON.parse(activeConversation.apiMessages) as Anthropic.MessageParam[]
+    } catch {
+      return undefined
+    }
+  }, [activeConversation])
+
+  // Persist after each message exchange
+  const handleMessagesChange = useCallback(
+    (displayMessages: ChatMessage[], apiMessages: Anthropic.MessageParam[]) => {
+      if (!conversationIdRef.current) {
+        conversationIdRef.current = createId()
+      }
+
+      const title =
+        displayMessages.find((m) => m.role === 'user')?.content.slice(0, 80) ?? 'Chat'
+
+      const conv: Conversation = {
+        id: conversationIdRef.current,
+        mode: (mode as 'today' | 'breakdown') ?? 'today',
+        ...(todoId && { todoId }),
+        ...(style && { style }),
+        title,
+        displayMessages,
+        apiMessages: JSON.stringify(apiMessages),
+        created_at: activeConversation?.created_at ?? new Date(),
+        updated_at: new Date(),
+      }
+
+      saveConversation(conv)
+    },
+    [mode, todoId, style, activeConversation, createId, saveConversation],
+  )
+
+  const { messages, isStreaming, error, sendMessage } = useAIChat({
+    systemPrompt,
+    toolContext,
+    initialMessages,
+    initialApiMessages,
+    onMessagesChange: handleMessagesChange,
+  })
+
+  // Auto-send first message for breakdown mode
+  useEffect(() => {
+    if (initialSentRef.current) return
+    if (todosLoading || historyLoading) return
+
+    // Don't auto-send if we restored a conversation
+    if (activeConversation) return
+
+    if (mode === 'breakdown' && targetTodo && style) {
+      initialSentRef.current = true
+      const firstMsg = buildBreakdownFirstMessage(targetTodo, style)
+      sendMessage(firstMsg)
+    } else if (mode === 'today' && initialQuery) {
+      initialSentRef.current = true
+      sendMessage(decodeURIComponent(initialQuery))
+    }
+  }, [mode, targetTodo, style, initialQuery, todosLoading, historyLoading, activeConversation])
+
+  // Auto-scroll to bottom on new messages
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    const text = inputValue.trim()
+    if (!text || isStreaming) return
+    setInputValue('')
+    sendMessage(text)
+  }
+
+  const showEmptyState = messages.length === 0 && !isStreaming && mode === 'today'
+
+  return (
+    <>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-4">
-        {messages.length === 0 && !isStreaming && mode === 'today' && (
-          <div className="text-center py-16 animate-gentle-appear">
-            <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-              <svg className="w-6 h-6 text-primary" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
-              </svg>
+        {showEmptyState && (
+          <div className="animate-gentle-appear">
+            {/* Empty prompt */}
+            <div className="text-center py-12">
+              <div className="mx-auto mb-4 w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                <svg className="w-6 h-6 text-primary" viewBox="0 0 16 16" fill="currentColor">
+                  <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+                </svg>
+              </div>
+              <p className="text-on-surface font-display font-semibold text-base mb-1">
+                What do you need?
+              </p>
+              <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
+                Ask me to plan your day, reorganize your list, or help you get started on something.
+              </p>
             </div>
-            <p className="text-on-surface font-display font-semibold text-base mb-1">
-              What do you need?
-            </p>
-            <p className="text-on-surface-variant text-sm max-w-xs mx-auto">
-              Ask me to plan your day, reorganize your list, or help you get started on something.
-            </p>
+
+            {/* Recent conversations */}
+            {recentConversations.length > 0 && (
+              <div className="mt-4">
+                <p className="text-on-surface-variant text-xs font-medium uppercase tracking-wider px-1 mb-2">
+                  Recent conversations
+                </p>
+                <div className="space-y-1">
+                  {recentConversations.map((conv) => (
+                    <ConversationRow
+                      key={conv.id}
+                      conversation={conv}
+                      onSelect={() => onSelectConversation(conv)}
+                      onDelete={() => onDeleteConversation(conv.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -316,6 +421,47 @@ export function AIChatPage() {
           </button>
         </div>
       </form>
+    </>
+  )
+}
+
+// --- Conversation Row ---
+
+function ConversationRow({
+  conversation,
+  onSelect,
+  onDelete,
+}: {
+  conversation: Conversation
+  onSelect: () => void
+  onDelete: () => void
+}) {
+  const messageCount = conversation.displayMessages.filter((m) => m.role === 'user').length
+  const timeLabel = formatRelativeTime(conversation.updated_at)
+
+  return (
+    <div className="group flex items-center gap-2 rounded-xl hover:bg-surface-container-low transition-colors">
+      <button
+        onClick={onSelect}
+        className="flex-1 min-w-0 text-left px-3 py-2.5 cursor-pointer"
+      >
+        <p className="text-sm text-on-surface truncate">{conversation.title}</p>
+        <p className="text-xs text-on-surface-variant mt-0.5">
+          {messageCount} message{messageCount !== 1 ? 's' : ''} &middot; {timeLabel}
+        </p>
+      </button>
+      <button
+        onClick={(e) => {
+          e.stopPropagation()
+          onDelete()
+        }}
+        className="opacity-0 group-hover:opacity-100 p-2 mr-1 rounded-lg text-on-surface-variant hover:text-error hover:bg-error/5 transition-all cursor-pointer"
+        aria-label="Delete conversation"
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+          <path d="M4 4l6 6M10 4l-6 6" />
+        </svg>
+      </button>
     </div>
   )
 }
@@ -405,4 +551,19 @@ function formatMarkdown(text: string): string {
     .replace(/`(.+?)`/g, '<code class="px-1.5 py-0.5 rounded bg-surface-container text-xs font-mono">$1</code>')
     // Line breaks
     .replace(/\n/g, '<br />')
+}
+
+function formatRelativeTime(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  const diffHours = Math.floor(diffMs / 3600000)
+  const diffDays = Math.floor(diffMs / 86400000)
+
+  if (diffMins < 1) return 'just now'
+  if (diffMins < 60) return `${diffMins}m ago`
+  if (diffHours < 24) return `${diffHours}h ago`
+  if (diffDays === 1) return 'yesterday'
+  if (diffDays < 7) return `${diffDays}d ago`
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 }
