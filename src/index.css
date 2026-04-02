@@ -115,6 +115,11 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 4px;
 }
 
+/* Let Tailwind's outline-none win over the global focus style */
+.outline-none:focus-visible {
+  outline: none;
+}
+
 /* --- Milkdown Dark Mode Overrides --- */
 
 [data-theme='dark'] .milkdown .ProseMirror {
