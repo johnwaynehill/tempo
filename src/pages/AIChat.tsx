@@ -428,7 +428,7 @@ function ChatSession({
             onChange={(e) => setInputValue(e.target.value)}
             placeholder={isStreaming ? 'Responding...' : 'Type a message...'}
             disabled={isStreaming}
-            className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40 disabled:opacity-50"
+            className="flex-1 bg-transparent text-on-surface text-sm outline-none border-none focus:ring-0 placeholder:text-on-surface-variant/40 disabled:opacity-50"
           />
           <button
             type="submit"
