@@ -129,7 +129,7 @@ export function TodayPage() {
               type="text"
               value={aiInput}
               onChange={(e) => setAiInput(e.target.value)}
-              placeholder="Ask Claude to help plan your day..."
+              placeholder="Ask Tempo AI to help plan your day..."
               className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40"
             />
           </form>

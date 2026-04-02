@@ -3,7 +3,7 @@ import { useAuth } from '@/context/AuthContext'
 
 const mainNav = [
   { to: '/today', label: 'Today', icon: '◉' },
-  { to: '/chat?mode=today', label: 'Claude', icon: '✦' },
+  { to: '/chat?mode=today', label: 'Tempo AI', icon: '✦' },
   { to: '/inbox', label: 'Inbox', icon: '↓' },
   { to: '/backlog', label: 'Backlog', icon: '☷' },
 ] as const

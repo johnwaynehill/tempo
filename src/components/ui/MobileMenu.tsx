@@ -9,7 +9,7 @@ import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 const navItems = [
   {
     to: '/chat?mode=today',
-    label: 'Claude',
+    label: 'Tempo AI',
     icon: '<svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z"/></svg>',
   },
   {

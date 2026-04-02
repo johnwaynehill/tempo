@@ -161,26 +161,29 @@ export function AIChatPage() {
         </div>
       ) : (
         /* Today mode: standard page header */
-        <div className="flex items-start justify-between gap-4 pb-4 pt-1 flex-shrink-0">
+        <div className="mb-8 flex items-start justify-between gap-4 flex-shrink-0">
           <div>
             <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-              Claude
+              Tempo AI
             </h1>
             <p className="text-on-surface-variant text-sm">
               {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
             </p>
           </div>
-          {activeConv && (
-            <button
-              onClick={handleNewChat}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M8 3v10M3 8h10" />
-              </svg>
-              New chat
-            </button>
-          )}
+          <button
+            onClick={activeConv ? handleNewChat : undefined}
+            disabled={!activeConv}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shrink-0 ${
+              activeConv
+                ? 'bg-primary text-on-primary hover:shadow-md cursor-pointer'
+                : 'bg-surface-container text-on-surface-variant/40 cursor-default'
+            }`}
+          >
+            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M8 3v10M3 8h10" />
+            </svg>
+            New chat
+          </button>
         </div>
       )}
 
@@ -202,6 +205,7 @@ export function AIChatPage() {
         createId={createId}
         onSelectConversation={handleSelectConversation}
         onDeleteConversation={handleDeleteConversation}
+        onBackToList={handleNewChat}
       />
     </div>
   )
@@ -225,6 +229,7 @@ interface ChatSessionProps {
   createId: () => string
   onSelectConversation: (conv: Conversation) => void
   onDeleteConversation: (id: string) => void
+  onBackToList: () => void
 }
 
 function ChatSession({
@@ -243,6 +248,7 @@ function ChatSession({
   createId,
   onSelectConversation,
   onDeleteConversation,
+  onBackToList,
 }: ChatSessionProps) {
   const [inputValue, setInputValue] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -328,11 +334,25 @@ function ChatSession({
   }
 
   const showEmptyState = messages.length === 0 && !isStreaming && mode === 'today'
+  const hasActiveChat = messages.length > 0 || isStreaming
 
   return (
     <>
       {/* Messages area */}
       <div className="flex-1 overflow-y-auto min-h-0 space-y-4 py-4">
+        {/* Back to conversations link when viewing a chat */}
+        {hasActiveChat && recentConversations.length > 0 && (
+          <button
+            onClick={onBackToList}
+            className="flex items-center gap-1.5 text-on-surface-variant text-xs hover:text-on-surface transition-colors cursor-pointer -mt-2 mb-2"
+          >
+            <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 2L4 7l5 5" />
+            </svg>
+            All conversations
+          </button>
+        )}
+
         {showEmptyState && (
           <div className="animate-gentle-appear">
             {/* Empty prompt */}
@@ -382,7 +402,7 @@ function ChatSession({
               <span className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '150ms' }} />
               <span className="w-2 h-2 rounded-full bg-primary/40 animate-bounce" style={{ animationDelay: '300ms' }} />
             </div>
-            <span className="text-on-surface-variant text-xs">Claude is thinking...</span>
+            <span className="text-on-surface-variant text-xs">Thinking...</span>
           </div>
         )}
 
@@ -406,7 +426,7 @@ function ChatSession({
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
-            placeholder={isStreaming ? 'Claude is responding...' : 'Type a message...'}
+            placeholder={isStreaming ? 'Responding...' : 'Type a message...'}
             disabled={isStreaming}
             className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40 disabled:opacity-50"
           />
