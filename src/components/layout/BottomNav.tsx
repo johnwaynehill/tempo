@@ -17,7 +17,7 @@ export function BottomNav() {
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex flex-col items-center gap-0.5 px-3 py-1.5 text-xs transition-colors duration-200 ${
+              `flex flex-col items-center gap-1 px-3 py-2 text-xs transition-colors duration-200 ${
                 isActive
                   ? 'text-primary'
                   : 'text-on-surface-variant'

@@ -13,7 +13,7 @@ export function EnergySelector({ value, onChange }: EnergySelectorProps) {
         <button
           key={level}
           onClick={() => onChange(level)}
-          className={`px-3 py-1 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer ${
+          className={`px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 cursor-pointer min-h-[44px] ${
             value === level
               ? 'bg-primary text-on-primary'
               : 'bg-surface-container-high text-on-surface-variant'

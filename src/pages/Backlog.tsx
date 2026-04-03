@@ -149,7 +149,7 @@ export function BacklogPage() {
         </div>
         <button
           onClick={createTodo}
-          className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0 min-h-[44px]"
         >
           <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M8 3v10M3 8h10" />
@@ -164,7 +164,7 @@ export function BacklogPage() {
         <div className="flex rounded-xl bg-surface-container-high p-1">
           <button
             onClick={() => setViewMode('list')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
               viewMode === 'list'
                 ? 'bg-surface-container-lowest text-on-surface shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -177,7 +177,7 @@ export function BacklogPage() {
           </button>
           <button
             onClick={() => setViewMode('calendar')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
               viewMode === 'calendar'
                 ? 'bg-surface-container-lowest text-on-surface shadow-sm'
                 : 'text-on-surface-variant hover:text-on-surface'
@@ -236,7 +236,7 @@ export function BacklogPage() {
         {activeFilterCount > 0 && (
           <button
             onClick={() => { setEnergyFilter(undefined); setProjectFilter(undefined); closeAllDropdowns() }}
-            className="flex items-center gap-1 px-2 py-1.5 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
             title="Clear all filters"
           >
             <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">

@@ -29,18 +29,20 @@ export function HabitRow({ habit }: HabitRowProps) {
       {/* Check-in circle */}
       <button
         onClick={handleToggle}
-        className={`w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 cursor-pointer ${
-          isCompletedToday
-            ? 'bg-primary border-primary'
-            : 'border-outline-variant hover:border-primary'
-        }`}
+        className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
         aria-label={isCompletedToday ? 'Mark incomplete' : 'Mark complete'}
       >
-        {isCompletedToday && (
-          <svg className="w-3.5 h-3.5 text-on-primary" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 8.5l3.5 3.5 6.5-7" />
-          </svg>
-        )}
+        <span className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all duration-200 ${
+          isCompletedToday
+            ? 'bg-primary border-primary'
+            : 'border-outline-variant group-hover:border-primary'
+        }`}>
+          {isCompletedToday && (
+            <svg className="w-3.5 h-3.5 text-on-primary" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 8.5l3.5 3.5 6.5-7" />
+            </svg>
+          )}
+        </span>
       </button>
 
       {/* Habit name */}

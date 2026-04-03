@@ -79,7 +79,7 @@ export function RecurrencePicker({ value, onChange, onClose }: RecurrencePickerP
             <button
               key={f}
               onClick={() => handleFrequencyChange(f)}
-              className={`flex-1 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+              className={`flex-1 py-2.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                 frequency === f
                   ? 'bg-primary text-on-primary'
                   : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -97,7 +97,7 @@ export function RecurrencePicker({ value, onChange, onClose }: RecurrencePickerP
               <button
                 key={i}
                 onClick={() => toggleDay(i)}
-                className={`w-8 h-8 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`w-10 h-10 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
                   daysOfWeek.includes(i)
                     ? 'bg-primary text-on-primary'
                     : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -119,7 +119,7 @@ export function RecurrencePicker({ value, onChange, onClose }: RecurrencePickerP
               max={31}
               value={dayOfMonth}
               onChange={(e) => handleDayOfMonthChange(parseInt(e.target.value) || 1)}
-              className="w-16 bg-surface-container rounded-lg px-3 py-1.5 text-on-surface text-sm text-center outline-none"
+              className="w-16 bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-base text-center outline-none"
             />
           </div>
         )}

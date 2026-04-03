@@ -21,7 +21,8 @@
 
 ## Today View
 - [x] Fixed daily set of 5 todos — list shrinks as items are completed, no backfill
-- [ ] Ability to drag-and-drop ToDos for sorting
+~~Ability to drag-and-drop ToDos for sorting~~
+- [ ] Add a AI generated "good job" message on random ToDo completions; consider using a Toast notificaiton or some sort of screen takeover with some light animation
 
 ## Backlog Updates
 - [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
@@ -49,7 +50,7 @@
   - [x] By Day, Week, Month
 
 ## Voice Input with Transcription
-Ability to input ToDos and Notes with Voice. Mac only for now. Use something like https://www.onresonant.com/ 
+Ability to input ToDos and Notes with Voice. Mac only for now. Use something like https://www.onresonant.com/ (future)
 
 
 ## Inbox

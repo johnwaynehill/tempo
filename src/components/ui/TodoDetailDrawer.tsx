@@ -130,7 +130,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             {todo.status !== 'today_pinned' && (
               <button
                 onClick={() => handleAction(() => pinToToday(todo.id))}
-                className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer"
+                className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
               >
                 Pin to Today
               </button>
@@ -138,7 +138,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             {todo.status !== 'backlog' && (
               <button
                 onClick={() => handleAction(() => moveToBacklog(todo.id))}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] ${
                   todo.status === 'inbox'
                     ? 'bg-gradient-to-br from-primary to-primary-dim text-on-primary hover:shadow-md'
                     : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -212,7 +212,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             </div>
 
             {/* Project + Due date row */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="text-xs text-on-surface-variant mb-2 block font-medium">Project</label>
                 <ProjectPicker
@@ -227,7 +227,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                   type="date"
                   defaultValue={todo.due_date?.toISOString().split('T')[0] ?? ''}
                   onChange={(e) => setField('due_date', e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
-                  className="w-full bg-surface-container rounded-lg px-3 py-2 text-on-surface text-sm outline-none"
+                  className="w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-base outline-none min-h-[44px]"
                 />
               </div>
             </div>
@@ -243,7 +243,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                   className="hidden"
                 />
                 <details className="group/defer">
-                  <summary className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer list-none">
+                  <summary className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer list-none min-h-[44px] flex items-center">
                     Defer
                   </summary>
                   <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
@@ -273,7 +273,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               <div className="relative">
                 <button
                   onClick={() => setShowReminderPicker(!showReminderPicker)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
                     todo.reminder_at
                       ? 'bg-primary/10 text-primary hover:bg-primary/20'
                       : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -295,7 +295,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               <div className="relative">
                 <button
                   onClick={() => setShowRecurrencePicker(!showRecurrencePicker)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                  className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
                     todo.recurrence
                       ? 'bg-primary/10 text-primary hover:bg-primary/20'
                       : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
@@ -316,7 +316,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               <div className="relative">
                 <button
                   onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
                 >
                   <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
                     <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
@@ -363,14 +363,14 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               {linkedNote ? (
                 <button
                   onClick={() => { navigate(`/notes/${linkedNote.id}`); handleClose() }}
-                  className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer"
+                  className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer min-h-[44px]"
                 >
                   ¶ {linkedNote.title}
                 </button>
               ) : (
                 <button
                   onClick={() => setShowNotePicker(true)}
-                  className="px-3 py-1.5 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer"
+                  className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
                 >
                   Link Note
                 </button>
