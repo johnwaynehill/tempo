@@ -82,7 +82,7 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
   - [x] 2. **Gamify** — "Give me 3 chaotic, highly stimulating ways to gamify this task."
   - [x] 3. **Transition protocol** — "Give me a 5-minute, low-energy transition protocol to shift out of freeze mode."
 - [x] Claude can create, update, and read Notes (summaries, reflections, plans)
-- [x] Firebase Cloud Function proxy for production (API key server-side, Firebase auth verified)
+- [x] Firebase Cloud Function proxy for production (API key server-side, Firebase auth verified, path allowlist hardened)
 - [x] 5-item Today cap enforced in both curation and breakdown modes
 - [x] Chat history persistence (conversations saved to Firestore, restored on return)
 - [ ] Proactive daily suggestions when opening Today page
@@ -100,7 +100,11 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
   - [x] Backlog defaults to show All Project ToDos; filter is optional
 - [x] Merged Calendar into Backlog as a view toggle (List / Calendar)
 - [x] Replaced collapsible project groups with flat section headers
-- [ ] Do UX pass with appropriate tools
+- [x] Do UX pass with appropriate tools
+  - [x] Mobile touch targets (44px minimum across all interactive elements)
+  - [x] iOS auto-zoom prevention (16px font on all inputs)
+  - [x] Mobile layout fixes (stacked grids, BottomNav spacing)
+  - [x] Added .impeccable.md design context for future sessions
 
 ## Bugs
 - [x] The "new version available" toast's Update Button does not do anything in Prod
@@ -111,5 +115,8 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [x] Make Hamburger Menu universal for all views
   - [x] Add New ToDo
   - [x] Add New Note
-- [ ] Create new icon for Claude/AI
+- [x] Create new icon for Claude/AI
   - [ ] Add to the bottom Nav Bar for iOS; (?, unsure)
+- [x] Add Completed to mobile hamburger menu
+- [x] Add section dividers to mobile hamburger menu
+- [x] Tap completed todos to open detail drawer (for delete/edit)
