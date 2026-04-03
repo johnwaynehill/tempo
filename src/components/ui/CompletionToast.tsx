@@ -21,10 +21,10 @@ export function CompletionToast({ message, onDismiss }: CompletionToastProps) {
 
   return (
     <div
-      className={`fixed bottom-24 md:bottom-8 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
+      className={`fixed top-[max(1.5rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
         visible
           ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-4'
+          : 'opacity-0 -translate-y-4'
       }`}
     >
       <button
