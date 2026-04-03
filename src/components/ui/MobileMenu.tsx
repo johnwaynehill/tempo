@@ -11,11 +11,13 @@ const navItems = [
     to: '/chat?mode=today',
     label: 'Tempo AI',
     icon: '<svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z"/><path d="M13 0C13 1.2 13.8 2 15 2C13.8 2 13 2.8 13 4C13 2.8 12.2 2 11 2C12.2 2 13 1.2 13 0Z" opacity="0.55"/></svg>',
+    divider: true,
   },
   {
     to: '/habits',
     label: 'Habits',
     icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>',
+    divider: true,
   },
   {
     to: '/completed',
@@ -31,6 +33,7 @@ const navItems = [
     to: '/review',
     label: 'Weekly Review',
     icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></svg>',
+    divider: true,
   },
   {
     to: '/settings',
@@ -98,15 +101,17 @@ export function MobileMenu() {
             <div className="border-t border-outline-variant/15 my-1.5" />
 
             {/* Navigation */}
-            {navItems.map(({ to, label, icon }) => (
-              <button
-                key={to}
-                onClick={() => { navigate(to); setOpen(false) }}
-                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-              >
-                <span className="text-on-surface-variant" dangerouslySetInnerHTML={{ __html: icon }} />
-                {label}
-              </button>
+            {navItems.map(({ to, label, icon, divider }) => (
+              <div key={to}>
+                <button
+                  onClick={() => { navigate(to); setOpen(false) }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <span className="text-on-surface-variant" dangerouslySetInnerHTML={{ __html: icon }} />
+                  {label}
+                </button>
+                {divider && <div className="border-t border-outline-variant/15 my-1.5" />}
+              </div>
             ))}
 
             {user && (
