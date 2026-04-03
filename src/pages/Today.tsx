@@ -3,9 +3,11 @@ import { useNavigate } from 'react-router'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
+import { CompletionToast } from '@/components/ui/CompletionToast'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
+import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -13,6 +15,7 @@ export function TodayPage() {
   const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading: todosLoading } = useTodos()
   const { preferences, updatePreferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
+  const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -69,7 +72,10 @@ export function TodayPage() {
               <TodoItem
                 key={todo.id}
                 todo={todo}
-                onComplete={completeTodo}
+                onComplete={(id) => {
+                  completeTodo(id)
+                  triggerToast(todo.title)
+                }}
                 onDefer={(id, until) => {
                   if (todo.status === 'today_pinned') {
                     deferTodo(id, until)
@@ -135,6 +141,10 @@ export function TodayPage() {
             />
           </form>
         </div>
+      )}
+
+      {toastMessage && (
+        <CompletionToast message={toastMessage} onDismiss={dismissToast} />
       )}
     </div>
   )
