@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useTodos } from '@/hooks/useTodos'
 import { MobileMenu } from '@/components/ui/MobileMenu'
+import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { toISODateString } from '@/lib/dateUtils'
 import type { Todo } from '@/types'
 
@@ -49,8 +50,9 @@ function formatCompletedDate(date: Date): string {
 }
 
 export function CompletedPage() {
-  const { done, uncompleteTodo } = useTodos()
+  const { done, completeTodo, deferTodo, uncompleteTodo } = useTodos()
   const [period, setPeriod] = useState<TimePeriod>('today')
+  const [drawerTodo, setDrawerTodo] = useState<Todo | null>(null)
 
   const filtered = useMemo(() => {
     const startDate = getStartDate(period)
@@ -99,7 +101,7 @@ export function CompletedPage() {
           <button
             key={p}
             onClick={() => setPeriod(p)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
+            className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
               period === p
                 ? 'bg-primary text-on-primary'
                 : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
@@ -124,9 +126,10 @@ export function CompletedPage() {
             </div>
             <div className="space-y-0.5">
               {todos.map((todo) => (
-                <div
+                <button
                   key={todo.id}
-                  className="flex items-start gap-3 py-3 px-3 rounded-xl hover:bg-surface-container transition-colors duration-200 group"
+                  onClick={() => setDrawerTodo(todo)}
+                  className="w-full flex items-start gap-3 py-3 px-3 rounded-xl hover:bg-surface-container transition-colors duration-200 group text-left cursor-pointer"
                 >
                   {/* Filled checkmark */}
                   <div className="mt-0.5 w-[18px] h-[18px] rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
@@ -147,14 +150,14 @@ export function CompletedPage() {
                   </div>
 
                   {/* Undo button */}
-                  <button
-                    onClick={() => uncompleteTodo(todo.id)}
-                    className="opacity-0 group-hover:opacity-100 px-2.5 py-1 rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200 cursor-pointer flex-shrink-0"
+                  <span
+                    onClick={(e) => { e.stopPropagation(); uncompleteTodo(todo.id) }}
+                    className="opacity-0 group-hover:opacity-100 max-md:opacity-60 px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-200 cursor-pointer flex-shrink-0 min-h-[44px] flex items-center"
                     title="Mark as not completed"
                   >
                     Undo
-                  </button>
-                </div>
+                  </span>
+                </button>
               ))}
             </div>
           </div>
@@ -165,6 +168,15 @@ export function CompletedPage() {
             {period === 'today' ? 'Nothing completed yet today.' : 'No completed tasks in this period.'}
           </p>
         </div>
+      )}
+
+      {drawerTodo && (
+        <TodoDetailDrawer
+          todo={drawerTodo}
+          onClose={() => setDrawerTodo(null)}
+          onComplete={completeTodo}
+          onDefer={deferTodo}
+        />
       )}
     </div>
   )
