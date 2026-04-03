@@ -112,7 +112,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           placeholder="e.g. Tempo"
-          className={`w-full bg-surface-container rounded-lg px-3 py-2 text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40 ${
+          className={`w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-base outline-none placeholder:text-on-surface-variant/40 min-h-[44px] ${
             value ? 'pr-8' : ''
           }`}
         />
@@ -121,7 +121,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
           <button
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => select(null)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant/50 hover:text-on-surface-variant hover:bg-surface-container-high transition-colors cursor-pointer"
             aria-label="Clear project"
           >
             <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

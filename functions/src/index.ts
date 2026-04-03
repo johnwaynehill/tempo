@@ -8,6 +8,7 @@ initializeApp()
 const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY')
 
 const ANTHROPIC_BASE = 'https://api.anthropic.com'
+const ALLOWED_PATHS = ['/v1/messages']
 
 /**
  * Proxy for Anthropic API requests.
@@ -48,7 +49,11 @@ export const anthropicProxy = onRequest(
     }
 
     // Forward the request to Anthropic
-    const apiPath = req.path || '/v1/messages'
+    const apiPath = req.path
+    if (!apiPath || !ALLOWED_PATHS.includes(apiPath)) {
+      res.status(403).json({ error: 'Forbidden API path' })
+      return
+    }
     const targetUrl = `${ANTHROPIC_BASE}${apiPath}`
 
     const body = JSON.stringify(req.body)

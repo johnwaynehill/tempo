@@ -240,7 +240,7 @@ export function MobileFormatBar() {
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => runCommand(item.command)}
               aria-label={item.label}
-              className="flex items-center justify-center w-10 h-10 rounded-lg text-on-surface-variant hover:bg-surface-container-high active:bg-primary-container active:text-primary transition-colors shrink-0 cursor-pointer"
+              className="flex items-center justify-center w-11 h-11 rounded-lg text-on-surface-variant hover:bg-surface-container-high active:bg-primary-container active:text-primary transition-colors shrink-0 cursor-pointer"
               dangerouslySetInnerHTML={{ __html: item.icon }}
             />
           ),

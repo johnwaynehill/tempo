@@ -40,7 +40,7 @@ export function FilterDropdown<T extends string>({
     <div className="relative">
       <button
         onClick={onToggle}
-        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] ${
           isActive
             ? 'bg-primary/10 text-primary'
             : 'bg-surface-container-high text-on-surface-variant'

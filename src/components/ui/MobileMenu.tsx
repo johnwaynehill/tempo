@@ -46,7 +46,7 @@ export function MobileMenu() {
     <div className="relative md:hidden">
       <button
         onClick={() => setOpen(!open)}
-        className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+        className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
         aria-label="Menu"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">

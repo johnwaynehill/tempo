@@ -42,18 +42,24 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
           <button
             onClick={handleComplete}
             disabled={completing}
-            className={`mt-0.5 w-5 h-5 rounded-full border-2 flex-shrink-0 transition-all duration-300 cursor-pointer flex items-center justify-center ${
+            className={`mt-0.5 w-11 h-11 rounded-full flex-shrink-0 transition-all duration-300 cursor-pointer flex items-center justify-center ${
               completing
-                ? 'border-primary bg-primary scale-110'
-                : 'border-outline-variant hover:border-primary hover:bg-primary/10'
+                ? ''
+                : ''
             }`}
             aria-label={`Complete "${todo.title}"`}
           >
-            {completing && (
-              <svg className="w-3 h-3 text-on-primary" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M2.5 6L5 8.5L9.5 3.5" />
-              </svg>
-            )}
+            <span className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${
+              completing
+                ? 'border-primary bg-primary scale-110'
+                : 'border-outline-variant group-hover:border-primary group-hover:bg-primary/10'
+            }`}>
+              {completing && (
+                <svg className="w-3 h-3 text-on-primary" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M2.5 6L5 8.5L9.5 3.5" />
+                </svg>
+              )}
+            </span>
           </button>
 
           {/* Content — tap to open drawer */}
@@ -120,7 +126,7 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
           {/* Subtle "Later" on hover */}
           <button
             onClick={() => setDrawerOpen(true)}
-            className="opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-60 text-xs text-on-surface-variant hover:text-on-surface px-2 py-1 rounded-lg hover:bg-surface-container transition-all duration-200 cursor-pointer flex-shrink-0"
+            className="opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-60 text-xs text-on-surface-variant hover:text-on-surface px-3 py-2 rounded-lg hover:bg-surface-container transition-all duration-200 cursor-pointer flex-shrink-0 min-h-[44px]"
             aria-label={`Edit "${todo.title}"`}
           >
             Edit

@@ -91,7 +91,7 @@ export function ReminderPicker({ currentReminder, onSet, onClear, onClose }: Rem
           <button
             key={opt.label}
             onClick={() => { onSet(opt.getDate()); onClose() }}
-            className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer min-h-[44px]"
           >
             {opt.label}
           </button>
@@ -106,19 +106,19 @@ export function ReminderPicker({ currentReminder, onSet, onClear, onClose }: Rem
               value={customDate}
               min={new Date().toISOString().split('T')[0]}
               onChange={(e) => setCustomDate(e.target.value)}
-              className="flex-1 bg-surface-container rounded-lg px-2 py-1 text-xs text-on-surface outline-none"
+              className="flex-1 bg-surface-container rounded-lg px-3 py-2.5 text-base text-on-surface outline-none min-h-[44px]"
             />
             <input
               type="time"
               value={customTime}
               onChange={(e) => setCustomTime(e.target.value)}
-              className="w-20 bg-surface-container rounded-lg px-2 py-1 text-xs text-on-surface outline-none"
+              className="w-24 bg-surface-container rounded-lg px-3 py-2.5 text-base text-on-surface outline-none min-h-[44px]"
             />
           </div>
           <button
             onClick={handleCustom}
             disabled={!customDate}
-            className="w-full text-xs px-3 py-1.5 rounded-lg bg-primary text-on-primary font-medium disabled:opacity-40 cursor-pointer"
+            className="w-full text-sm px-3 py-2.5 rounded-lg bg-primary text-on-primary font-medium disabled:opacity-40 cursor-pointer min-h-[44px]"
           >
             Set reminder
           </button>
