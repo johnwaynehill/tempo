@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react'
 import { anthropic, AI_ENABLED } from '@/lib/anthropic'
 
-const TRIGGER_CHANCE = 0.3
+const TRIGGER_CHANCE = import.meta.env.DEV ? 1.0 : 0.3
 const DISMISS_DELAY = 4000
 
 /** Fallback messages if the API call fails or AI is disabled */
@@ -15,7 +15,7 @@ const FALLBACK_MESSAGES = [
 
 export function useCompletionToast() {
   const [message, setMessage] = useState<string | null>(null)
-  const dismissTimer = useRef<ReturnType<typeof setTimeout>>()
+  const dismissTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const dismiss = useCallback(() => {
     setMessage(null)
