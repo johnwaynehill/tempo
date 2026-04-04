@@ -1,0 +1,61 @@
+import { Router } from 'express'
+import { randomBytes, createHash } from 'crypto'
+import { eq, and } from 'drizzle-orm'
+import { db, schema } from '../db/index.js'
+
+const router = Router()
+
+// List API keys (without hashes)
+router.get('/', async (req, res) => {
+  const rows = await db
+    .select({
+      id: schema.apiKeys.id,
+      keyPrefix: schema.apiKeys.keyPrefix,
+      name: schema.apiKeys.name,
+      createdAt: schema.apiKeys.createdAt,
+      lastUsedAt: schema.apiKeys.lastUsedAt,
+    })
+    .from(schema.apiKeys)
+    .where(eq(schema.apiKeys.userId, req.userId!))
+
+  res.json(rows)
+})
+
+// Create a new API key — returns the full key ONCE
+router.post('/', async (req, res) => {
+  const { name } = req.body as { name?: string }
+  const uid = req.userId!
+
+  // Generate key: tempo_{uid-prefix}_{random}
+  const random = randomBytes(24).toString('base64url')
+  const key = `tempo_${uid.slice(0, 8)}_${random}`
+  const keyHash = createHash('sha256').update(key).digest('hex')
+  const keyPrefix = key.slice(0, 20) + '...'
+
+  const [row] = await db
+    .insert(schema.apiKeys)
+    .values({ userId: uid, keyHash, keyPrefix, name: name || 'Default' })
+    .returning()
+
+  // Return the full key only on creation
+  res.status(201).json({
+    id: row.id,
+    key,
+    keyPrefix,
+    name: row.name,
+    createdAt: row.createdAt,
+  })
+})
+
+// Delete an API key
+router.delete('/:id', async (req, res) => {
+  const [row] = await db
+    .delete(schema.apiKeys)
+    .where(and(eq(schema.apiKeys.id, req.params.id), eq(schema.apiKeys.userId, req.userId!)))
+    .returning({ id: schema.apiKeys.id })
+
+  if (!row) { res.status(404).json({ error: 'Not found' }); return }
+  res.status(204).send()
+})
+
+export default router
