@@ -1,20 +1,19 @@
-import type { AddTodoInput, TodosContextValue } from '@/context/TodosContext'
-import type { NotesContextValue } from '@/context/NotesContext'
+import type { AddTodoInput } from '@/hooks/useTodos'
 import type { EnergyLevel, Note, Todo, TodoSize } from '@/types'
 
-// The subset of context methods the AI tool executor needs
+// The subset of hook methods the AI tool executor needs
 export interface ToolContext {
   todos: Todo[]
   notes: Note[]
-  addTodo: TodosContextValue['addTodo']
-  updateTodo: TodosContextValue['updateTodo']
-  completeTodo: TodosContextValue['completeTodo']
-  pinToToday: TodosContextValue['pinToToday']
-  deferTodo: TodosContextValue['deferTodo']
-  moveToBacklog: TodosContextValue['moveToBacklog']
-  dismissFromToday: TodosContextValue['dismissFromToday']
-  addNote: NotesContextValue['addNote']
-  updateNote: NotesContextValue['updateNote']
+  addTodo: (input: AddTodoInput) => Promise<string>
+  updateTodo: (id: string, updates: Partial<Todo>) => Promise<void>
+  completeTodo: (id: string) => Promise<void>
+  pinToToday: (id: string) => Promise<void>
+  deferTodo: (id: string, until?: Date) => Promise<void>
+  moveToBacklog: (id: string) => Promise<void>
+  dismissFromToday: (id: string) => Promise<void>
+  addNote: (title: string, content?: string) => Promise<string>
+  updateNote: (id: string, updates: Partial<Note>) => Promise<void>
 }
 
 function todoTitle(ctx: ToolContext, id: string): string {

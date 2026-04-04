@@ -1,5 +1,5 @@
 import type { TodoStatus, TodoSize, EnergyLevel } from '@/types'
-import type { AddTodoInput } from '@/context/TodosContext'
+import type { AddTodoInput } from '@/hooks/useTodos'
 
 /**
  * Coda column → Tempo field mapping from PRD Section 12.

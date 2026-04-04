@@ -1,8 +1,7 @@
-import { useEffect, useState, useRef, useCallback } from 'react'
-import { doc, onSnapshot, setDoc, Timestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { useCallback, useRef } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { reviewConverter } from '@/lib/converters'
 import type { WeeklyReview } from '@/types'
 
 interface UseWeeklyReviewResult {
@@ -13,34 +12,22 @@ interface UseWeeklyReviewResult {
 
 export function useWeeklyReview(weekId: string): UseWeeklyReviewResult {
   const { user } = useAuth()
-  const [review, setReview] = useState<WeeklyReview | null>(null)
-  const [loading, setLoading] = useState(true)
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const qc = useQueryClient()
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // Subscribe to the review document
-  useEffect(() => {
-    if (!user || !weekId) {
-      setReview(null)
-      setLoading(false)
-      return
-    }
-
-    setLoading(true)
-    const ref = doc(db, 'users', user.uid, 'reviews', weekId).withConverter(reviewConverter)
-
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      if (snapshot.exists()) {
-        setReview(snapshot.data())
-      } else {
-        setReview(null)
+  const { data: review = null, isLoading: loading } = useQuery({
+    queryKey: ['review', user?.uid, weekId],
+    queryFn: async () => {
+      try {
+        return await api.reviews.get(weekId) as unknown as WeeklyReview
+      } catch {
+        return null
       }
-      setLoading(false)
-    })
+    },
+    enabled: !!user && !!weekId,
+    staleTime: 30_000,
+  })
 
-    return unsubscribe
-  }, [user, weekId])
-
-  // Debounced save
   const saveReflection = useCallback(
     (text: string) => {
       if (!user || !weekId) return
@@ -48,16 +35,12 @@ export function useWeeklyReview(weekId: string): UseWeeklyReviewResult {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
 
       saveTimerRef.current = setTimeout(() => {
-        const now = new Date()
-        const ref = doc(db, 'users', user.uid, 'reviews', weekId)
-        setDoc(ref, {
-          reflection: text,
-          created_at: review?.created_at ? Timestamp.fromDate(review.created_at) : Timestamp.fromDate(now),
-          updated_at: Timestamp.fromDate(now),
+        api.reviews.save(weekId, { reflection: text }).then(() => {
+          qc.invalidateQueries({ queryKey: ['review', user.uid, weekId] })
         })
       }, 500)
     },
-    [user, weekId, review?.created_at],
+    [user, weekId],
   )
 
   return { review, loading, saveReflection }

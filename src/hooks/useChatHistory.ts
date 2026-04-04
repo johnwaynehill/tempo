@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
+import { v4 as uuid } from 'uuid'
 import {
   collection,
   doc,
@@ -10,7 +11,6 @@ import {
   limit,
   Timestamp,
 } from 'firebase/firestore'
-import { v4 as uuid } from 'uuid'
 import { db } from '@/lib/firebase'
 import { useAuth } from '@/context/AuthContext'
 import type { ChatMessage } from '@/hooks/useAIChat'
@@ -42,6 +42,9 @@ interface SerializedConversation {
 }
 
 // --- Hook ---
+// NOTE: Chat history remains on Firestore for now.
+// It will move to Postgres in a future phase when the conversations API
+// is extended with streaming support.
 
 export function useChatHistory() {
   const { user } = useAuth()

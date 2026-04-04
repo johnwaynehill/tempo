@@ -11,7 +11,7 @@ import {
 } from '@/lib/dateUtils'
 import { describeRecurrence } from '@/lib/recurrence'
 import type { CalendarEvent, Todo } from '@/types'
-import type { AddEventInput } from '@/context/EventsContext'
+import type { AddEventInput } from '@/hooks/useEvents'
 
 const WEEKDAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
