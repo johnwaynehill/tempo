@@ -1,3 +1,6 @@
+# Firebase service account keys
+*-firebase-adminsdk-*.json
+
 # Logs
 logs
 *.log
