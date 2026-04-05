@@ -141,7 +141,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
                 key={project}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => select(project)}
-                className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
+                className={`w-full text-left px-4 py-3 text-sm transition-colors cursor-pointer min-h-[44px] ${
                   i === highlightIndex
                     ? 'bg-surface-container-low'
                     : value === project

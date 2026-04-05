@@ -38,6 +38,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [visible, setVisible] = useState(false)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
+  const isNewTodo = !todo.title.trim()
 
   const setField = (field: string, value: unknown) => {
     updateTodo(todo.id, { [field]: value })
@@ -101,9 +102,12 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Handle bar (mobile) */}
-        <div className="md:hidden flex justify-center pt-3 pb-1">
-          <div className="w-8 h-1 rounded-full bg-outline-variant/30" />
+        {/* Drag handle / close zone */}
+        <div
+          className="flex justify-center pt-4 pb-2 cursor-pointer"
+          onClick={handleClose}
+        >
+          <div className="w-10 h-1.5 rounded-full bg-outline-variant/40" />
         </div>
 
         <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 space-y-7">
@@ -379,23 +383,35 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             </div>
           </div>
 
-          {/* Bottom actions: Delete + Complete */}
+          {/* Bottom actions: Delete + Complete/Add */}
           <div className="border-t border-outline-variant/15 pt-4 flex items-center gap-3">
             <button
               onClick={() => handleAction(() => removeTodo(todo.id))}
               className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-error/70 hover:text-error hover:bg-error/5 text-sm font-medium transition-colors cursor-pointer"
             >
-              Delete
+              {isNewTodo ? 'Discard' : 'Delete'}
             </button>
-            <button
-              onClick={handleComplete}
-              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
-            >
-              <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M2.5 6L5 8.5L9.5 3.5" />
-              </svg>
-              Complete
-            </button>
+            {isNewTodo ? (
+              <button
+                onClick={handleClose}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M8 3v10M3 8h10" />
+                </svg>
+                Add Todo
+              </button>
+            ) : (
+              <button
+                onClick={handleComplete}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M2.5 6L5 8.5L9.5 3.5" />
+                </svg>
+                Complete
+              </button>
+            )}
           </div>
         </div>
       </div>
