@@ -57,6 +57,7 @@ export interface Note {
   id: string
   title: string
   content: string // Markdown source
+  project?: string
   linked_todo_id?: string
   inline_todo_map?: Record<string, string> // checkboxId -> todoId
   created_at: Date

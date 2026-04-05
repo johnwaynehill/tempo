@@ -54,6 +54,7 @@ export const notes = pgTable('notes', {
   firestoreId: text('firestore_id'),
   title: text('title').notNull(),
   content: text('content').notNull().default(''),
+  project: text('project'),
   linkedTodoId: uuid('linked_todo_id'),
   inlineTodoMap: jsonb('inline_todo_map'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

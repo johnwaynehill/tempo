@@ -2,14 +2,17 @@ import { useParams, Link, useNavigate } from 'react-router'
 import { useRef, useCallback, useState, useEffect } from 'react'
 import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
+import { useProjects } from '@/hooks/useProjects'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
 import { LinkPicker } from '@/components/ui/LinkPicker'
+import { ProjectPicker } from '@/components/ui/ProjectPicker'
 
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { notes, loading, updateNote, removeNote } = useNotes()
   const { todos, updateTodo, addTodo } = useTodos()
+  const { projects } = useProjects()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
   const [showTodoPicker, setShowTodoPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
@@ -125,8 +128,15 @@ export function NoteEditorPage() {
         })}
       </p>
 
-      {/* Linked todo chip — or Link Todo button */}
-      <div className="mb-6">
+      {/* Project + Linked todo row */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <div className="w-40">
+          <ProjectPicker
+            value={note.project ?? null}
+            projects={projects}
+            onChange={(project) => updateNote(id!, { project: project ?? undefined })}
+          />
+        </div>
         {linkedTodo ? (
           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
             linkedTodo.status === 'done'

@@ -59,6 +59,7 @@ export interface Note {
   id: string
   title: string
   content: string
+  project?: string
   linkedTodoId?: string
   createdAt: string
   updatedAt: string

@@ -4,6 +4,7 @@ import { TodoItem } from '@/components/ui/TodoItem'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
 import { useTodos } from '@/hooks/useTodos'
+import { useNotes } from '@/hooks/useNotes'
 import { usePreferences } from '@/hooks/usePreferences'
 import { scoreTodo } from '@/lib/scoring'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
@@ -50,6 +51,7 @@ export function ProjectDetailPage() {
   const navigate = useNavigate()
 
   const { todos, completeTodo, deferTodo, updateTodo, loading } = useTodos()
+  const { notes, updateNote } = useNotes()
   const { preferences } = usePreferences()
 
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
@@ -73,6 +75,12 @@ export function ProjectDetailPage() {
     [todos, projectName],
   )
 
+  // Notes in this project
+  const projectNotes = useMemo(
+    () => notes.filter((n) => n.project === projectName),
+    [notes, projectName],
+  )
+
   const filtered = energyFilter
     ? projectTodos.filter((t) => t.energy_level === energyFilter)
     : projectTodos
@@ -82,7 +90,7 @@ export function ProjectDetailPage() {
     [filtered, sortMode, preferences.current_energy],
   )
 
-  // Rename project: batch update all todos with this project name
+  // Rename project: batch update all todos and notes with this project name
   const handleRename = async () => {
     const newName = renameValue.trim()
     if (!newName || newName === projectName) {
@@ -90,30 +98,37 @@ export function ProjectDetailPage() {
       return
     }
 
-    const matching = todos.filter((t) => t.project === projectName)
-    await Promise.all(matching.map((t) => updateTodo(t.id, { project: newName })))
+    const matchingTodos = todos.filter((t) => t.project === projectName)
+    const matchingNotes = projectNotes
+    await Promise.all([
+      ...matchingTodos.map((t) => updateTodo(t.id, { project: newName })),
+      ...matchingNotes.map((n) => updateNote(n.id, { project: newName })),
+    ])
     setRenaming(false)
     navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true })
   }
 
-  // Delete project: clear project field on all matching todos
+  // Delete project: clear project field on all matching todos and notes
   const handleDelete = async () => {
-    const matching = todos.filter((t) => t.project === projectName)
-    await Promise.all(matching.map((t) => updateTodo(t.id, { project: undefined })))
-    navigate('/backlog', { replace: true })
+    const matchingTodos = todos.filter((t) => t.project === projectName)
+    await Promise.all([
+      ...matchingTodos.map((t) => updateTodo(t.id, { project: undefined })),
+      ...projectNotes.map((n) => updateNote(n.id, { project: undefined })),
+    ])
+    navigate('/projects', { replace: true })
   }
 
   return (
     <div>
       {/* Back link */}
       <Link
-        to="/backlog"
+        to="/projects"
         className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors mb-6"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <path d="M10 4L6 8l4 4" />
         </svg>
-        Backlog
+        Projects
       </Link>
 
       {/* Header */}
@@ -183,7 +198,8 @@ export function ProjectDetailPage() {
         </div>
 
         <p className="text-on-surface-variant text-sm mt-1">
-          {projectTodos.length} active &middot; {totalCount} total
+          {projectTodos.length} active todo{projectTodos.length !== 1 ? 's' : ''}
+          {projectNotes.length > 0 && ` · ${projectNotes.length} note${projectNotes.length !== 1 ? 's' : ''}`}
         </p>
       </div>
 
@@ -265,6 +281,31 @@ export function ProjectDetailPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Notes section */}
+      {projectNotes.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-3">
+            Notes
+          </h2>
+          <div className="space-y-2">
+            {projectNotes.map((n) => (
+              <Link
+                key={n.id}
+                to={`/notes/${n.id}`}
+                className="block bg-surface-container-lowest rounded-xl p-4 hover:bg-surface-container-low transition-colors duration-200"
+              >
+                <h3 className="font-display font-semibold text-on-surface text-sm">
+                  {n.title}
+                </h3>
+                <p className="text-on-surface-variant text-xs mt-0.5">
+                  {n.updated_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Delete confirmation dialog */}

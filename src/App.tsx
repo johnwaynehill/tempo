@@ -19,6 +19,7 @@ import { HabitsPage } from '@/pages/Habits'
 import { HabitDetailPage } from '@/pages/HabitDetail'
 import { AIChatPage } from '@/pages/AIChat'
 import { CompletedPage } from '@/pages/Completed'
+import { ProjectsPage } from '@/pages/Projects'
 
 function AuthenticatedApp() {
   return (
@@ -29,6 +30,7 @@ function AuthenticatedApp() {
         <Route path="/backlog" element={<BacklogPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/notes/:id" element={<NoteEditorPage />} />
+        <Route path="/projects" element={<ProjectsPage />} />
         <Route path="/projects/:projectSlug" element={<ProjectDetailPage />} />
         <Route path="/braindump" element={<BrainDumpPage />} />
         <Route path="/habits" element={<HabitsPage />} />
