@@ -2,34 +2,46 @@ import { useParams, Link, useNavigate } from 'react-router'
 import { useRef, useCallback, useState, useEffect } from 'react'
 import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
-import { useProjects } from '@/hooks/useProjects'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
 import { LinkPicker } from '@/components/ui/LinkPicker'
-import { ProjectPicker } from '@/components/ui/ProjectPicker'
+import { extractProject } from '@/lib/hashtags'
 
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { notes, loading, updateNote, removeNote } = useNotes()
   const { todos, updateTodo, addTodo } = useTodos()
-  const { projects } = useProjects()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const lastProjectRef = useRef<string | undefined>(undefined)
   const [showTodoPicker, setShowTodoPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [confirmVisible, setConfirmVisible] = useState(false)
 
   const note = notes.find((n) => n.id === id)
+
+  // Keep lastProjectRef in sync with loaded note
+  useEffect(() => {
+    if (note) lastProjectRef.current = note.project
+  }, [note?.id])
+
   const linkedTodo = note?.linked_todo_id
     ? todos.find((t) => t.id === note.linked_todo_id)
     : undefined
 
   // Debounced auto-save (800ms after last keystroke)
+  // Also syncs project field from hashtags in content
   const handleContentChange = useCallback(
     (markdown: string) => {
       if (!id) return
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
-        updateNote(id, { content: markdown })
+        const project = extractProject(markdown)
+        const updates: Record<string, unknown> = { content: markdown }
+        if (project !== lastProjectRef.current) {
+          updates.project = project ?? null
+          lastProjectRef.current = project
+        }
+        updateNote(id, updates as Partial<import('@/types').Note>)
       }, 800)
     },
     [id, updateNote],
@@ -128,15 +140,17 @@ export function NoteEditorPage() {
         })}
       </p>
 
-      {/* Project + Linked todo row */}
+      {/* Tags + Linked todo row */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
-        <div className="w-40">
-          <ProjectPicker
-            value={note.project ?? null}
-            projects={projects}
-            onChange={(project) => updateNote(id!, { project: project ?? undefined })}
-          />
-        </div>
+        {note.project && (
+          <Link
+            to={`/projects/${encodeURIComponent(note.project)}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+          >
+            <span className="opacity-60">#</span>
+            {note.project}
+          </Link>
+        )}
         {linkedTodo ? (
           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
             linkedTodo.status === 'done'
