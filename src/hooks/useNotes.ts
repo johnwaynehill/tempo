@@ -26,8 +26,7 @@ export function useNotes() {
 
   const addNote = useCallback(async (title: string, content: string = ''): Promise<string> => {
     const id = uuid()
-    const now = new Date()
-    await api.notes.create({ id, title, content, created_at: now, updated_at: now } as unknown as Record<string, unknown>)
+    await api.notes.create({ id, title, content } as unknown as Record<string, unknown>)
     await invalidate()
     return id
   }, [])

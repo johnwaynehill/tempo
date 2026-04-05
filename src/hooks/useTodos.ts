@@ -45,7 +45,6 @@ export function useTodos() {
 
   const addTodo = useCallback(async (input: AddTodoInput): Promise<string> => {
     const id = uuid()
-    const now = new Date()
     const todo = {
       id,
       title: input.title,
@@ -57,8 +56,6 @@ export function useTodos() {
       due_date: input.due_date,
       recurrence: input.recurrence,
       note_id: input.note_id,
-      created_at: now,
-      updated_at: now,
     }
     await api.todos.create(todo as unknown as Record<string, unknown>)
     await invalidate()
@@ -94,8 +91,6 @@ export function useTodos() {
         recurrence_parent_id: todo.recurrence_parent_id ?? todo.id,
         note_id: todo.note_id,
         supports: todo.supports,
-        created_at: new Date(),
-        updated_at: new Date(),
       } as unknown as Record<string, unknown>)
       await invalidate()
     }

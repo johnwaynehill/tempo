@@ -30,12 +30,10 @@ export function useEvents() {
 
   const addEvent = useCallback(async (input: AddEventInput): Promise<string> => {
     const id = uuid()
-    const now = new Date()
     await api.events.create({
       id, title: input.title, start_time: input.start_time, end_time: input.end_time,
       all_day: input.all_day ?? false, description: input.description,
       location: input.location, color: input.color,
-      created_at: now, updated_at: now,
     } as unknown as Record<string, unknown>)
     await invalidate()
     return id
