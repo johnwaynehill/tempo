@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
-import { EnergySelector } from '@/components/ui/EnergySelector'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
@@ -10,12 +9,6 @@ import { scoreTodo } from '@/lib/scoring'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
 
 type SortMode = 'score' | 'due' | 'recent'
-
-const SORT_LABELS: Record<SortMode, string> = {
-  score: 'Priority',
-  due: 'Due date',
-  recent: 'Recent',
-}
 
 const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -203,8 +196,10 @@ export function ProjectDetailPage() {
         </p>
       </div>
 
-      {/* Mobile filter menus */}
-      <div className="sm:hidden flex gap-2 mb-6">
+      {/* Filter toolbar */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <div className="flex-1 min-w-0" />
+
         <FilterDropdown
           label="Energy"
           options={ENERGY_OPTIONS}
@@ -215,8 +210,9 @@ export function ProjectDetailPage() {
           onClose={() => setEnergyOpen(false)}
           onChange={(level) => setEnergyFilter(level)}
         />
+
         <FilterDropdown
-          label="Priority"
+          label="Sort"
           options={SORT_OPTIONS}
           value={sortMode !== 'score' ? sortMode : undefined}
           open={sortOpen}
@@ -224,33 +220,19 @@ export function ProjectDetailPage() {
           onClose={() => setSortOpen(false)}
           onChange={(mode) => setSortMode(mode ?? 'score')}
         />
-      </div>
 
-      {/* Desktop: always-visible controls */}
-      <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-4 mb-8">
-        <div className="min-w-0">
-          <EnergySelector
-            value={energyFilter}
-            onChange={(level) =>
-              setEnergyFilter(energyFilter === level ? undefined : level)
-            }
-          />
-        </div>
-        <div className="flex gap-1.5 flex-shrink-0">
-          {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setSortMode(mode)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                sortMode === mode
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {SORT_LABELS[mode]}
-            </button>
-          ))}
-        </div>
+        {energyFilter && (
+          <button
+            onClick={() => { setEnergyFilter(undefined); setEnergyOpen(false) }}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
+            title="Clear filters"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 3l6 6M9 3l-6 6" />
+            </svg>
+            1
+          </button>
+        )}
       </div>
 
       {/* Todo list */}
