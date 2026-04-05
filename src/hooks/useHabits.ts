@@ -32,11 +32,9 @@ export function useHabits() {
 
   const addHabit = useCallback(async (input: AddHabitInput): Promise<string> => {
     const id = uuid()
-    const now = new Date()
     await api.habits.create({
       id, name: input.name, description: input.description,
       frequency: 'daily', archived: false, completions: {},
-      created_at: now, updated_at: now,
     } as unknown as Record<string, unknown>)
     await invalidate()
     return id

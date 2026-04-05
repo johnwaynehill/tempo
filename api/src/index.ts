@@ -34,6 +34,18 @@ app.use(cors({
 }))
 app.use(express.json())
 
+// Parse ISO date strings in request bodies to Date objects (Drizzle requires Date, not strings)
+app.use((req, _res, next) => {
+  if (req.body && typeof req.body === 'object') {
+    for (const [key, value] of Object.entries(req.body)) {
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
+        req.body[key] = new Date(value)
+      }
+    }
+  }
+  next()
+})
+
 // Health check (unauthenticated)
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
