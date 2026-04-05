@@ -4,15 +4,14 @@ import { auth } from '@/lib/firebase'
 const isDev = import.meta.env.DEV
 const devApiKey = import.meta.env.VITE_ANTHROPIC_API_KEY as string | undefined
 
-// Production proxy URL — Cloud Function that injects the API key server-side
-const PROD_PROXY_URL = 'https://anthropicproxy-blb4phnqna-uc.a.run.app'
+const API_BASE = import.meta.env.VITE_API_URL || 'https://tempo-api-production.up.railway.app'
 
 const proxyUrl = isDev
   ? `${window.location.origin}/api/anthropic`
-  : PROD_PROXY_URL
+  : `${API_BASE}/api/anthropic`
 
 /**
- * Custom fetch that attaches the Firebase ID token for production proxy auth.
+ * Custom fetch that attaches the Firebase ID token for proxy auth.
  * In dev mode, uses plain fetch (Vite proxy doesn't need auth).
  */
 const authedFetch: typeof globalThis.fetch = async (input, init) => {

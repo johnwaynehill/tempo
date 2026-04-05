@@ -1,8 +1,7 @@
-import { useEffect, useState, useMemo, useRef } from 'react'
-import { doc, onSnapshot, setDoc } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
+import { useEffect, useMemo, useRef, useCallback } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { todaySetConverter } from '@/lib/converters'
 import { suggestTodayTodos } from '@/lib/scoring'
 import type { Todo, TodaySet, EnergyLevel } from '@/types'
 
@@ -14,7 +13,7 @@ function todayDateString(): string {
 interface UseTodaySetResult {
   /** The resolved todos for today (pinned + daily set, minus completed) */
   todayTodos: Todo[]
-  /** Whether the set is still loading from Firestore */
+  /** Whether the set is still loading */
   loading: boolean
   /** Remove a todo from the daily set (dismiss without replacing) */
   dismissFromSet: (todoId: string) => void
@@ -26,39 +25,25 @@ export function useTodaySet(
   currentEnergy?: EnergyLevel,
 ): UseTodaySetResult {
   const { user } = useAuth()
-  const [todaySet, setTodaySet] = useState<TodaySet | null>(null)
-  const [loading, setLoading] = useState(true)
+  const qc = useQueryClient()
   const generatingRef = useRef(false)
-
   const todayStr = todayDateString()
 
-  // Subscribe to the today_set document
-  useEffect(() => {
-    if (!user) {
-      setTodaySet(null)
-      setLoading(false)
-      return
-    }
+  const { data: todaySet, isLoading: loading } = useQuery({
+    queryKey: ['today-set', user?.uid, todayStr],
+    queryFn: async () => {
+      const result = await api.todaySet.get(todayStr)
+      return { date: result.date, todo_ids: result.todoIds ?? [] } as TodaySet
+    },
+    enabled: !!user,
+    staleTime: 60_000,
+  })
 
-    const ref = doc(db, 'users', user.uid, 'settings', 'today_set').withConverter(todaySetConverter)
-
-    const unsubscribe = onSnapshot(ref, (snapshot) => {
-      if (snapshot.exists()) {
-        setTodaySet(snapshot.data())
-      } else {
-        setTodaySet(null)
-      }
-      setLoading(false)
-    })
-
-    return unsubscribe
-  }, [user])
-
-  // Generate the daily set if it's a new day (or first time)
+  // Generate the daily set if it's a new day
   useEffect(() => {
     if (!user || loading) return
-    if (todaySet?.date === todayStr) return // Already have today's set
-    if (generatingRef.current) return // Prevent double-generation
+    if (todaySet?.date === todayStr) return
+    if (generatingRef.current) return
 
     generatingRef.current = true
 
@@ -68,13 +53,13 @@ export function useTodaySet(
       .filter((t) => !pinnedIds.has(t.id))
       .map((t) => t.id)
 
-    const ref = doc(db, 'users', user.uid, 'settings', 'today_set')
-    setDoc(ref, { date: todayStr, todo_ids: todoIds }).then(() => {
+    api.todaySet.update({ date: todayStr, todoIds }).then(() => {
       generatingRef.current = false
+      qc.invalidateQueries({ queryKey: ['today-set'] })
     })
   }, [user, loading, todaySet, todayStr, todos, pinned, currentEnergy])
 
-  // Resolve the daily set IDs to actual todos, filtering out completed/deleted
+  // Resolve the daily set IDs to actual todos
   const todayTodos = useMemo(() => {
     if (!todaySet || todaySet.date !== todayStr) return [...pinned]
 
@@ -82,21 +67,20 @@ export function useTodaySet(
     const pinnedIds = new Set(pinned.map((t) => t.id))
 
     const setTodos = todaySet.todo_ids
-      .filter((id) => !pinnedIds.has(id)) // Don't duplicate pinned items
+      .filter((id) => !pinnedIds.has(id))
       .map((id) => todoMap.get(id))
       .filter((t): t is Todo => t !== undefined && t.status !== 'done')
 
     return [...pinned, ...setTodos]
   }, [todaySet, todayStr, todos, pinned])
 
-  // Dismiss a todo from the daily set
-  const dismissFromSet = (todoId: string) => {
+  const dismissFromSet = useCallback((todoId: string) => {
     if (!user || !todaySet) return
-
     const updatedIds = todaySet.todo_ids.filter((id) => id !== todoId)
-    const ref = doc(db, 'users', user.uid, 'settings', 'today_set')
-    setDoc(ref, { date: todaySet.date, todo_ids: updatedIds })
-  }
+    api.todaySet.update({ date: todaySet.date, todoIds: updatedIds }).then(() => {
+      qc.invalidateQueries({ queryKey: ['today-set'] })
+    })
+  }, [user, todaySet])
 
   return { todayTodos, loading, dismissFromSet }
 }
