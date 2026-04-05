@@ -1,13 +1,6 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
-import {
-  initializeFirestore,
-  persistentLocalCache,
-  persistentMultipleTabManager,
-} from 'firebase/firestore'
 
-// TODO: Replace with your Firebase project config
-// Create a project at https://console.firebase.google.com
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -18,13 +11,5 @@ const firebaseConfig = {
 }
 
 export const app = initializeApp(firebaseConfig)
-
-// Firestore with offline persistence + multi-tab support
-export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({
-    tabManager: persistentMultipleTabManager(),
-  }),
-})
-
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
