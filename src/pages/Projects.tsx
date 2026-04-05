@@ -1,19 +1,78 @@
-import { Link } from 'react-router'
+import { useState } from 'react'
+import { Link, useNavigate } from 'react-router'
 import { useProjects } from '@/hooks/useProjects'
+import { api } from '@/lib/api'
+import { useQueryClient } from '@tanstack/react-query'
 
 export function ProjectsPage() {
   const { projects, projectCounts, noteCounts } = useProjects()
+  const navigate = useNavigate()
+  const qc = useQueryClient()
+  const [showNew, setShowNew] = useState(false)
+  const [newName, setNewName] = useState('')
+
+  const handleCreate = async () => {
+    const name = newName.trim()
+    if (!name) return
+    await api.projects.create(name)
+    qc.invalidateQueries({ queryKey: ['projects'] })
+    setNewName('')
+    setShowNew(false)
+    navigate(`/projects/${encodeURIComponent(name)}`)
+  }
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-          Projects
-        </h1>
-        <p className="text-on-surface-variant text-sm">
-          {projects.length} project{projects.length !== 1 ? 's' : ''}
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
+            Projects
+          </h1>
+          <p className="text-on-surface-variant text-sm">
+            {projects.length} project{projects.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <button
+          onClick={() => setShowNew(true)}
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0 min-h-[44px]"
+        >
+          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          New project
+        </button>
       </div>
+
+      {/* New project inline form */}
+      {showNew && (
+        <form
+          onSubmit={(e) => { e.preventDefault(); handleCreate() }}
+          className="mb-6 flex items-center gap-2"
+        >
+          <input
+            type="text"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            placeholder="Project name"
+            autoFocus
+            className="flex-1 px-4 py-2.5 rounded-xl bg-surface-container-lowest text-on-surface text-sm outline-none border border-outline-variant/30 focus:border-primary transition-colors min-h-[44px]"
+          />
+          <button
+            type="submit"
+            disabled={!newName.trim()}
+            className="px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed min-h-[44px]"
+          >
+            Create
+          </button>
+          <button
+            type="button"
+            onClick={() => { setShowNew(false); setNewName('') }}
+            className="px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
+          >
+            Cancel
+          </button>
+        </form>
+      )}
 
       {projects.length === 0 ? (
         <div className="text-center py-20">

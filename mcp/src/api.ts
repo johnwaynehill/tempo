@@ -85,6 +85,13 @@ export interface WeeklyReview {
   updatedAt: string
 }
 
+export interface Project {
+  id: string
+  name: string
+  createdAt: string
+  updatedAt: string
+}
+
 // --- API methods ---
 
 export const api = {
@@ -105,6 +112,12 @@ export const api = {
     get: (id: string) => apiFetch<Note>(`/api/notes/${id}`),
     create: (data: Partial<Note>) => apiFetch<Note>('/api/notes', { method: 'POST', body: JSON.stringify(data) }),
     update: (id: string, data: Partial<Note>) => apiFetch<Note>(`/api/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  },
+  projects: {
+    list: () => apiFetch<Project[]>('/api/projects'),
+    create: (name: string) => apiFetch<Project>('/api/projects', { method: 'POST', body: JSON.stringify({ name }) }),
+    rename: (id: string, name: string) => apiFetch<Project>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+    delete: (id: string) => apiFetch<void>(`/api/projects/${id}`, { method: 'DELETE' }),
   },
   events: {
     list: () => apiFetch<CalendarEvent[]>('/api/events'),

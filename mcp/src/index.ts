@@ -164,6 +164,67 @@ server.tool(
   },
 )
 
+// --- List Projects ---
+server.tool(
+  'list_projects',
+  'List all projects',
+  {},
+  async () => {
+    const projects = await api.projects.list()
+    if (projects.length === 0) {
+      return { content: [{ type: 'text', text: 'No projects.' }] }
+    }
+    const lines = projects.map(p => `${p.name} | id: ${p.id}`)
+    return { content: [{ type: 'text', text: lines.join('\n') }] }
+  },
+)
+
+// --- Create Project ---
+server.tool(
+  'create_project',
+  'Create a new project (or return existing if name matches)',
+  {
+    name: z.string().describe('Project name'),
+  },
+  async ({ name }) => {
+    const project = await api.projects.create(name)
+    return {
+      content: [{ type: 'text', text: `Project: ${project.name} | id: ${project.id}` }],
+    }
+  },
+)
+
+// --- Rename Project ---
+server.tool(
+  'rename_project',
+  'Rename a project (cascades to all associated todos)',
+  {
+    id: z.string().describe('Project ID'),
+    name: z.string().describe('New project name'),
+  },
+  async ({ id, name }) => {
+    const project = await api.projects.rename(id, name)
+    return {
+      content: [{ type: 'text', text: `Renamed to: ${project.name}` }],
+    }
+  },
+)
+
+// --- Delete Project ---
+server.tool(
+  'delete_project',
+  'Delete a project (removes label from todos, unlinks notes)',
+  {
+    id: z.string().describe('Project ID'),
+  },
+  async ({ id }) => {
+    await api.projects.delete(id)
+    return {
+      content: [{ type: 'text', text: `Deleted project ${id}` }],
+    }
+  },
+)
+
 // --- List Habits ---
 server.tool(
   'list_habits',
