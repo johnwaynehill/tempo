@@ -57,9 +57,16 @@ export interface Note {
   id: string
   title: string
   content: string // Markdown source
-  project?: string
+  projects: string[] // Project names via hashtags
   linked_todo_id?: string
   inline_todo_map?: Record<string, string> // checkboxId -> todoId
+  created_at: Date
+  updated_at: Date
+}
+
+export interface Project {
+  id: string
+  name: string
   created_at: Date
   updated_at: Date
 }

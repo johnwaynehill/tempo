@@ -4,6 +4,7 @@ import { TodoItem } from '@/components/ui/TodoItem'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
+import { useProjects } from '@/hooks/useProjects'
 import { usePreferences } from '@/hooks/usePreferences'
 import { scoreTodo } from '@/lib/scoring'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
@@ -43,9 +44,13 @@ export function ProjectDetailPage() {
   const projectName = decodeURIComponent(projectSlug ?? '')
   const navigate = useNavigate()
 
-  const { todos, completeTodo, deferTodo, updateTodo, loading } = useTodos()
-  const { notes, updateNote } = useNotes()
+  const { todos, completeTodo, deferTodo, loading } = useTodos()
+  const { notes } = useNotes()
+  const { projectList, renameProject, deleteProject } = useProjects()
   const { preferences } = usePreferences()
+
+  // Find the project DB object by name
+  const projectObj = projectList.find(p => p.name === projectName)
 
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
@@ -68,9 +73,9 @@ export function ProjectDetailPage() {
     [todos, projectName],
   )
 
-  // Notes in this project
+  // Notes in this project (many-to-many via projects array)
   const projectNotes = useMemo(
-    () => notes.filter((n) => n.project === projectName),
+    () => notes.filter((n) => (n.projects ?? []).includes(projectName)),
     [notes, projectName],
   )
 
@@ -83,31 +88,22 @@ export function ProjectDetailPage() {
     [filtered, sortMode, preferences.current_energy],
   )
 
-  // Rename project: batch update all todos and notes with this project name
+  // Rename project via API (cascades to todos.project automatically)
   const handleRename = async () => {
     const newName = renameValue.trim()
-    if (!newName || newName === projectName) {
+    if (!newName || newName === projectName || !projectObj) {
       setRenaming(false)
       return
     }
-
-    const matchingTodos = todos.filter((t) => t.project === projectName)
-    const matchingNotes = projectNotes
-    await Promise.all([
-      ...matchingTodos.map((t) => updateTodo(t.id, { project: newName })),
-      ...matchingNotes.map((n) => updateNote(n.id, { project: newName })),
-    ])
+    await renameProject(projectObj.id, newName)
     setRenaming(false)
     navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true })
   }
 
-  // Delete project: clear project field on all matching todos and notes
+  // Delete project via API (cascades to todos + note_projects)
   const handleDelete = async () => {
-    const matchingTodos = todos.filter((t) => t.project === projectName)
-    await Promise.all([
-      ...matchingTodos.map((t) => updateTodo(t.id, { project: undefined })),
-      ...projectNotes.map((n) => updateNote(n.id, { project: undefined })),
-    ])
+    if (!projectObj) return
+    await deleteProject(projectObj.id)
     navigate('/projects', { replace: true })
   }
 
