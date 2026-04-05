@@ -1,5 +1,6 @@
 import 'dotenv/config'
 import express from 'express'
+import cors from 'cors'
 import admin from 'firebase-admin'
 import { authenticate } from './middleware/auth.js'
 import todosRouter from './routes/todos.js'
@@ -20,6 +21,15 @@ admin.initializeApp({
 const app = express()
 const port = parseInt(process.env.PORT || '3001', 10)
 
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:4173',
+    /\.vercel\.app$/,
+    /\.web\.app$/,
+  ],
+  credentials: true,
+}))
 app.use(express.json())
 
 // Health check (unauthenticated)
