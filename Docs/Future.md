@@ -22,7 +22,9 @@
 ## Today View
 - [x] Fixed daily set of 5 todos — list shrinks as items are completed, no backfill
 ~~Ability to drag-and-drop ToDos for sorting~~
-- [ ] Add a AI generated "good job" message on random ToDo completions; consider using a Toast notificaiton or some sort of screen takeover with some light animation
+- [x] Add a AI generated "good job" message on random ToDo completions; consider using a Toast notificaiton or some sort of screen takeover with some light animation
+- [ ] Consider adding a view of Habits into Today (future)
+- [ ] Keep Tempo AI Chat bar at the bottom and visible even if the page scrolls
 
 ## Backlog Updates
 - [x] It's not obvious that a pill is selected for Filter due to colors being the same as selected state
@@ -87,6 +89,9 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [x] Chat history persistence (conversations saved to Firestore, restored on return)
 - [ ] Proactive daily suggestions when opening Today page
 - [x] Remove Plus FAB from Claude pages.
+- [x] API layer to enable external tools to read/write data to Tempo
+- [x] MCP Server for AI Tools
+- [ ] CLI (unsure if needed)
 
 ## Desktop App
 - [x] Clean up left navigation Rail
@@ -120,3 +125,31 @@ Ability to switch contexts between Work and Personal modes; each with thier own 
 - [x] Add Completed to mobile hamburger menu
 - [x] Add section dividers to mobile hamburger menu
 - [x] Tap completed todos to open detail drawer (for delete/edit)
+
+## Tempo AI
+- [ ] Chat bar should stay fixed at the bottom
+- [ ] Chat bar should expand in height up to a max of 7 lines of text
+- [ ] Weird zoom-in issue when selecting the Chat bar
+- [ ] Tempo AI header has weird scrolling issue
+
+## Additional Features
+Future features to build in over time
+
+#### Navigation
+- [ ] Simplify the navigation for mobile. Do a UX Designer pass to first understand what the navigation should be. Max of 5 nav items for mobile.
+
+#### Mood Tracking
+Like https://www.tiimoapp.com/product/mood-tracking. A simple slider with a big, emotional face
+- [ ] Track mode anytime
+- [ ] Mood tracking as an automatic habit
+  - [ ] Autocompletes when mood is tracked
+- [ ] Sync to Apple Health (optional)
+
+#### Time Tracker
+Like https://www.tiimoapp.com/product/focus. A simple tracker that counts down from a pre-determined list of timers. Built for time agnosia. https://cdn.prod.website-files.com/64786b629e5c33d650d54a0a/6819f671b9dc81938504c46b_Timeagnosiamain.jpg as inspiration for the design of the page.
+- [ ] Count down timer from a small list (5, 15, 25, 45 mins)
+- [ ] Ability to Add 1 min (from a button)
+- [ ] Select ToDos to accomplish during this timer
+
+#### ADHD Paralysis
+We created some prompts for a ToDo that feels hard to tackle. Let's build in more features that help me tackle ADHD Paralysis. Read https://www.tiimoapp.com/resource-hub/adhd-paralysis and brainstorm ideas for features to add to Tempo to help.
