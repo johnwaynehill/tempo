@@ -12,6 +12,7 @@ import todaySetRouter from './routes/today-set.js'
 import reviewsRouter from './routes/reviews.js'
 import apiKeysRouter from './routes/api-keys.js'
 import anthropicRouter from './routes/anthropic.js'
+import conversationsRouter from './routes/conversations.js'
 
 // Init Firebase Admin (for token verification)
 admin.initializeApp({
@@ -50,6 +51,7 @@ app.use('/api/today-set', todaySetRouter)
 app.use('/api/reviews', reviewsRouter)
 app.use('/api/api-keys', apiKeysRouter)
 app.use('/api/anthropic', anthropicRouter)
+app.use('/api/conversations', conversationsRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Tempo API running on port ${port}`)

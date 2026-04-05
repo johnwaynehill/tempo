@@ -136,6 +136,16 @@ export const api = {
       method: 'PUT', body: JSON.stringify(data),
     }).then(r => fromApi(r, TIMESTAMP_DATES)),
   },
+  conversations: {
+    list: () => apiFetch<Record<string, unknown>[]>('/api/conversations')
+      .then(rows => rows.map(r => fromApi(r, TIMESTAMP_DATES))),
+    get: (id: string) => apiFetch<Record<string, unknown>>(`/api/conversations/${id}`)
+      .then(r => fromApi(r, TIMESTAMP_DATES)),
+    save: (id: string, data: Record<string, unknown>) => apiFetch<Record<string, unknown>>(`/api/conversations/${id}`, {
+      method: 'PUT', body: JSON.stringify(toApi(data)),
+    }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    delete: (id: string) => apiFetch<void>(`/api/conversations/${id}`, { method: 'DELETE' }),
+  },
   apiKeys: {
     list: () => apiFetch<Record<string, unknown>[]>('/api/api-keys'),
     create: (name: string) => apiFetch<Record<string, unknown>>('/api/api-keys', {
