@@ -1,39 +1,16 @@
 # Product Requirements Document
 ## Tempo — ADHD-First Personal Productivity PWA
 
-**Version:** 0.5
+**Version:** 1.0
 **Author:** Staff PM / UX (Claude)
-**Date:** 2026-03-29
-**Status:** v1 Complete — v2 Complete — v3 In Progress (Insights + Review shipped)
+**Date:** 2026-04-05
+**Status:** v1–v3 Complete — ongoing feature work
 
-**Changelog (v0.4 → v0.5):**
-- Marked shipped: projects as sidebar folders (US-28), Create Note button (US-33), mobile Markdown editor bar (US-34)
-- Added new user stories: US-38 (mobile settings & profile in Today header), US-39 (manual PWA update check)
-- All P2 items now shipped — roadmap moves to P3
-- Updated version to 0.5, status to v3 In Progress
-
-**Changelog (v0.3 → v0.4):**
-- Marked shipped v2 items: floating formatting toolbar (US-24), delete note confirmation (US-25), celebratory empty states (US-26), backlog filter contrast (US-27), project typeahead in todo detail
-- Added new user stories: US-33 (Create Note button), US-34 (mobile Markdown editor bar), US-35 (calendar view), US-36 (today fixed daily set), US-37 (mobile responsiveness / PWA safe areas)
-- Updated Firestore collections to include `today_set` document
-- Updated v2 roadmap to reflect current progress
-- Updated technical architecture: Vite (not Next.js), Railway (not Vercel)
-
-**Changelog (v0.2 → v0.3):**
-- Added v2 user stories (US-24 through US-32): floating formatting toolbar, celebratory states, project folders, habit tracker, visualizations, voice input, work/personal modes
-- Added v2 Roadmap table with prioritized feature list
-- Updated Information Architecture to reflect v2 additions
-- Marked todo detail drawer as shipped (US-28 partial)
-
-**Changelog (v0.1 → v0.2):**
-- Replaced iCloud/GitHub sync with Firebase Firestore (real-time, offline-first)
-- Dropped Obsidian dependency; Tempo becomes the primary note editor with WYSIWYG Markdown
-- Switched framework from SvelteKit to Next.js (React)
-- Resolved Today view curation: hybrid auto-suggest + manual pin
-- Added energy-level matching as a v1 feature
-- Promoted note–todo linking to P1
-- Scoped reminders to Mac-only for v1 (iOS PWA limitation)
-- Resolved all open questions
+**Related Docs:**
+- [CHANGELOG.md](CHANGELOG.md) — Detailed history of shipped work by date
+- [Future.md](Future.md) — Feature backlog and ideas
+- [ProjectReference.md](ProjectReference.md) — Tech stack, repo structure, API patterns, and conventions
+- [ADHD-Productivity-Apps-Research.md](ADHD-Productivity-Apps-Research.md) — Competitive analysis and neuroscience research informing the roadmap
 
 ---
 
@@ -77,18 +54,16 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 | G1 | Surface a focused "Today" view with ≤5 prioritized todos — never the full list by default |
 | G2 | Allow friction-free capture of todos and notes in under 3 seconds |
 | G3 | Provide a visually calm, minimal UI that reduces cognitive load |
-| G4 | Sync seamlessly across Mac and iPhone via Firestore (real-time, no manual step) |
+| G4 | Sync seamlessly across Mac and iPhone (real-time, no manual step) |
 | G5 | Provide a WYSIWYG Markdown note editor good enough to replace Obsidian |
 | G6 | Deliver gentle, non-punishing reminders (Mac only in v1) |
 | G7 | Work offline-first as a PWA installed on both devices |
 | G8 | Match tasks to current energy level (ADHD-specific) |
 
-### Non-Goals (v1)
+### Non-Goals
 - Not a team/collaboration tool
 - Not a Coda integration (migrate data once; Coda becomes the archive)
-- Not a calendar or time-blocking app
-- No AI features in v1
-- No iOS push notifications in v1 (Web Push unsupported on iOS PWAs)
+- No iOS push notifications (Web Push unsupported on iOS PWAs)
 
 ---
 
@@ -157,23 +132,21 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 
 ```
 Tempo
-├── Today             ← Default landing view (≤5 prioritized todos)
-│   └── Energy selector (persistent in header)
+├── Today             ← Default landing view (≤5 daily todos + energy selector)
 ├── Inbox             ← Unprocessed captures
-├── Backlog           ← Full todo list (collapsed by default)
-│   └── [Project folders]              ← v2: promoted to sidebar nav
-│   └── Energy filter
-├── Notes
-│   ├── [Note list]
-│   └── [WYSIWYG Markdown editor]      ← v2: floating formatting toolbar
-├── Habits            ← v2: daily habit tracker + contribution grid
-├── Insights          ← v2: todo visualizations (completed, by project, trends)
-├── Brain Dump        ← Quick scratchpad → Inbox
+├── Backlog           ← Full todo list (collapsed by project, energy filter)
+├── Projects          ← Project folders with filtered views
+├── Calendar          ← Month grid with event CRUD
+├── Notes             ← Note list + WYSIWYG Markdown editor (Milkdown)
+├── Habits            ← Daily habit tracker + contribution grid
+├── Insights          ← Todo visualizations (completed, by project, trends)
+├── Weekly Review     ← Reflection + summary cards
+├── Completed         ← Archive of done todos
+├── Tempo AI          ← Claude-powered chat assistant (ADHD task breakdown)
 └── Settings
-    ├── Mode selector (Work / Personal) ← v2: isolated databases
     ├── Notification preferences (Mac)
     ├── Import from Coda (CSV)
-    └── Export data (JSON + .md)
+    └── PWA update check
 ```
 
 ---
@@ -274,77 +247,44 @@ Note {
 }
 ```
 
-### Firestore Collections
+### Database
 
-```
-/users/{uid}/todos/{todoId}           ← One document per todo
-/users/{uid}/notes/{noteId}           ← One document per note
-/users/{uid}/settings/preferences     ← Single doc: energy, theme, notification prefs
-/users/{uid}/settings/today_set       ← Daily set: { date: string, todo_ids: string[] }
-```
+Postgres on Railway. Full schema in `api/src/db/schema.ts`. See [ProjectReference.md](ProjectReference.md) for table list and API patterns.
 
 ---
 
-## 10. Sync Strategy
+## 10. Data & Sync Strategy
 
 | Concern | Approach |
 |---------|----------|
-| Storage | Firebase Firestore (free Spark tier) |
-| Structure | One document per todo, one document per note |
-| Real-time sync | Firestore `onSnapshot` listeners — instant across devices |
-| Offline | Firestore persistence enabled (built-in IndexedDB cache) |
-| Conflict resolution | Last-write-wins at the document level (single-user, low conflict risk) |
-| Auth | Firebase Auth with Google sign-in |
-| Free tier limits | 1 GB storage, 50K reads/day, 20K writes/day (far exceeds personal use) |
-| Data portability | One-click export: todos as JSON, notes as individual `.md` files |
-| AI accessibility | Structured Firestore data; export produces JSON readable by any AI tool |
+| Storage | Postgres on Railway |
+| API | Express 5 + Drizzle ORM (REST endpoints) |
+| Data layer | TanStack Query (React) — cache, refetch, optimistic updates |
+| Auth | Firebase Auth (Google sign-in) — token verified server-side |
+| AI access | MCP server with 17 tools using API keys; Anthropic Claude proxy |
+| Conflict resolution | Last-write-wins (single-user, low conflict risk) |
+| Data portability | Structured Postgres data; MCP tools enable AI-readable access |
 
-### Why Not GitHub?
-The original PRD proposed GitHub Contents API. This was replaced because:
-- Every save = a git commit (noisy, slow, 2 API calls per write)
-- No real-time sync (polling only)
-- Single `todos.json` file = merge conflict risk across devices
-- Rate limits add complexity for a frequently-used personal tool
-
-### Why Not iCloud?
-- PWAs on iOS cannot access iCloud files directly
-- Would require a native wrapper or sync script
-- No real-time push for changes across devices
+See [ProjectReference.md](ProjectReference.md) for full stack details, auth flow, and API patterns.
 
 ---
 
 ## 11. Technical Architecture
 
-| Layer | Choice | Rationale |
-|-------|--------|-----------|
-| Framework | Vite 8 + React 19 + TypeScript | Fast builds, modern tooling, strong ecosystem |
-| Hosting | Railway (custom domain) | Docker-based, consolidates with other projects |
-| Data | Firebase Firestore | Real-time sync, offline built-in, free tier |
-| Auth | Firebase Auth (Google sign-in) | One-tap, secures Firestore rules |
-| Offline | Firestore persistence | Built-in IndexedDB cache, no extra code |
-| Markdown editor | Milkdown (ProseMirror-based) | WYSIWYG Markdown, keyboard shortcuts, mobile-friendly, lightweight |
-| Styling | Tailwind CSS v4 | CSS-based theme tokens, dark mode built-in |
-| Notifications | Web Push API | Mac only in v1 (iOS PWA doesn't support) |
-| PWA | vite-plugin-pwa | Service worker via Workbox, installable on Mac + iPhone |
+See [ProjectReference.md](ProjectReference.md) for the full tech stack, repo structure, and conventions.
 
 ### Data Flow
 ```
-User action → React state update (optimistic UI)
-           → Firestore write (async, real-time)
-           → Firestore syncs to other devices via onSnapshot
-           → If offline: Firestore caches locally, syncs on reconnect
+User action → React state update (optimistic UI via TanStack Query)
+           → REST API call (Express + Drizzle ORM → Postgres)
+           → TanStack Query invalidates/refetches as needed
 ```
 
-### Firestore Security Rules (Simplified)
+### Auth Flow
 ```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-    }
-  }
-}
+Google Sign-In → Firebase Auth → ID token in Authorization header
+API verifies token → scopes all queries by user_id (Firebase UID)
+MCP/external tools use API keys (X-API-Key header) instead of tokens
 ```
 
 ---
@@ -399,31 +339,63 @@ service cloud.firestore {
 | Data export (JSON + .md) | P1 | Portability + AI readability |
 | Brain dump / scratchpad | P2 | |
 
-### v2 Roadmap
+### What's Been Built
 
-| Feature | Priority | Status | Notes |
-|---------|----------|--------|-------|
-| Floating formatting toolbar (Notes) | P2 | ✅ Shipped | Select text → contextual toolbar with all Markdown options |
-| Delete note confirmation | P2 | ✅ Shipped | Simple confirm dialog before permanent delete |
-| Celebratory empty states | P2 | ✅ Shipped | More rewarding "All done" / "Inbox zero" moments |
-| Backlog filter pill contrast fix | P2 | ✅ Shipped | UX polish — clearer selected vs. unselected state |
-| Project typeahead in todo detail | P2 | ✅ Shipped | Combobox with autocomplete for existing projects, implicit create on blur |
-| Today fixed daily set (US-36) | P2 | ✅ Shipped | 5 todos per day, list shrinks as items complete, no backfill |
-| Mobile responsiveness & PWA safe areas (US-37) | P2 | ✅ Shipped | Safe-area insets, 44px touch targets, responsive drawers & filters |
-| Projects as sidebar folders (US-28) | P2 | ✅ Shipped | Sidebar nav, project detail pages, rename/delete, backlog pills |
-| Create Note button (US-33) | P2 | ✅ Shipped | One-tap note creation from Notes page |
-| Mobile Markdown editor bar (US-34) | P2 | ✅ Shipped | Formatting toolbar above keyboard on mobile |
-| Mobile settings & profile (US-38) | P2 | ✅ Shipped | Settings gear + profile pic in Today header on mobile |
-| Manual PWA update check (US-39) | P2 | ✅ Shipped | "Check for updates" button in Settings page |
-| Calendar view (US-35) | P3 | ✅ Shipped | Tasks on calendar with recurring meeting support |
-| Habit tracker (US-29) | P3 | ✅ Shipped | Daily habit tracking with GitHub-style contribution grid |
-| Todo visualizations (US-30) | P3 | ✅ Shipped | Charts: completed by project, on-time, trends over time |
-| Voice input + transcription | P3 | | Capture by voice, transcribed to text |
-| Work/Personal modes | P3 | | Isolated contexts with separate databases and mode indicator |
-| Recurring todos (US-19) | P3 | ✅ Shipped | Auto-creates next occurrence on completion |
-| Inline todo syntax in notes (US-20) | P3 | ✅ Shipped | `- [ ]` in notes creates todos on click |
-| Weekly review screen (US-22) | P3 | ✅ Shipped | Week navigator, summary cards, reflection textarea, mobile menu |
-| iOS push notifications | P3 | | When Apple supports Web Push on PWAs |
+All v1 (P0/P1) and v2 (P2) features are shipped. Most v3 (P3) features are shipped. Summary of key capabilities beyond the v1 MVP:
+
+**Editor & Notes:** Floating formatting toolbar, mobile Markdown bar above keyboard, Create Note button, delete confirmation, inline todo checkboxes in notes, hashtag extraction with visual badges
+
+**Today & Focus:** Fixed daily set of 5 todos (shrinks on completion, no backfill), energy matching, AI-powered task breakdown ("Unstick Me"), Tempo AI chat assistant with chat history persistence
+
+**Organization:** Projects as first-class sidebar folders with filtered views, project typeahead, backlog collapsible sections and sort, Projects view with project field for notes
+
+**Habits & Insights:** Daily habit tracker with GitHub-style contribution grid, todo visualizations (completed by project, on-time, trends), weekly review with reflection, Insights page
+
+**Calendar:** Month grid view with event CRUD, recurring todo support
+
+**Mobile & PWA:** 44px touch targets, iOS safe-area insets, responsive drawers, mobile settings/profile in header, manual PWA update check
+
+**Infrastructure:** Migrated from Firestore to Postgres (Railway), Express API with Drizzle ORM, TanStack Query data layer, MCP server with 17 tools for AI integration, Anthropic Claude AI proxy
+
+**UX Polish:** Dark mode, keyboard shortcuts, Coda CSV import, celebratory empty states, soft reminders, completion animations, inbox triage flow
+
+For the full changelog, see [CHANGELOG.md](CHANGELOG.md). For future ideas, see [Future.md](Future.md).
+
+### Remaining Backlog — Research-Informed Priorities
+
+Prioritized based on [ADHD productivity research](ADHD-Productivity-Apps-Research.md). Each feature maps to a core ADHD cognitive challenge identified in the literature.
+
+#### P1 — Time Blindness & Task Initiation (highest impact)
+
+| Feature | ADHD Challenge | Inspiration | Notes |
+|---------|---------------|-------------|-------|
+| Visual timer with dynamic end-time | Time blindness | Llama Life | Countdown timer on Today view + "you'll finish at X:XX PM" across all tasks. Subtle, always-visible — a filling sage gradient, not an aggressive red countdown. Addresses the #1 gap in Tempo's current design. |
+| Guided daily planning ritual | Task initiation, decision fatigue | Sunsama | Morning flow: review yesterday → set energy → AI suggests tasks → confirm/swap → set time estimates → start. Under 2 minutes, feels like a calm check-in. Sunsama charges $20/mo for this. |
+| AI task decomposition with granularity slider | Task initiation, overwhelm | Goblin.tools | Extend "Unstick Me" with a granularity control — low: 3 broad steps, high: 12 micro-steps. Adjusts to current executive function capacity. Leverages existing Claude integration. |
+| One-task focus mode | Working memory, overwhelm | Llama Life, Routinery | Toggle that hides the 5-task list, shows only current task + timer + "Done / Skip / Break" actions. Swipe to peek at what's next. The most consistently praised pattern across ADHD apps. |
+
+#### P2 — Emotional Safety & Flow Protection (high impact)
+
+| Feature | ADHD Challenge | Inspiration | Notes |
+|---------|---------------|-------------|-------|
+| "Not Now" quick capture | Distractibility during focus | Llama Life | Persistent shortcut during focus mode — single text field, captures thought to Inbox, immediately returns to current task. Zero navigation, zero context switch. |
+| Transition breathing space | Task-switching difficulty | Research-backed | 3–5 second pause between tasks with a gentle animation (leaves settling, water rippling). Optional micro-reflection: "How did that go?" Reinforces Quiet Rhythm identity. |
+| Overcommitment detection | Optimism bias | Sunsama | When tasks have time estimates, compare total vs. available hours. Gentle nudge: "This looks like 7 hours of work. You have 5 hours free. Want to move something to tomorrow?" |
+| Daily shutdown ritual | Hyperfocus overwork, reflection | Sunsama | Evening flow: review completed tasks (celebrate) → defer unfinished (no shame) → one-sentence reflection → set tomorrow's energy expectation. Enforces work-life boundaries. |
+| Shame-free visual language audit | Emotional dysregulation, Wall of Awful | Tiimo | Review all UI for implicit judgment. No "overdue" indicators — missed tasks float forward silently. Add encouraging microcopy variety: "Good start," "Every step counts," "Tomorrow's a fresh page." |
+
+#### P3 — Delight & Differentiation
+
+| Feature | ADHD Challenge | Inspiration | Notes |
+|---------|---------------|-------------|-------|
+| Task Roulette ("Surprise me") | Decision paralysis | BeeDone, Llama Life | Random task selection from Today's list with a gentle shuffle animation. Simple to build, surprisingly powerful. |
+| Micro-celebration variety | Hedonic adaptation | Research-backed | Vary completion feedback: color bloom, gentle sound, encouraging text, brief animation. Randomize to combat habituation. Keep within calm sage palette. |
+| Routine playlists for Habits | Sequencing, working memory | Routinery | Extend Habits with "press play" guided sequences. Morning routine becomes a timer-guided flow. Routinery charges $40/yr for this. |
+| Energy-adaptive interface density | Variable arousal states | Novel (no competitor) | Low energy → fewer elements, more whitespace, simpler nav. High energy → more detail and options. The app breathes with the user. Unique differentiator. |
+| Time estimation calibration | Time blindness (metacognitive) | Novel | Track actual vs. estimated time per task. Weekly Review shows patterns: "You consistently underestimate writing tasks by 40%." Teaches the brain to estimate better over time. |
+| Ambient soundscapes | Under-arousal, focus | Research-backed | White/pink/brown noise + nature sounds. Peer-reviewed research confirms stochastic resonance improves ADHD cognition. 4–6 sounds matching Tempo's nature aesthetic. |
+| Voice input + transcription | Capture friction | Multiple | Capture todos and notes by voice. See [Future.md](Future.md). |
+| Work/Personal modes | Context bleed | Multiple | Isolated databases with mode indicator. See [Future.md](Future.md). |
 
 ---
 
@@ -468,4 +440,4 @@ All previously open questions have been resolved:
 
 ---
 
-*End of PRD v0.5*
+*End of PRD v1.0*
