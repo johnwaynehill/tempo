@@ -1,14 +1,16 @@
 /**
  * Extract hashtag-based project names from markdown content.
- * Matches #ProjectName tags (single word) and #[Multi Word Project] tags.
- * Ignores headings (lines starting with #) and code blocks.
+ * Matches #ProjectName and \#ProjectName (Milkdown escapes # at line start).
+ * Also supports #[Multi Word Project] syntax.
+ * Ignores markdown headings and code blocks.
  */
 
-const HASHTAG_RE = /(?:^|[\s(])#(\w[\w-]*)(?=[\s.,;:!?)}\]]|$)|(?:^|[\s(])#\[([^\]]+)\]/gm
+// Matches: #Tag or \#Tag (escaped by Milkdown), single word or bracketed
+const HASHTAG_RE = /(?:^|[\s(])\\?#(\w[\w-]*)(?=[\s.,;:!?)}\]]|$)|(?:^|[\s(])\\?#\[([^\]]+)\]/gm
 
 export function extractHashtags(markdown: string): string[] {
   const tags: string[] = []
-  // Strip code blocks to avoid matching inside them
+  // Strip code blocks and inline code to avoid matching inside them
   const stripped = markdown
     .replace(/```[\s\S]*?```/g, '')
     .replace(/`[^`]+`/g, '')
@@ -22,12 +24,4 @@ export function extractHashtags(markdown: string): string[] {
   }
 
   return tags
-}
-
-/**
- * Get the first hashtag as the project name, or undefined if none.
- */
-export function extractProject(markdown: string): string | undefined {
-  const tags = extractHashtags(markdown)
-  return tags[0] ?? undefined
 }

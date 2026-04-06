@@ -10,6 +10,7 @@ import { trailing } from '@milkdown/kit/plugin/trailing'
 import { extendListItemSchemaForTask, wrapInTaskListInputRule } from '@milkdown/kit/preset/gfm'
 import { remarkGFMPlugin } from '@milkdown/kit/preset/gfm'
 import { formatToolbar, configureFormatToolbar } from '@/lib/milkdown-toolbar-plugin'
+import { hashtagPlugin } from '@/lib/milkdown-hashtag-plugin'
 import { MobileFormatBar } from '@/components/ui/MobileFormatBar'
 import { nord } from '@milkdown/theme-nord'
 import '@milkdown/theme-nord/style.css'
@@ -45,6 +46,7 @@ function MilkdownInner({ defaultValue, onChange, onCheckboxToggle }: MilkdownEdi
       .use(indent)
       .use(trailing)
       .use(formatToolbar)
+      .use(hashtagPlugin)
   }, [])
 
   // Attach click handler for task list checkboxes
@@ -248,6 +250,15 @@ export function MilkdownEditor({ defaultValue, onChange, onCheckboxToggle }: Mil
           float: left;
           pointer-events: none;
           height: 0;
+        }
+        .milkdown-editor-root .ProseMirror .hashtag-badge {
+          background: var(--color-primary-container, rgba(0,0,0,0.06));
+          color: var(--color-on-primary-container, var(--color-primary));
+          padding: 1px 6px;
+          border-radius: 6px;
+          font-size: 0.9em;
+          font-weight: 500;
+          white-space: nowrap;
         }
       `}</style>
     </MilkdownProvider>
