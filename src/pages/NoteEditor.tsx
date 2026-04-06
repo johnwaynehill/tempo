@@ -146,7 +146,7 @@ export function NoteEditorPage() {
           <Link
             key={proj}
             to={`/projects/${encodeURIComponent(proj)}`}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+            className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
           >
             <span className="opacity-60">#</span>
             {proj}
