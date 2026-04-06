@@ -4,6 +4,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
 import { MilkdownEditor } from '@/components/ui/MilkdownEditor'
 import { LinkPicker } from '@/components/ui/LinkPicker'
+import { extractHashtags } from '@/lib/hashtags'
 
 export function NoteEditorPage() {
   const { id } = useParams<{ id: string }>()
@@ -11,22 +12,36 @@ export function NoteEditorPage() {
   const { notes, loading, updateNote, removeNote } = useNotes()
   const { todos, updateTodo, addTodo } = useTodos()
   const saveTimerRef = useRef<ReturnType<typeof setTimeout>>(null)
+  const lastProjectsRef = useRef<string[]>([])
   const [showTodoPicker, setShowTodoPicker] = useState(false)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [confirmVisible, setConfirmVisible] = useState(false)
 
   const note = notes.find((n) => n.id === id)
+
+  // Keep lastProjectsRef in sync with loaded note
+  useEffect(() => {
+    if (note) lastProjectsRef.current = note.projects ?? []
+  }, [note?.id])
+
   const linkedTodo = note?.linked_todo_id
     ? todos.find((t) => t.id === note.linked_todo_id)
     : undefined
 
   // Debounced auto-save (800ms after last keystroke)
+  // Also syncs projects from hashtags in content
   const handleContentChange = useCallback(
     (markdown: string) => {
       if (!id) return
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
       saveTimerRef.current = setTimeout(() => {
-        updateNote(id, { content: markdown })
+        const projects = extractHashtags(markdown)
+        const updates: Record<string, unknown> = { content: markdown }
+        if (JSON.stringify(projects) !== JSON.stringify(lastProjectsRef.current)) {
+          updates.projects = projects
+          lastProjectsRef.current = projects
+        }
+        updateNote(id, updates as Partial<import('@/types').Note>)
       }, 800)
     },
     [id, updateNote],
@@ -125,8 +140,18 @@ export function NoteEditorPage() {
         })}
       </p>
 
-      {/* Linked todo chip — or Link Todo button */}
-      <div className="mb-6">
+      {/* Tags + Linked todo row */}
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        {(note.projects ?? []).map(proj => (
+          <Link
+            key={proj}
+            to={`/projects/${encodeURIComponent(proj)}`}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/15 transition-colors"
+          >
+            <span className="opacity-60">#</span>
+            {proj}
+          </Link>
+        ))}
         {linkedTodo ? (
           <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium ${
             linkedTodo.status === 'done'

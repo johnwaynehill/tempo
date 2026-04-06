@@ -9,6 +9,7 @@ import {
   date,
   jsonb,
   primaryKey,
+  unique,
 } from 'drizzle-orm/pg-core'
 
 // --- Enums ---
@@ -54,11 +55,33 @@ export const notes = pgTable('notes', {
   firestoreId: text('firestore_id'),
   title: text('title').notNull(),
   content: text('content').notNull().default(''),
+  project: text('project'),
   linkedTodoId: uuid('linked_todo_id'),
   inlineTodoMap: jsonb('inline_todo_map'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 })
+
+// --- Projects ---
+
+export const projects = pgTable('projects', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  unique().on(table.userId, table.name),
+])
+
+// --- Note ↔ Project join table ---
+
+export const noteProjects = pgTable('note_projects', {
+  noteId: uuid('note_id').notNull().references(() => notes.id, { onDelete: 'cascade' }),
+  projectId: uuid('project_id').notNull().references(() => projects.id, { onDelete: 'cascade' }),
+}, (table) => [
+  primaryKey({ columns: [table.noteId, table.projectId] }),
+])
 
 // --- Habits ---
 

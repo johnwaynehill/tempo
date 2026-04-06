@@ -146,6 +146,17 @@ export const api = {
     }).then(r => fromApi(r, TIMESTAMP_DATES)),
     delete: (id: string) => apiFetch<void>(`/api/conversations/${id}`, { method: 'DELETE' }),
   },
+  projects: {
+    list: () => apiFetch<Record<string, unknown>[]>('/api/projects')
+      .then(rows => rows.map(r => fromApi(r, TIMESTAMP_DATES))),
+    create: (name: string) => apiFetch<Record<string, unknown>>('/api/projects', {
+      method: 'POST', body: JSON.stringify({ name }),
+    }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    update: (id: string, data: { name: string }) => apiFetch<Record<string, unknown>>(`/api/projects/${id}`, {
+      method: 'PUT', body: JSON.stringify(data),
+    }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    delete: (id: string) => apiFetch<void>(`/api/projects/${id}`, { method: 'DELETE' }),
+  },
   apiKeys: {
     list: () => apiFetch<Record<string, unknown>[]>('/api/api-keys'),
     create: (name: string) => apiFetch<Record<string, unknown>>('/api/api-keys', {

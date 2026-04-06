@@ -49,3 +49,6 @@ We created "Unstick Me" prompts for hard-to-tackle todos. Build more features th
 
 ## CLI
 - CLI tool for Tempo (unsure if needed given MCP server exists)
+
+## Tech Stack
+- Consider moving to Swift to build native Mac, iPhone, and iPad apps. Create a Pros/Cons list and really understand the limitations of this. Only after using the app for 2 weeks.

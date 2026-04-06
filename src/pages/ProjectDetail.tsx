@@ -1,20 +1,15 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
-import { EnergySelector } from '@/components/ui/EnergySelector'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
 import { useTodos } from '@/hooks/useTodos'
+import { useNotes } from '@/hooks/useNotes'
+import { useProjects } from '@/hooks/useProjects'
 import { usePreferences } from '@/hooks/usePreferences'
 import { scoreTodo } from '@/lib/scoring'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
 
 type SortMode = 'score' | 'due' | 'recent'
-
-const SORT_LABELS: Record<SortMode, string> = {
-  score: 'Priority',
-  due: 'Due date',
-  recent: 'Recent',
-}
 
 const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -49,8 +44,13 @@ export function ProjectDetailPage() {
   const projectName = decodeURIComponent(projectSlug ?? '')
   const navigate = useNavigate()
 
-  const { todos, completeTodo, deferTodo, updateTodo, loading } = useTodos()
+  const { todos, completeTodo, deferTodo, loading } = useTodos()
+  const { notes } = useNotes()
+  const { projectList, renameProject, deleteProject } = useProjects()
   const { preferences } = usePreferences()
+
+  // Find the project DB object by name
+  const projectObj = projectList.find(p => p.name === projectName)
 
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [sortMode, setSortMode] = useState<SortMode>('score')
@@ -73,6 +73,12 @@ export function ProjectDetailPage() {
     [todos, projectName],
   )
 
+  // Notes in this project (many-to-many via projects array)
+  const projectNotes = useMemo(
+    () => notes.filter((n) => (n.projects ?? []).includes(projectName)),
+    [notes, projectName],
+  )
+
   const filtered = energyFilter
     ? projectTodos.filter((t) => t.energy_level === energyFilter)
     : projectTodos
@@ -82,38 +88,36 @@ export function ProjectDetailPage() {
     [filtered, sortMode, preferences.current_energy],
   )
 
-  // Rename project: batch update all todos with this project name
+  // Rename project via API (cascades to todos.project automatically)
   const handleRename = async () => {
     const newName = renameValue.trim()
-    if (!newName || newName === projectName) {
+    if (!newName || newName === projectName || !projectObj) {
       setRenaming(false)
       return
     }
-
-    const matching = todos.filter((t) => t.project === projectName)
-    await Promise.all(matching.map((t) => updateTodo(t.id, { project: newName })))
+    await renameProject(projectObj.id, newName)
     setRenaming(false)
     navigate(`/projects/${encodeURIComponent(newName)}`, { replace: true })
   }
 
-  // Delete project: clear project field on all matching todos
+  // Delete project via API (cascades to todos + note_projects)
   const handleDelete = async () => {
-    const matching = todos.filter((t) => t.project === projectName)
-    await Promise.all(matching.map((t) => updateTodo(t.id, { project: undefined })))
-    navigate('/backlog', { replace: true })
+    if (!projectObj) return
+    await deleteProject(projectObj.id)
+    navigate('/projects', { replace: true })
   }
 
   return (
     <div>
       {/* Back link */}
       <Link
-        to="/backlog"
+        to="/projects"
         className="inline-flex items-center gap-1.5 text-sm text-on-surface-variant hover:text-on-surface transition-colors mb-6"
       >
         <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
           <path d="M10 4L6 8l4 4" />
         </svg>
-        Backlog
+        Projects
       </Link>
 
       {/* Header */}
@@ -183,12 +187,15 @@ export function ProjectDetailPage() {
         </div>
 
         <p className="text-on-surface-variant text-sm mt-1">
-          {projectTodos.length} active &middot; {totalCount} total
+          {projectTodos.length} active todo{projectTodos.length !== 1 ? 's' : ''}
+          {projectNotes.length > 0 && ` · ${projectNotes.length} note${projectNotes.length !== 1 ? 's' : ''}`}
         </p>
       </div>
 
-      {/* Mobile filter menus */}
-      <div className="sm:hidden flex gap-2 mb-6">
+      {/* Filter toolbar */}
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
+        <div className="flex-1 min-w-0" />
+
         <FilterDropdown
           label="Energy"
           options={ENERGY_OPTIONS}
@@ -199,8 +206,9 @@ export function ProjectDetailPage() {
           onClose={() => setEnergyOpen(false)}
           onChange={(level) => setEnergyFilter(level)}
         />
+
         <FilterDropdown
-          label="Priority"
+          label="Sort"
           options={SORT_OPTIONS}
           value={sortMode !== 'score' ? sortMode : undefined}
           open={sortOpen}
@@ -208,33 +216,19 @@ export function ProjectDetailPage() {
           onClose={() => setSortOpen(false)}
           onChange={(mode) => setSortMode(mode ?? 'score')}
         />
-      </div>
 
-      {/* Desktop: always-visible controls */}
-      <div className="hidden sm:flex sm:items-start sm:justify-between sm:gap-4 mb-8">
-        <div className="min-w-0">
-          <EnergySelector
-            value={energyFilter}
-            onChange={(level) =>
-              setEnergyFilter(energyFilter === level ? undefined : level)
-            }
-          />
-        </div>
-        <div className="flex gap-1.5 flex-shrink-0">
-          {(['score', 'due', 'recent'] as SortMode[]).map((mode) => (
-            <button
-              key={mode}
-              onClick={() => setSortMode(mode)}
-              className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer ${
-                sortMode === mode
-                  ? 'bg-primary text-on-primary'
-                  : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              {SORT_LABELS[mode]}
-            </button>
-          ))}
-        </div>
+        {energyFilter && (
+          <button
+            onClick={() => { setEnergyFilter(undefined); setEnergyOpen(false) }}
+            className="flex items-center gap-1 px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
+            title="Clear filters"
+          >
+            <svg className="w-3 h-3" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M3 3l6 6M9 3l-6 6" />
+            </svg>
+            1
+          </button>
+        )}
       </div>
 
       {/* Todo list */}
@@ -265,6 +259,31 @@ export function ProjectDetailPage() {
             </div>
           )}
         </>
+      )}
+
+      {/* Notes section */}
+      {projectNotes.length > 0 && (
+        <div className="mt-10">
+          <h2 className="text-xs font-medium text-on-surface-variant uppercase tracking-wider mb-3">
+            Notes
+          </h2>
+          <div className="space-y-2">
+            {projectNotes.map((n) => (
+              <Link
+                key={n.id}
+                to={`/notes/${n.id}`}
+                className="block bg-surface-container-lowest rounded-xl p-4 hover:bg-surface-container-low transition-colors duration-200"
+              >
+                <h3 className="font-display font-semibold text-on-surface text-sm">
+                  {n.title}
+                </h3>
+                <p className="text-on-surface-variant text-xs mt-0.5">
+                  {n.updated_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Delete confirmation dialog */}
