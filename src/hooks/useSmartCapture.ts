@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { anthropic, AI_ENABLED } from '@/lib/anthropic'
 import type { EnergyLevel, TodoSize } from '@/types'
 
@@ -26,6 +26,9 @@ export function useSmartCapture(
   const cacheRef = useRef<Map<string, SmartSuggestions>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
 
+  // Stabilize projectNames to avoid re-triggering the effect on every render
+  const stableProjectNames = useMemo(() => projectNames, [projectNames.join(',')])
+
   useEffect(() => {
     if (!enabled || !AI_ENABLED || title.trim().length < MIN_CHARS) {
       setSuggestions(null)
@@ -50,8 +53,8 @@ export function useSmartCapture(
       abortRef.current = controller
 
       try {
-        const projectList = projectNames.length > 0
-          ? `Known projects: ${projectNames.join(', ')}`
+        const projectList = stableProjectNames.length > 0
+          ? `Known projects: ${stableProjectNames.join(', ')}`
           : 'No existing projects.'
 
         const response = await anthropic.messages.create({
@@ -82,7 +85,7 @@ Be concise. Return JSON only, no explanation.`,
           if (['small', 'medium', 'large'].includes(parsed.size ?? '')) {
             valid.size = parsed.size
           }
-          if (parsed.project && projectNames.includes(parsed.project)) {
+          if (parsed.project && stableProjectNames.includes(parsed.project)) {
             valid.project = parsed.project
           }
 
@@ -109,7 +112,7 @@ Be concise. Return JSON only, no explanation.`,
       clearTimeout(timer)
       setLoading(false)
     }
-  }, [title, enabled, projectNames])
+  }, [title, enabled, stableProjectNames])
 
   return { suggestions, loading }
 }
