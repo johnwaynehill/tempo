@@ -10,6 +10,10 @@ import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useTimer } from '@/hooks/useTimer'
+import { useStreak } from '@/hooks/useStreak'
+import { usePickForMe } from '@/hooks/usePickForMe'
+import { StreakIndicator } from '@/components/ui/StreakIndicator'
+import { PickForMeCard } from '@/components/ui/PickForMeCard'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -19,6 +23,8 @@ export function TodayPage() {
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
   const timer = useTimer()
+  const { currentStreak, hasCompletedToday } = useStreak(todos)
+  const { pick: pickResult, loading: pickLoading, pickForMe, dismiss: dismissPick } = usePickForMe(todayTodos, preferences.current_energy)
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -45,13 +51,16 @@ export function TodayPage() {
           <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
             Today
           </h1>
-          <p className="text-on-surface-variant text-sm">
-            {new Date().toLocaleDateString('en-US', {
-              weekday: 'long',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-on-surface-variant text-sm">
+              {new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </p>
+            <StreakIndicator currentStreak={currentStreak} hasCompletedToday={hasCompletedToday} />
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -89,6 +98,27 @@ export function TodayPage() {
           onChange={(level) => updatePreferences({ current_energy: preferences.current_energy === level ? undefined : level })}
         />
       </div>
+
+      {/* Pick for me — visible when 2+ tasks and AI enabled */}
+      {AI_ENABLED && todayTodos.length > 1 && !loading && (
+        <div className="mb-6">
+          <button
+            onClick={pickForMe}
+            disabled={pickLoading}
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-surface-container-low border border-outline-variant/15 text-on-surface-variant text-sm font-medium hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer min-h-[44px] disabled:opacity-50"
+          >
+            {pickLoading ? (
+              <span className="w-4 h-4 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            ) : (
+              <svg className="w-4 h-4 text-primary/60" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z" />
+                <path d="M13 0C13 1.2 13.8 2 15 2C13.8 2 13 2.8 13 4C13 2.8 12.2 2 11 2C12.2 2 13 1.2 13 0Z" opacity="0.55" />
+              </svg>
+            )}
+            {pickLoading ? 'Picking...' : 'Just pick for me'}
+          </button>
+        </div>
+      )}
 
       {/* Today's tasks */}
       {loading ? (
@@ -189,6 +219,18 @@ export function TodayPage() {
             />
           </form>
         </div>
+      )}
+
+      {pickResult && (
+        <PickForMeCard
+          todo={pickResult.todo}
+          reason={pickResult.reason}
+          onStart={(id) => {
+            timer.start(id)
+            dismissPick()
+          }}
+          onDismiss={dismissPick}
+        />
       )}
 
       {toastMessage && (

@@ -5,10 +5,12 @@ import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { useProjects } from '@/hooks/useProjects'
+import { useSmartCapture } from '@/hooks/useSmartCapture'
 import { LinkPicker } from '@/components/ui/LinkPicker'
 import { ReminderPicker } from '@/components/ui/ReminderPicker'
 import { RecurrencePicker } from '@/components/ui/RecurrencePicker'
 import { ProjectPicker } from '@/components/ui/ProjectPicker'
+import { SmartCaptureSuggestions } from '@/components/ui/SmartCaptureSuggestions'
 import { describeRecurrence } from '@/lib/recurrence'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
@@ -37,9 +39,14 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [showBreakdownPicker, setShowBreakdownPicker] = useState(false)
   const [granularity, setGranularity] = useState(3)
   const [visible, setVisible] = useState(false)
+  const [liveTitle, setLiveTitle] = useState(todo.title)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
   const isNewTodo = !todo.title.trim()
+
+  // Smart capture: suggest metadata for new todos
+  const projectNames = projects // already string[]
+  const { suggestions } = useSmartCapture(liveTitle, isNewTodo, projectNames)
 
   const setField = (field: string, value: unknown) => {
     updateTodo(todo.id, { [field]: value })
@@ -118,6 +125,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               ref={titleRef}
               type="text"
               defaultValue={todo.title}
+              onChange={(e) => setLiveTitle(e.target.value)}
               onBlur={(e) => {
                 const v = e.target.value.trim()
                 if (v && v !== todo.title) setField('title', v)
@@ -129,6 +137,19 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               <p className="text-on-surface-variant text-xs mt-1">{todo.project}</p>
             )}
           </div>
+
+          {/* AI suggestions for new todos */}
+          {isNewTodo && suggestions && (
+            <SmartCaptureSuggestions
+              suggestions={suggestions}
+              setFields={{
+                energy_level: !!todo.energy_level,
+                size: !!todo.size,
+                project: !!todo.project,
+              }}
+              onAccept={(field, value) => setField(field, value)}
+            />
+          )}
 
           {/* Quick actions row */}
           <div className="flex items-center gap-2 flex-wrap">
