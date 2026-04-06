@@ -35,6 +35,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [showReminderPicker, setShowReminderPicker] = useState(false)
   const [showRecurrencePicker, setShowRecurrencePicker] = useState(false)
   const [showBreakdownPicker, setShowBreakdownPicker] = useState(false)
+  const [granularity, setGranularity] = useState(3)
   const [visible, setVisible] = useState(false)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
@@ -348,10 +349,34 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                   Unstick Me
                 </button>
                 {showBreakdownPicker && (
-                  <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[220px]">
+                  <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[260px]">
+                    {/* Granularity slider */}
+                    <div className="px-4 pt-2 pb-3 border-b border-outline-variant/15">
+                      <div className="flex items-center justify-between mb-2">
+                        <label className="text-xs text-on-surface-variant font-medium">Detail level</label>
+                        <span className="text-xs text-on-surface-variant">
+                          {granularity === 1 ? 'Broad strokes' : granularity === 2 ? 'Overview' : granularity === 3 ? 'Concrete' : granularity === 4 ? 'Detailed' : 'Baby steps'}
+                        </span>
+                      </div>
+                      <input
+                        type="range"
+                        min={1}
+                        max={5}
+                        step={1}
+                        value={granularity}
+                        onChange={(e) => setGranularity(Number(e.target.value))}
+                        className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-primary bg-surface-container-high"
+                      />
+                      <div className="flex justify-between mt-1">
+                        <span className="text-[10px] text-on-surface-variant/50">1</span>
+                        <span className="text-[10px] text-on-surface-variant/50">5</span>
+                      </div>
+                    </div>
+
+                    {/* Style buttons */}
                     <button
                       onClick={() => {
-                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps`)
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps&granularity=${granularity}`)
                         handleClose()
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
@@ -361,7 +386,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                     </button>
                     <button
                       onClick={() => {
-                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=gamify`)
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=gamify&granularity=${granularity}`)
                         handleClose()
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
@@ -371,7 +396,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                     </button>
                     <button
                       onClick={() => {
-                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=transition-protocol`)
+                        navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=transition-protocol&granularity=${granularity}`)
                         handleClose()
                       }}
                       className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"

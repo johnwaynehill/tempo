@@ -111,10 +111,26 @@ export interface BreakdownPromptInput {
   todo: Todo
   style: BreakdownStyle
   currentEnergy?: string
+  granularity?: number
+}
+
+function granularityInstruction(granularity: number): string {
+  switch (granularity) {
+    case 1: return 'Break the task into 2–3 high-level phases. Keep it broad — just enough structure to see the path forward.'
+    case 2: return 'Break the task into 3–5 clear steps. Moderate detail — concrete but not overly granular.'
+    case 3: return 'Break the task into 5–8 concrete, actionable steps. Each step should be clearly defined and completable in a short sitting.'
+    case 4: return 'Break the task into 8–12 small, specific steps. Think "what would I literally do next?" level of detail.'
+    case 5: return 'Break the task into 10–15 ridiculously tiny micro-steps, each completable in under 2 minutes. Make them so small that starting feels effortless.'
+    default: return 'Break the task into 5–8 concrete, actionable steps.'
+  }
 }
 
 export function buildBreakdownSystemPrompt(input: BreakdownPromptInput & { todayCount: number }): string {
-  const { todo, style, currentEnergy, todayCount } = input
+  const { todo, style, currentEnergy, todayCount, granularity } = input
+
+  const granularityBlock = granularity
+    ? `\n\n## Granularity Level: ${granularity}/5\n${granularityInstruction(granularity)}\nInclude a time estimate (in minutes) for each step you create.`
+    : ''
 
   return `${BASE_PERSONA}
 
@@ -129,7 +145,7 @@ ${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not s
 Currently ${todayCount} items pinned to Today.
 
 ## Instructions
-${BREAKDOWN_INSTRUCTIONS[style]}
+${BREAKDOWN_INSTRUCTIONS[style]}${granularityBlock}
 
 ## HARD LIMIT: Maximum 5 items in Today
 The Today list currently has ${todayCount} items. The absolute maximum is 5 — this is an ADHD app and more than 5 causes paralysis. You can add at most ${Math.max(0, 5 - todayCount)} more items with status "today_pinned". If Today is already full (5 items), create new todos with status "backlog" instead, or suggest the user dismiss something from Today first. NEVER exceed 5 total items in Today.
