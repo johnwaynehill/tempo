@@ -7,7 +7,6 @@ import { useTimer, formatElapsed, formatMinutes, defaultEstimate } from '@/hooks
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 
-type TransitionFeel = 'good' | 'meh' | 'tough'
 
 function getEstimate(todo: { estimated_minutes?: number; size?: string }): number {
   return todo.estimated_minutes ?? defaultEstimate(todo.size)

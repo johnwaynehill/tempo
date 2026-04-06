@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router'
 import { EnergySelector } from '@/components/ui/EnergySelector'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
-import { useEvents } from '@/hooks/useEvents'
 import { suggestTodayTodos } from '@/lib/scoring'
 import { defaultEstimate, formatMinutes } from '@/hooks/useTimer'
 import { api } from '@/lib/api'
@@ -26,7 +25,6 @@ export function PlanMyDayPage() {
   const navigate = useNavigate()
   const { todos, pinned, backlog, done, pinToToday, updateTodo, loading: todosLoading } = useTodos()
   const { preferences, updatePreferences } = usePreferences()
-  const { events } = useEvents()
 
   const [step, setStep] = useState<Step>('energy')
   const [energy, setEnergy] = useState<EnergyLevel | undefined>(preferences.current_energy)
