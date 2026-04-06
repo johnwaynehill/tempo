@@ -21,12 +21,14 @@ import { AIChatPage } from '@/pages/AIChat'
 import { CompletedPage } from '@/pages/Completed'
 import { ProjectsPage } from '@/pages/Projects'
 import { FocusModePage } from '@/pages/FocusMode'
+import { PlanMyDayPage } from '@/pages/PlanMyDay'
 
 function AuthenticatedApp() {
   return (
     <Routes>
-      {/* Focus mode is full-screen — no sidebar/nav */}
+      {/* Full-screen views — no sidebar/nav */}
       <Route path="/focus" element={<FocusModePage />} />
+      <Route path="/plan" element={<PlanMyDayPage />} />
 
       <Route element={<AppShell />}>
         <Route path="/today" element={<TodayPage />} />

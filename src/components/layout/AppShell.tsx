@@ -42,8 +42,9 @@ export function AppShell() {
           navigate(`/notes/${id}`)
         },
       },
-      // Focus
+      // Focus & Plan
       { label: 'F', description: 'Focus mode', key: 'f', action: () => navigate('/focus') },
+      { label: 'P', description: 'Plan my day', key: 'p', action: () => navigate('/plan') },
       // Help
       { label: '?', description: 'Keyboard shortcuts', key: '?', shift: true, action: () => setShortcutsOpen((v) => !v) },
     ],
