@@ -215,6 +215,26 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
               </div>
             </div>
 
+            {/* Time estimate */}
+            <div>
+              <label className="text-xs text-on-surface-variant mb-2 block font-medium">Time estimate</label>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide">
+                {[5, 15, 25, 45, 60, 90].map((mins) => (
+                  <button
+                    key={mins}
+                    onClick={() => setField('estimated_minutes', todo.estimated_minutes === mins ? null : mins)}
+                    className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 cursor-pointer min-h-[44px] shrink-0 ${
+                      todo.estimated_minutes === mins
+                        ? 'bg-primary text-on-primary'
+                        : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    {mins < 60 ? `${mins}m` : `${mins / 60}h`}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Project + Due date row */}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>

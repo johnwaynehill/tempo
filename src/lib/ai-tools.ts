@@ -44,6 +44,10 @@ export const AI_TOOLS: ToolDefinition[] = [
           type: 'string',
           description: 'Due date in ISO format (YYYY-MM-DD)',
         },
+        estimated_minutes: {
+          type: 'number',
+          description: 'Estimated time to complete in minutes (e.g. 5, 15, 25, 45, 60, 90)',
+        },
       },
       required: ['title'],
     },
@@ -68,6 +72,10 @@ export const AI_TOOLS: ToolDefinition[] = [
         size: { type: 'string', enum: ['small', 'medium', 'large'] },
         impact: { type: 'number', minimum: 1, maximum: 5 },
         due_date: { type: 'string', description: 'ISO date (YYYY-MM-DD)' },
+        estimated_minutes: {
+          type: 'number',
+          description: 'Estimated time to complete in minutes',
+        },
       },
       required: ['todo_id'],
     },

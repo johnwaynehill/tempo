@@ -4,10 +4,12 @@ import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import { CompletionToast } from '@/components/ui/CompletionToast'
+import { TimerBar } from '@/components/ui/TimerBar'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
+import { useTimer } from '@/hooks/useTimer'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -16,6 +18,7 @@ export function TodayPage() {
   const { preferences, updatePreferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
+  const timer = useTimer()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -67,24 +70,44 @@ export function TodayPage() {
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
       ) : (
         <>
+          {/* Timer bar — dynamic end-time and active timer */}
+          <TimerBar
+            todos={todayTodos}
+            timer={timer}
+            onStartTimer={(id) => timer.start(id)}
+          />
+
           <div className="space-y-0">
             {todayTodos.map((todo) => (
               <TodoItem
                 key={todo.id}
                 todo={todo}
                 onComplete={(id) => {
+                  // If this task had the timer, stop it and auto-start next
+                  if (timer.activeTaskId === id) {
+                    const currentIndex = todayTodos.findIndex((t) => t.id === id)
+                    const nextTodo = todayTodos[currentIndex + 1]
+                    if (nextTodo) {
+                      timer.start(nextTodo.id)
+                    } else {
+                      timer.stop()
+                    }
+                  }
                   completeTodo(id)
                   triggerToast(todo.title)
                 }}
                 onDefer={(id, until) => {
+                  if (timer.activeTaskId === id) timer.stop()
                   if (todo.status === 'today_pinned') {
                     deferTodo(id, until)
                   } else {
-                    // Remove from the daily set and dismiss
                     dismissFromSet(id)
                     dismissFromToday(id)
                   }
                 }}
+                timerActive={timer.activeTaskId === todo.id && timer.isRunning}
+                timerElapsed={timer.activeTaskId === todo.id ? timer.elapsedSeconds : undefined}
+                onStartTimer={(id) => timer.start(id)}
               />
             ))}
           </div>

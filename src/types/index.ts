@@ -38,6 +38,7 @@ export interface Todo {
   size?: TodoSize
   impact?: number // 1–5
   energy_level?: EnergyLevel
+  estimated_minutes?: number
   due_date?: Date
   supports?: string
   note_id?: string

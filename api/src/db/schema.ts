@@ -40,6 +40,7 @@ export const todos = pgTable('todos', {
   deferUntil: timestamp('defer_until', { withTimezone: true }),
   reminderAt: timestamp('reminder_at', { withTimezone: true }),
   dismissedFromToday: timestamp('dismissed_from_today', { withTimezone: true }),
+  estimatedMinutes: integer('estimated_minutes'),
   recurrence: jsonb('recurrence'),
   recurrenceParentId: uuid('recurrence_parent_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
