@@ -10,6 +10,7 @@ function serializeTodo(t: Todo): string {
   if (t.energy_level) parts.push(`energy:${t.energy_level}`)
   if (t.size) parts.push(`size:${t.size}`)
   if (t.impact) parts.push(`impact:${t.impact}`)
+  if (t.estimated_minutes) parts.push(`est:${t.estimated_minutes}min`)
   if (t.due_date) parts.push(`due:${toISODateString(t.due_date)}`)
   if (t.recurrence) parts.push(`recurs:${describeRecurrence(t.recurrence)}`)
   return parts.join(' | ')
@@ -193,5 +194,6 @@ ${currentEnergy ? `Current energy level: ${currentEnergy}` : 'Energy level not s
 - Pin tasks to today with pin_to_today. Create new tasks with create_todo only if the user asks for something new.
 - Be opinionated but flexible. If they push back, adjust immediately.
 - Keep responses short and actionable. This is a productivity tool, not a therapy session.
-- If you notice overdue tasks or neglected projects, gently flag them.`
+- If you notice overdue tasks or neglected projects, gently flag them.
+- When creating or suggesting tasks, include a time estimate (estimated_minutes) to help with time blindness. Use realistic estimates — most tasks take longer than you think.`
 }

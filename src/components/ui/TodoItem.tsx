@@ -5,6 +5,7 @@ import { ENERGY_LABELS } from '@/types'
 import { describeRecurrence } from '@/lib/recurrence'
 import { useNotes } from '@/hooks/useNotes'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
+import { formatElapsed, formatMinutes, defaultEstimate } from '@/hooks/useTimer'
 
 const SIZE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' } as const
 
@@ -13,9 +14,13 @@ interface TodoItemProps {
   onComplete: (id: string) => void
   onDefer: (id: string, until?: Date) => void
   showEnergy?: boolean
+  /** Timer state for this item (optional — only passed from Today view) */
+  timerActive?: boolean
+  timerElapsed?: number
+  onStartTimer?: (id: string) => void
 }
 
-export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoItemProps) {
+export function TodoItem({ todo, onComplete, onDefer, showEnergy = true, timerActive, timerElapsed, onStartTimer }: TodoItemProps) {
   const [completing, setCompleting] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
   const { notes } = useNotes()
@@ -91,6 +96,11 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
               {todo.impact && (
                 <span className="text-xs text-on-surface-variant">Impact {todo.impact}/5</span>
               )}
+              {todo.estimated_minutes && (
+                <span className="text-xs px-2 py-0.5 rounded-lg bg-surface-container-high text-on-surface-variant">
+                  {formatMinutes(todo.estimated_minutes)}
+                </span>
+              )}
               {todo.due_date && (
                 <span className="text-xs text-on-surface-variant">
                   {todo.due_date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
@@ -123,7 +133,28 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
             </div>
           </button>
 
-          {/* Subtle "Later" on hover */}
+          {/* Timer badge or play button */}
+          {timerActive && timerElapsed !== undefined ? (
+            <span className={`text-xs font-mono tabular-nums px-2 py-1 rounded-lg shrink-0 ${
+              timerElapsed > (todo.estimated_minutes ?? defaultEstimate(todo.size)) * 60
+                ? 'text-primary bg-primary/8'
+                : 'text-on-surface-variant bg-surface-container'
+            }`}>
+              {formatElapsed(timerElapsed)}
+            </span>
+          ) : onStartTimer && !timerActive ? (
+            <button
+              onClick={(e) => { e.stopPropagation(); onStartTimer(todo.id) }}
+              className="opacity-0 group-hover:opacity-100 max-md:opacity-60 w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant/50 hover:text-primary hover:bg-primary/5 transition-all duration-200 cursor-pointer shrink-0"
+              title={`Start timer (${formatMinutes(todo.estimated_minutes ?? defaultEstimate(todo.size))})`}
+            >
+              <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M4 2l10 6-10 6z" />
+              </svg>
+            </button>
+          ) : null}
+
+          {/* Edit button */}
           <button
             onClick={() => setDrawerOpen(true)}
             className="opacity-0 group-hover:opacity-100 md:opacity-0 max-md:opacity-60 text-xs text-on-surface-variant hover:text-on-surface px-3 py-2 rounded-lg hover:bg-surface-container transition-all duration-200 cursor-pointer flex-shrink-0 min-h-[44px]"
