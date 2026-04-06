@@ -10,7 +10,7 @@ const mainNav = [
 
 const captureNav = [
   { to: '/notes', label: 'Notes', icon: '¶' },
-  { to: '/projects', label: 'Projects', icon: '▤' },
+  { to: '/projects', label: 'Projects', icon: '📂' },
   { to: '/braindump', label: 'Brain Dump', icon: '⚡' },
 ] as const
 

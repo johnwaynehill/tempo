@@ -42,6 +42,8 @@ export function AppShell() {
           navigate(`/notes/${id}`)
         },
       },
+      // Focus
+      { label: 'F', description: 'Focus mode', key: 'f', action: () => navigate('/focus') },
       // Help
       { label: '?', description: 'Keyboard shortcuts', key: '?', shift: true, action: () => setShortcutsOpen((v) => !v) },
     ],

@@ -63,6 +63,7 @@ export const SHORTCUT_MAP = {
   notes:      { label: '4', description: 'Go to Notes' },
   braindump:  { label: '5', description: 'Go to Brain Dump' },
   settings:   { label: ',', description: 'Go to Settings' },
+  focus:      { label: 'F', description: 'Focus mode' },
   help:       { label: '?', description: 'Show keyboard shortcuts' },
   search:     { label: '/', description: 'Focus search (on current page)' },
 } as const

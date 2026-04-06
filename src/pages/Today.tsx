@@ -54,7 +54,22 @@ export function TodayPage() {
           </p>
         </div>
 
-        <MobileMenu />
+        <div className="flex items-center gap-2">
+          {todayTodos.length > 0 && (
+            <button
+              onClick={() => navigate('/focus')}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+              title="Focus mode (F)"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+              </svg>
+              <span className="hidden md:inline">Focus</span>
+            </button>
+          )}
+          <MobileMenu />
+        </div>
       </div>
 
       {/* Energy selector — always visible per PRD §7.5 */}

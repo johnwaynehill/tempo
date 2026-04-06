@@ -20,10 +20,14 @@ import { HabitDetailPage } from '@/pages/HabitDetail'
 import { AIChatPage } from '@/pages/AIChat'
 import { CompletedPage } from '@/pages/Completed'
 import { ProjectsPage } from '@/pages/Projects'
+import { FocusModePage } from '@/pages/FocusMode'
 
 function AuthenticatedApp() {
   return (
     <Routes>
+      {/* Focus mode is full-screen — no sidebar/nav */}
+      <Route path="/focus" element={<FocusModePage />} />
+
       <Route element={<AppShell />}>
         <Route path="/today" element={<TodayPage />} />
         <Route path="/inbox" element={<InboxPage />} />
