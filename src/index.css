@@ -251,6 +251,39 @@ html {
   animation: focus-breathe 3.5s ease-in-out;
 }
 
+/* --- Range slider (granularity) --- */
+
+input[type='range'] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--color-surface-container-high);
+  border-radius: 9999px;
+  height: 6px;
+  outline: none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: 2px solid var(--color-surface-container-lowest);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+input[type='range']::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  cursor: pointer;
+  border: 2px solid var(--color-surface-container-lowest);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 /* --- Scrollbar hide utility --- */
 
 .scrollbar-hide {

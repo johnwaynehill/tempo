@@ -25,6 +25,7 @@ export function AIChatPage() {
   const mode = searchParams.get('mode') as 'breakdown' | 'today' | null
   const todoId = searchParams.get('todoId')
   const style = searchParams.get('style') as BreakdownStyle | null
+  const granularity = searchParams.get('granularity') ? Number(searchParams.get('granularity')) : undefined
   const initialQuery = searchParams.get('q')
 
   const {
@@ -101,6 +102,7 @@ export function AIChatPage() {
         style,
         currentEnergy: preferences.current_energy,
         todayCount: todayTodos.length,
+        granularity,
       })
     }
     return buildTodayCurationSystemPrompt({
@@ -111,7 +113,7 @@ export function AIChatPage() {
       currentEnergy: preferences.current_energy,
       todayTodoIds: todayTodos.map((t) => t.id),
     })
-  }, [mode, targetTodo, style, todos, notes, habits, events, preferences.current_energy, todayTodos])
+  }, [mode, targetTodo, style, granularity, todos, notes, habits, events, preferences.current_energy, todayTodos])
 
   const handleNewChat = () => {
     setActiveConv(null)
@@ -156,6 +158,7 @@ export function AIChatPage() {
             </h1>
             <p className="text-on-surface-variant text-xs">
               {style === 'micro-steps' ? 'Micro-steps' : style === 'gamify' ? 'Gamify' : 'Transition protocol'}
+              {granularity ? ` · Detail ${granularity}/5` : ''}
             </p>
           </div>
         </div>

@@ -42,7 +42,7 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 - Needs fast, low-friction capture (the thought will evaporate otherwise)
 - Works across Mac (primary) and iPhone (on the go)
 - Wants data that is structured, exportable, and readable by AI tools
-- Does **not** want to maintain a server or SaaS subscription
+- Does **not** want to maintain multiple tools, services, or providers
 
 ---
 
@@ -155,7 +155,7 @@ Tempo
 
 ### 7.1 Calm by Default
 - The app opens to **Today** — never the full backlog.
-- Maximum **5 todos visible** on Today before a "Show more" collapse.
+- Maximum **5 todos visible** on Today.
 - White/off-white background, one accent color, generous line height.
 - No badges, counters, or red indicators on the main view.
 
