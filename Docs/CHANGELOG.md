@@ -1,5 +1,10 @@
 # Changelog
 
+## 2026-04-07
+- Fix CORS preflight on MCP endpoint so Claude.ai browser OAuth flow completes (#56)
+- Add OAuth 2.0 to MCP server — authorization code flow with PKCE, consent page, token refresh, dual-auth (API key for Claude Code + Bearer for Claude.ai) (#55)
+- Deploy MCP server as remote Railway service with Streamable HTTP transport — accessible from Claude.ai, Claude mobile, and Claude Code on any device (#54)
+
 ## 2026-04-06
 - Fix due date 500 error (plain YYYY-MM-DD strings crashed Drizzle) and add 6 playlist MCP tools + energy/time fields to todo tools (#53)
 - Fix adaptive theme contrast — dramatically increased color differentiation between energy levels (#52)

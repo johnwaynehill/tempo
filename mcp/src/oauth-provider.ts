@@ -4,18 +4,17 @@ import type { OAuthServerProvider, AuthorizationParams } from '@modelcontextprot
 import type { OAuthRegisteredClientsStore } from '@modelcontextprotocol/sdk/server/auth/clients.js'
 import type { OAuthClientInformationFull, OAuthTokens, OAuthTokenRevocationRequest } from '@modelcontextprotocol/sdk/shared/auth.js'
 import type { AuthInfo } from '@modelcontextprotocol/sdk/server/auth/types.js'
+import { api } from './api.js'
 
-// --- Client Store ---
+// --- Client Store (persisted via Tempo API) ---
 
 class TempoClientsStore implements OAuthRegisteredClientsStore {
-  private clients = new Map<string, OAuthClientInformationFull>()
-
   async getClient(clientId: string) {
-    return this.clients.get(clientId)
+    return await api.mcpOauth.get<OAuthClientInformationFull>('client', clientId) ?? undefined
   }
 
   async registerClient(client: OAuthClientInformationFull) {
-    this.clients.set(client.client_id, client)
+    await api.mcpOauth.set('client', client.client_id, client)
     return client
   }
 }
@@ -26,22 +25,22 @@ interface TokenData {
   clientId: string
   scopes: string[]
   expiresAt: number // ms since epoch
-  resource?: URL
+  resource?: string
 }
 
 interface CodeData {
   client: OAuthClientInformationFull
   params: AuthorizationParams
+  resourceStr?: string
 }
 
-// --- OAuth Provider ---
+// --- OAuth Provider (persisted via Tempo API) ---
 
 export class TempoOAuthProvider implements OAuthServerProvider {
   readonly clientsStore = new TempoClientsStore()
 
+  // Auth codes are short-lived (seconds) — in-memory is fine
   private codes = new Map<string, CodeData>()
-  private tokens = new Map<string, TokenData>()
-  private refreshTokens = new Map<string, { clientId: string; scopes: string[]; resource?: URL }>()
 
   async authorize(client: OAuthClientInformationFull, params: AuthorizationParams, res: Response): Promise<void> {
     const req = res.req
@@ -49,7 +48,11 @@ export class TempoOAuthProvider implements OAuthServerProvider {
     // Second pass: user clicked Approve
     if (req.body?.approved === 'true') {
       const code = randomUUID()
-      this.codes.set(code, { client, params })
+      this.codes.set(code, {
+        client,
+        params,
+        resourceStr: params.resource?.toString(),
+      })
 
       const target = new URL(params.redirectUri)
       target.searchParams.set('code', code)
@@ -133,19 +136,23 @@ export class TempoOAuthProvider implements OAuthServerProvider {
     const accessToken = randomUUID()
     const refreshToken = randomUUID()
     const scopes = data.params.scopes || []
+    const expiresAt = Date.now() + 3600_000 // 1 hour
 
-    this.tokens.set(accessToken, {
+    const tokenData: TokenData = {
       clientId: client.client_id,
       scopes,
-      expiresAt: Date.now() + 3600_000, // 1 hour
-      resource: data.params.resource,
-    })
+      expiresAt,
+      resource: data.resourceStr,
+    }
 
-    this.refreshTokens.set(refreshToken, {
-      clientId: client.client_id,
-      scopes,
-      resource: data.params.resource,
-    })
+    await Promise.all([
+      api.mcpOauth.set('access_token', accessToken, tokenData, new Date(expiresAt).toISOString()),
+      api.mcpOauth.set('refresh_token', refreshToken, {
+        clientId: client.client_id,
+        scopes,
+        resource: data.resourceStr,
+      }),
+    ])
 
     return {
       access_token: accessToken,
@@ -157,19 +164,20 @@ export class TempoOAuthProvider implements OAuthServerProvider {
   }
 
   async exchangeRefreshToken(client: OAuthClientInformationFull, refreshToken: string, scopes?: string[]): Promise<OAuthTokens> {
-    const data = this.refreshTokens.get(refreshToken)
+    const data = await api.mcpOauth.get<{ clientId: string; scopes: string[]; resource?: string }>('refresh_token', refreshToken)
     if (!data) throw new Error('Invalid refresh token')
     if (data.clientId !== client.client_id) throw new Error('Refresh token was not issued to this client')
 
     const accessToken = randomUUID()
     const finalScopes = scopes?.length ? scopes : data.scopes
+    const expiresAt = Date.now() + 3600_000
 
-    this.tokens.set(accessToken, {
+    await api.mcpOauth.set('access_token', accessToken, {
       clientId: client.client_id,
       scopes: finalScopes,
-      expiresAt: Date.now() + 3600_000,
+      expiresAt,
       resource: data.resource,
-    })
+    } satisfies TokenData, new Date(expiresAt).toISOString())
 
     return {
       access_token: accessToken,
@@ -181,7 +189,7 @@ export class TempoOAuthProvider implements OAuthServerProvider {
   }
 
   async verifyAccessToken(token: string): Promise<AuthInfo> {
-    const data = this.tokens.get(token)
+    const data = await api.mcpOauth.get<TokenData>('access_token', token)
     if (!data || data.expiresAt < Date.now()) {
       throw new Error('Invalid or expired token')
     }
@@ -194,8 +202,10 @@ export class TempoOAuthProvider implements OAuthServerProvider {
   }
 
   async revokeToken(_client: OAuthClientInformationFull, request: OAuthTokenRevocationRequest): Promise<void> {
-    this.tokens.delete(request.token)
-    this.refreshTokens.delete(request.token)
+    await Promise.all([
+      api.mcpOauth.delete('access_token', request.token),
+      api.mcpOauth.delete('refresh_token', request.token),
+    ])
   }
 }
 

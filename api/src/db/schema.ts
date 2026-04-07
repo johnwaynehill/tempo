@@ -186,6 +186,16 @@ export const playlistItems = pgTable('playlist_items', {
   project: text('project'),
 })
 
+// --- MCP OAuth State ---
+
+export const mcpOauthState = pgTable('mcp_oauth_state', {
+  key: text('key').primaryKey(),
+  type: text('type').notNull(), // 'client', 'access_token', 'refresh_token'
+  data: jsonb('data').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true }),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 // --- API Keys ---
 
 export const apiKeys = pgTable('api_keys', {
