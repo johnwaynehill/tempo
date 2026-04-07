@@ -192,6 +192,28 @@ export function SettingsPage() {
           </div>
           <div className="flex items-center justify-between">
             <div>
+              <p className="text-on-surface text-sm font-medium">Adaptive theme</p>
+              <p className="text-on-surface-variant text-xs">Adjust colors based on your energy level</p>
+            </div>
+            <button
+              onClick={() => updatePreferences({ adaptive_theme: !preferences.adaptive_theme })}
+              className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
+                preferences.adaptive_theme
+                  ? 'bg-primary'
+                  : 'bg-surface-container-high'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface-container-lowest shadow transition-transform duration-200 ${
+                  preferences.adaptive_theme
+                    ? 'translate-x-5'
+                    : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
               <p className="text-on-surface text-sm font-medium">Notifications</p>
               <p className="text-on-surface-variant text-xs">
                 {!isSupported

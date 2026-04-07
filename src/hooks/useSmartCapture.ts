@@ -48,10 +48,8 @@ export function useSmartCapture(
     }
 
     setLoading(true)
-    console.log('[SmartCapture] Debouncing for title:', trimmed)
 
     const timer = setTimeout(async () => {
-      console.log('[SmartCapture] Firing API call for:', trimmed)
       // Abort previous request
       abortRef.current?.abort()
       const controller = new AbortController()
@@ -117,8 +115,7 @@ Return JSON only, no explanation.`,
             setSuggestions(null)
           }
         }
-      } catch (err) {
-        console.warn('[SmartCapture] AI call failed:', err)
+      } catch {
         if (!controller.signal.aborted) {
           setSuggestions(null)
         }

@@ -139,6 +139,7 @@ export const userPreferences = pgTable('user_preferences', {
   currentEnergy: energyLevelEnum('current_energy'),
   theme: themePreferenceEnum('theme').notNull().default('system'),
   notificationsEnabled: boolean('notifications_enabled').notNull().default(false),
+  adaptiveTheme: boolean('adaptive_theme').notNull().default(false),
 })
 
 // --- Today Sets ---
@@ -162,6 +163,28 @@ export const weeklyReviews = pgTable('weekly_reviews', {
 }, (table) => [
   primaryKey({ columns: [table.userId, table.id] }),
 ])
+
+// --- Playlists (Routine Templates) ---
+
+export const playlists = pgTable('playlists', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  description: text('description'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
+export const playlistItems = pgTable('playlist_items', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  playlistId: uuid('playlist_id').notNull().references(() => playlists.id, { onDelete: 'cascade' }),
+  title: text('title').notNull(),
+  sortOrder: integer('sort_order').notNull().default(0),
+  size: todoSizeEnum('size'),
+  energyLevel: energyLevelEnum('energy_level'),
+  estimatedMinutes: integer('estimated_minutes'),
+  project: text('project'),
+})
 
 // --- API Keys ---
 

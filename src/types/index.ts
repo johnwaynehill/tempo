@@ -116,10 +116,33 @@ export interface CalendarEvent {
   updated_at: Date
 }
 
+// --- Playlist ---
+
+export interface PlaylistItem {
+  id: string
+  playlist_id: string
+  title: string
+  sort_order: number
+  size?: TodoSize
+  energy_level?: EnergyLevel
+  estimated_minutes?: number
+  project?: string
+}
+
+export interface Playlist {
+  id: string
+  name: string
+  description?: string
+  items: PlaylistItem[]
+  created_at: Date
+  updated_at: Date
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {
   current_energy?: EnergyLevel
   theme: 'light' | 'dark' | 'system'
   notifications_enabled: boolean
+  adaptive_theme: boolean
 }

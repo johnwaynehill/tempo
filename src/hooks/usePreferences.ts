@@ -8,6 +8,7 @@ const DEFAULT_PREFS: UserPreferences = {
   current_energy: undefined,
   theme: 'system',
   notifications_enabled: false,
+  adaptive_theme: false,
 }
 
 export function usePreferences() {
@@ -22,6 +23,7 @@ export function usePreferences() {
         current_energy: result.current_energy ?? undefined,
         theme: (result.theme as string) ?? 'system',
         notifications_enabled: (result.notifications_enabled as boolean) ?? false,
+        adaptive_theme: (result.adaptive_theme as boolean) ?? false,
       } as UserPreferences
     },
     enabled: !!user,
