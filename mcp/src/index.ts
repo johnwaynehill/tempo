@@ -16,12 +16,14 @@ function todayStr(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }
 
-function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number }) {
+function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number }) {
   const parts = [`[${t.status}] ${t.title}`]
   if (t.project) parts.push(`project: ${t.project}`)
   if (t.dueDate) parts.push(`due: ${t.dueDate.slice(0, 10)}`)
   if (t.size) parts.push(`size: ${t.size}`)
   if (t.impact) parts.push(`impact: ${t.impact}`)
+  if (t.energyLevel) parts.push(`energy: ${t.energyLevel}`)
+  if (t.estimatedMinutes) parts.push(`${t.estimatedMinutes}m`)
   parts.push(`id: ${t.id}`)
   return parts.join(' | ')
 }
@@ -87,6 +89,7 @@ server.tool(
     impact: z.number().min(1).max(5).optional().describe('Impact score 1-5'),
     energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
     due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
+    estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
   },
   async (input) => {
     const todo = await api.todos.create({
@@ -96,8 +99,9 @@ server.tool(
       size: input.size,
       impact: input.impact,
       energyLevel: input.energy_level,
-      dueDate: input.due_date,
-    })
+      dueDate: input.due_date ? input.due_date + 'T00:00:00' : undefined,
+      estimatedMinutes: input.estimated_minutes,
+    } as Partial<import('./api.js').Todo>)
 
     return {
       content: [{ type: 'text', text: `Created todo: ${formatTodo(todo)}` }],
@@ -116,7 +120,9 @@ server.tool(
     project: z.string().optional().describe('Project name'),
     size: z.enum(['small', 'medium', 'large']).optional().describe('Task size'),
     impact: z.number().min(1).max(5).optional().describe('Impact score 1-5'),
-    due_date: z.string().optional().describe('Due date (ISO format)'),
+    energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
+    due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
+    estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
   },
   async ({ id, ...updates }) => {
     const data: Record<string, unknown> = {}
@@ -125,7 +131,9 @@ server.tool(
     if (updates.project !== undefined) data.project = updates.project
     if (updates.size !== undefined) data.size = updates.size
     if (updates.impact !== undefined) data.impact = updates.impact
-    if (updates.due_date !== undefined) data.dueDate = updates.due_date
+    if (updates.energy_level !== undefined) data.energyLevel = updates.energy_level
+    if (updates.due_date !== undefined) data.dueDate = updates.due_date + 'T00:00:00'
+    if (updates.estimated_minutes !== undefined) data.estimatedMinutes = updates.estimated_minutes
 
     const todo = await api.todos.update(id, data as Partial<import('./api.js').Todo>)
     return {
@@ -387,6 +395,143 @@ server.tool(
     const lines = reviews.map(r => `Week ${r.id}: ${r.reflection.slice(0, 80)}${r.reflection.length > 80 ? '...' : ''}`)
     return {
       content: [{ type: 'text', text: lines.length === 0 ? 'No reviews.' : lines.join('\n') }],
+    }
+  },
+)
+
+// --- List Playlists ---
+server.tool(
+  'list_playlists',
+  'List all routine playlists',
+  {},
+  async () => {
+    const playlists = await api.playlists.list()
+    if (playlists.length === 0) {
+      return { content: [{ type: 'text', text: 'No playlists.' }] }
+    }
+    const lines = playlists.map(p => {
+      const totalMin = p.items.reduce((sum, i) => sum + (i.estimatedMinutes ?? 15), 0)
+      return `${p.name} (${p.items.length} tasks, ~${totalMin}m) | id: ${p.id}`
+    })
+    return { content: [{ type: 'text', text: lines.join('\n') }] }
+  },
+)
+
+// --- Get Playlist ---
+server.tool(
+  'get_playlist',
+  'Get a playlist with all its items',
+  {
+    id: z.string().describe('Playlist ID'),
+  },
+  async ({ id }) => {
+    const playlist = await api.playlists.get(id)
+    const header = `# ${playlist.name}\n`
+    const items = playlist.items.map((item, i) =>
+      `${i + 1}. ${item.title}${item.estimatedMinutes ? ` (~${item.estimatedMinutes}m)` : ''}${item.project ? ` [${item.project}]` : ''}`
+    )
+    return { content: [{ type: 'text', text: header + items.join('\n') }] }
+  },
+)
+
+// --- Create Playlist ---
+server.tool(
+  'create_playlist',
+  'Create a new routine playlist with optional items',
+  {
+    name: z.string().describe('Playlist name'),
+    description: z.string().optional().describe('Description'),
+    items: z.array(z.object({
+      title: z.string().describe('Step title'),
+      estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
+      size: z.enum(['small', 'medium', 'large']).optional().describe('Task size'),
+      energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level'),
+      project: z.string().optional().describe('Project name'),
+    })).optional().describe('Playlist steps'),
+  },
+  async (input) => {
+    const items = input.items?.map((item, i) => ({
+      title: item.title,
+      estimatedMinutes: item.estimated_minutes,
+      size: item.size,
+      energyLevel: item.energy_level,
+      project: item.project,
+      sortOrder: i,
+    }))
+    const playlist = await api.playlists.create({
+      name: input.name,
+      description: input.description,
+      items,
+    })
+    return {
+      content: [{ type: 'text', text: `Created playlist: ${playlist.name} (${playlist.items.length} items) | id: ${playlist.id}` }],
+    }
+  },
+)
+
+// --- Update Playlist ---
+server.tool(
+  'update_playlist',
+  'Update a playlist name, description, or replace all items',
+  {
+    id: z.string().describe('Playlist ID'),
+    name: z.string().optional().describe('New name'),
+    description: z.string().optional().describe('New description'),
+    items: z.array(z.object({
+      title: z.string().describe('Step title'),
+      estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
+      size: z.enum(['small', 'medium', 'large']).optional().describe('Task size'),
+      energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level'),
+      project: z.string().optional().describe('Project name'),
+    })).optional().describe('Replace all items with this list'),
+  },
+  async ({ id, ...updates }) => {
+    const data: Record<string, unknown> = {}
+    if (updates.name !== undefined) data.name = updates.name
+    if (updates.description !== undefined) data.description = updates.description
+    if (updates.items !== undefined) {
+      data.items = updates.items.map((item, i) => ({
+        title: item.title,
+        estimatedMinutes: item.estimated_minutes,
+        size: item.size,
+        energyLevel: item.energy_level,
+        project: item.project,
+        sortOrder: i,
+      }))
+    }
+    const playlist = await api.playlists.update(id, data as any)
+    return {
+      content: [{ type: 'text', text: `Updated playlist: ${playlist.name} (${playlist.items.length} items)` }],
+    }
+  },
+)
+
+// --- Delete Playlist ---
+server.tool(
+  'delete_playlist',
+  'Delete a playlist',
+  {
+    id: z.string().describe('Playlist ID'),
+  },
+  async ({ id }) => {
+    await api.playlists.delete(id)
+    return {
+      content: [{ type: 'text', text: `Deleted playlist ${id}` }],
+    }
+  },
+)
+
+// --- Start Playlist ---
+server.tool(
+  'start_playlist',
+  'Start a playlist — creates today_pinned todos from all playlist items',
+  {
+    id: z.string().describe('Playlist ID'),
+  },
+  async ({ id }) => {
+    const result = await api.playlists.start(id)
+    return {
+      content: [{ type: 'text', text: `Started playlist — created ${result.count} todos for today` }],
     }
   },
 )

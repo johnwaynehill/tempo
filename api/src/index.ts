@@ -40,8 +40,8 @@ app.use(express.json())
 app.use((req, _res, next) => {
   if (req.body && typeof req.body === 'object') {
     for (const [key, value] of Object.entries(req.body)) {
-      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(value)) {
-        req.body[key] = new Date(value)
+      if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}(T|$)/.test(value)) {
+        req.body[key] = new Date(value.includes('T') ? value : value + 'T00:00:00')
       }
     }
   }

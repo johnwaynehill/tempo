@@ -36,6 +36,7 @@ export interface Todo {
   dueDate?: string
   supports?: string
   noteId?: string
+  estimatedMinutes?: number
   deferUntil?: string
   reminderAt?: string
   recurrence?: unknown
@@ -92,6 +93,27 @@ export interface Project {
   updatedAt: string
 }
 
+export interface PlaylistItem {
+  id: string
+  playlistId: string
+  title: string
+  sortOrder: number
+  size?: string
+  energyLevel?: string
+  estimatedMinutes?: number
+  project?: string
+}
+
+export interface Playlist {
+  id: string
+  userId: string
+  name: string
+  description?: string
+  items: PlaylistItem[]
+  createdAt: string
+  updatedAt: string
+}
+
 // --- API methods ---
 
 export const api = {
@@ -128,6 +150,16 @@ export const api = {
   },
   todaySet: {
     get: (date: string) => apiFetch<{ date: string; todoIds: string[] }>(`/api/today-set?date=${date}`),
+  },
+  playlists: {
+    list: () => apiFetch<Playlist[]>('/api/playlists'),
+    get: (id: string) => apiFetch<Playlist>(`/api/playlists/${id}`),
+    create: (data: { name: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
+      apiFetch<Playlist>('/api/playlists', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: string, data: { name?: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
+      apiFetch<Playlist>(`/api/playlists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: string) => apiFetch<void>(`/api/playlists/${id}`, { method: 'DELETE' }),
+    start: (id: string) => apiFetch<{ todoIds: string[]; count: number }>(`/api/playlists/${id}/start`, { method: 'POST' }),
   },
   preferences: {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences'),
