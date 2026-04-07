@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { anthropic, AI_ENABLED } from '@/lib/anthropic'
+import { anthropic, AI_ENABLED, AI_MODEL } from '@/lib/anthropic'
 
 const TRIGGER_CHANCE = import.meta.env.DEV ? 1.0 : 0.3
 const DISMISS_DELAY = 4000
@@ -41,7 +41,7 @@ export function useCompletionToast() {
 
     try {
       const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-20250414',
+        model: AI_MODEL,
         max_tokens: 60,
         system: 'You are Tempo, a calm and warm productivity companion for someone with ADHD. Generate a single short (under 12 words) celebration message for completing a task. Be warm, genuine, and encouraging — never cheesy, never use exclamation marks, never use emojis. Match the tone of: "Nice work — one less thing on your mind." or "Done. That feels good, doesn\'t it?"',
         messages: [

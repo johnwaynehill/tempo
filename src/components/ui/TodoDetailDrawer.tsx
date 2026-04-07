@@ -146,8 +146,18 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                 energy_level: !!todo.energy_level,
                 size: !!todo.size,
                 project: !!todo.project,
+                impact: !!todo.impact,
+                estimated_minutes: !!todo.estimated_minutes,
+                due_date: !!todo.due_date,
               }}
-              onAccept={(field, value) => setField(field, value)}
+              onAcceptAll={(s) => {
+                if (s.energy_level) setField('energy_level', s.energy_level)
+                if (s.size) setField('size', s.size)
+                if (s.project) setField('project', s.project)
+                if (s.impact) setField('impact', s.impact)
+                if (s.estimated_minutes) setField('estimated_minutes', s.estimated_minutes)
+                if (s.due_date) setField('due_date', new Date(s.due_date + 'T00:00:00'))
+              }}
             />
           )}
 

@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { anthropic, AI_ENABLED } from '@/lib/anthropic'
+import { anthropic, AI_ENABLED, AI_MODEL } from '@/lib/anthropic'
 import type { Todo, EnergyLevel } from '@/types'
 
 const DISMISS_DELAY = 10_000
@@ -64,7 +64,7 @@ export function usePickForMe(todayTodos: Todo[], currentEnergy?: EnergyLevel): U
       const todoList = todayTodos.map((t) => serializeTodoShort(t)).join('\n')
 
       const response = await anthropic.messages.create({
-        model: 'claude-haiku-4-20250414',
+        model: AI_MODEL,
         max_tokens: 120,
         system: `You are Tempo, an ADHD productivity assistant. The user is paralyzed by choice and needs you to pick ONE task to start right now. Consider: energy match, time of day (${timeOfDay}), task urgency, and size. Return ONLY valid JSON: {"todo_id":"...","reason":"..."}. The reason must be under 20 words, warm, and direct. No quotes around the JSON.`,
         messages: [
@@ -75,8 +75,9 @@ export function usePickForMe(todayTodos: Todo[], currentEnergy?: EnergyLevel): U
         ],
       })
 
-      const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+      let text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
       if (text) {
+        text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim()
         const parsed = JSON.parse(text) as { todo_id: string; reason: string }
         const matched = todayTodos.find((t) => t.id === parsed.todo_id)
         if (matched) {

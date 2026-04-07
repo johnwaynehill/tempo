@@ -1,11 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { anthropic, AI_ENABLED } from '@/lib/anthropic'
+import { anthropic, AI_ENABLED, AI_MODEL } from '@/lib/anthropic'
 import type { EnergyLevel, TodoSize } from '@/types'
 
 export interface SmartSuggestions {
   energy_level?: EnergyLevel
   size?: TodoSize
   project?: string
+  impact?: number
+  estimated_minutes?: number
+  due_date?: string // ISO date string e.g. "2026-04-10"
 }
 
 interface UseSmartCaptureResult {
@@ -45,8 +48,10 @@ export function useSmartCapture(
     }
 
     setLoading(true)
+    console.log('[SmartCapture] Debouncing for title:', trimmed)
 
     const timer = setTimeout(async () => {
+      console.log('[SmartCapture] Firing API call for:', trimmed)
       // Abort previous request
       abortRef.current?.abort()
       const controller = new AbortController()
@@ -57,15 +62,20 @@ export function useSmartCapture(
           ? `Known projects: ${stableProjectNames.join(', ')}`
           : 'No existing projects.'
 
+        const today = new Date().toISOString().split('T')[0]
+
         const response = await anthropic.messages.create({
-          model: 'claude-haiku-4-20250414',
-          max_tokens: 80,
-          system: `You are a task metadata classifier. Given a task title, suggest the most likely energy_level, size, and project. Return ONLY valid JSON with these optional fields:
+          model: AI_MODEL,
+          max_tokens: 120,
+          system: `You are a task metadata classifier. Given a task title, suggest metadata. Return ONLY valid JSON with these optional fields:
 - energy_level: one of "low", "medium_low", "medium", "high"
 - size: one of "small", "medium", "large"
-- project: pick from the known projects list ONLY, or omit if none fit.
+- project: pick from the known projects list ONLY, or omit if none fit
+- impact: integer 1-5 (1=low, 5=critical)
+- estimated_minutes: integer (common values: 5, 15, 25, 45, 60, 90)
+- due_date: ISO date string if the task implies a deadline, omit otherwise. Today is ${today}.
 ${projectList}
-Be concise. Return JSON only, no explanation.`,
+Return JSON only, no explanation.`,
           messages: [
             { role: 'user', content: trimmed },
           ],
@@ -73,8 +83,10 @@ Be concise. Return JSON only, no explanation.`,
 
         if (controller.signal.aborted) return
 
-        const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+        let text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+        // Strip markdown code fences if present
         if (text) {
+          text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,  '').trim()
           const parsed = JSON.parse(text) as SmartSuggestions
 
           // Validate fields
@@ -88,6 +100,15 @@ Be concise. Return JSON only, no explanation.`,
           if (parsed.project && stableProjectNames.includes(parsed.project)) {
             valid.project = parsed.project
           }
+          if (typeof parsed.impact === 'number' && parsed.impact >= 1 && parsed.impact <= 5) {
+            valid.impact = Math.round(parsed.impact)
+          }
+          if (typeof parsed.estimated_minutes === 'number' && parsed.estimated_minutes > 0 && parsed.estimated_minutes <= 480) {
+            valid.estimated_minutes = parsed.estimated_minutes
+          }
+          if (parsed.due_date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.due_date)) {
+            valid.due_date = parsed.due_date
+          }
 
           if (Object.keys(valid).length > 0) {
             cacheRef.current.set(trimmed, valid)
@@ -96,8 +117,8 @@ Be concise. Return JSON only, no explanation.`,
             setSuggestions(null)
           }
         }
-      } catch {
-        // Silently fail — suggestions are a nice-to-have
+      } catch (err) {
+        console.warn('[SmartCapture] AI call failed:', err)
         if (!controller.signal.aborted) {
           setSuggestions(null)
         }
