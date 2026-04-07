@@ -15,10 +15,18 @@ export function useMood() {
     staleTime: 30_000,
   })
 
+  const { data: history } = useQuery({
+    queryKey: ['mood-history', user?.uid],
+    queryFn: () => api.mood.history(14) as Promise<MoodEntry[]>,
+    enabled: !!user,
+    staleTime: 60_000,
+  })
+
   const mutation = useMutation({
     mutationFn: (data: { value: number; note?: string }) => api.mood.log(data),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['mood-latest'] })
+      qc.invalidateQueries({ queryKey: ['mood-history'] })
       qc.invalidateQueries({ queryKey: ['habits'] })
     },
   })
@@ -27,5 +35,11 @@ export function useMood() {
     mutation.mutate({ value, note })
   }, [mutation])
 
-  return { latestMood: latestMood ?? null, logMood, loading }
+  return {
+    latestMood: latestMood ?? null,
+    history: history ?? [],
+    logMood,
+    loading,
+    logging: mutation.isPending,
+  }
 }
