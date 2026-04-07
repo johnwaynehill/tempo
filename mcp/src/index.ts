@@ -4,7 +4,10 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
 import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js'
+import { mcpAuthRouter, getOAuthProtectedResourceMetadataUrl } from '@modelcontextprotocol/sdk/server/auth/router.js'
+import { requireBearerAuth } from '@modelcontextprotocol/sdk/server/auth/middleware/bearerAuth.js'
 import { createServer } from './server.js'
+import { TempoOAuthProvider } from './oauth-provider.js'
 
 const STDIO_MODE = process.argv.includes('--stdio')
 
@@ -24,22 +27,42 @@ if (STDIO_MODE) {
 
   const PORT = parseInt(process.env.PORT || '3001', 10)
   const API_KEY = process.env.TEMPO_API_KEY || ''
+  const SERVER_URL = new URL(process.env.PUBLIC_URL || `http://localhost:${PORT}`)
+  const MCP_URL = new URL('/mcp', SERVER_URL)
 
   const app = createMcpExpressApp({ host: '0.0.0.0' })
+  const oauthProvider = new TempoOAuthProvider()
 
-  // Auth middleware — reuse the same API key as the Tempo API
-  app.use('/mcp', (req, res, next) => {
-    const key = req.headers['x-api-key'] as string | undefined
-    if (!key || key !== API_KEY) {
-      res.status(401).json({ error: 'Unauthorized — provide X-API-Key header' })
-      return
-    }
-    next()
-  })
+  // OAuth routes — adds /authorize, /token, /register, /.well-known/*
+  app.use(mcpAuthRouter({
+    provider: oauthProvider,
+    issuerUrl: SERVER_URL,
+    resourceServerUrl: MCP_URL,
+    resourceName: 'Tempo MCP Server',
+    scopesSupported: ['mcp:tools'],
+  }))
 
   // Health check
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', server: 'tempo-mcp' })
+  })
+
+  // Dual auth middleware — API key (Claude Code) OR Bearer token (Claude.ai OAuth)
+  const bearerAuth = requireBearerAuth({
+    verifier: oauthProvider,
+    requiredScopes: [],
+    resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(MCP_URL),
+  })
+
+  app.use('/mcp', (req, res, next) => {
+    // Path 1: X-API-Key header (Claude Code)
+    const apiKey = req.headers['x-api-key'] as string | undefined
+    if (apiKey && apiKey === API_KEY) {
+      return next()
+    }
+
+    // Path 2: Bearer token (Claude.ai via OAuth)
+    bearerAuth(req, res, next)
   })
 
   // Session management
