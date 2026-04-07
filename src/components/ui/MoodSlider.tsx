@@ -19,7 +19,7 @@ export function MoodSlider({ initialValue = 50, onCommit, compact = false }: Moo
   const [transitioning, setTransitioning] = useState(false)
   const currentMood = moodFromValue(value)
   const lastMoodRef = useRef(currentMood)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   // Detect mood changes and trigger cross-fade
   useEffect(() => {

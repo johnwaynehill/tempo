@@ -29,7 +29,7 @@ export function PlanMyDayPage() {
   const { latestMood, logMood } = useMood()
 
   const [step, setStep] = useState<Step>('checkin')
-  const energy = preferences.current_energy ?? undefined
+  const energy = preferences.current_energy
   const moodValueRef = useRef<number | null>(null)
   const [moodCommitted, setMoodCommitted] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(pinned.map((t) => t.id)))

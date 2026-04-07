@@ -158,7 +158,7 @@ export const MOOD_ANCHORS = [
 // --- User Preferences ---
 
 export interface UserPreferences {
-  current_energy?: EnergyLevel | null
+  current_energy?: EnergyLevel
   theme: 'light' | 'dark' | 'system'
   notifications_enabled: boolean
   adaptive_theme: boolean
