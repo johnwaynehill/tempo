@@ -539,6 +539,42 @@ export function createServer(): McpServer {
     },
   )
 
+  // --- Log Mood ---
+  server.tool(
+    'log_mood',
+    'Log a mood entry (1-100 scale). Optionally include a short note.',
+    {
+      value: z.number().min(1).max(100).describe('Mood value (1 = awful, 50 = okay, 100 = great)'),
+      note: z.string().optional().describe('Optional short note (max 140 chars)'),
+    },
+    async ({ value, note }) => {
+      const entry = await api.mood.log({ value: Math.round(value), note })
+      return {
+        content: [{ type: 'text', text: `Logged mood: ${value}/100${note ? ` — "${note}"` : ''}` }],
+      }
+    },
+  )
+
+  // --- Get Mood History ---
+  server.tool(
+    'get_mood_history',
+    'Get mood entries for the last N days',
+    {
+      days: z.number().default(7).describe('Number of days to look back (default 7)'),
+    },
+    async ({ days }) => {
+      const entries = await api.mood.history(days)
+      if (!entries || entries.length === 0) {
+        return { content: [{ type: 'text', text: 'No mood entries found.' }] }
+      }
+      const lines = entries.map(e => {
+        const date = e.createdAt.slice(0, 16).replace('T', ' ')
+        return `${date} — ${e.value}/100${e.note ? ` "${e.note}"` : ''}`
+      })
+      return { content: [{ type: 'text', text: lines.join('\n') }] }
+    },
+  )
+
   // --- Get Preferences ---
   server.tool(
     'get_preferences',

@@ -138,10 +138,27 @@ export interface Playlist {
   updated_at: Date
 }
 
+// --- Mood ---
+
+export interface MoodEntry {
+  id: string
+  value: number        // 1-100
+  note?: string
+  created_at: Date
+}
+
+export const MOOD_ANCHORS = [
+  { value: 1,   label: 'Awful' },
+  { value: 25,  label: 'Low' },
+  { value: 50,  label: 'Okay' },
+  { value: 75,  label: 'Good' },
+  { value: 100, label: 'Great' },
+] as const
+
 // --- User Preferences ---
 
 export interface UserPreferences {
-  current_energy?: EnergyLevel
+  current_energy?: EnergyLevel | null
   theme: 'light' | 'dark' | 'system'
   notifications_enabled: boolean
   adaptive_theme: boolean

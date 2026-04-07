@@ -1,10 +1,10 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { EnergySelector } from '@/components/ui/EnergySelector'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 import { TimerBar } from '@/components/ui/TimerBar'
+import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
@@ -12,6 +12,7 @@ import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useTimer } from '@/hooks/useTimer'
 import { useStreak } from '@/hooks/useStreak'
 import { usePickForMe } from '@/hooks/usePickForMe'
+import { useMood } from '@/hooks/useMood'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
 import { PickForMeCard } from '@/components/ui/PickForMeCard'
 import { AI_ENABLED } from '@/lib/anthropic'
@@ -25,6 +26,7 @@ export function TodayPage() {
   const timer = useTimer()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { pick: pickResult, loading: pickLoading, pickForMe, dismiss: dismissPick } = usePickForMe(todayTodos, preferences.current_energy)
+  const { latestMood } = useMood()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -91,13 +93,38 @@ export function TodayPage() {
         </div>
       </div>
 
-      {/* Energy selector — always visible per PRD §7.5 */}
-      <div className="mb-8">
-        <EnergySelector
-          value={preferences.current_energy}
-          onChange={(level) => updatePreferences({ current_energy: preferences.current_energy === level ? undefined : level })}
-        />
-      </div>
+      {/* Mood check-in — compact entry point to /mood page */}
+      <button
+        onClick={() => navigate('/mood')}
+        className="mb-6 w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-lowest border border-outline-variant/10 text-left cursor-pointer transition-all hover:bg-surface-container-low hover:border-outline-variant/20 group min-h-[44px]"
+      >
+        {latestMood ? (
+          <>
+            <MoodBlob mood={moodFromValue(latestMood.value)} size={28} />
+            <div className="flex-1 min-w-0">
+              <span className="text-sm text-on-surface font-medium">
+                {MOOD_LABELS[moodFromValue(latestMood.value)]}
+              </span>
+              {latestMood.note && (
+                <p className="text-xs text-on-surface-variant truncate">{latestMood.note}</p>
+              )}
+            </div>
+            <span className="text-xs text-on-surface-variant opacity-60 group-hover:opacity-100 transition-opacity">
+              Check in →
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="text-lg">☺</span>
+            <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">
+              How are you feeling?
+            </span>
+            <span className="ml-auto text-xs text-on-surface-variant opacity-0 group-hover:opacity-60 transition-opacity">
+              Log mood →
+            </span>
+          </>
+        )}
+      </button>
 
       {/* Pick for me — visible when 2+ tasks and AI enabled */}
       {AI_ENABLED && todayTodos.length > 1 && !loading && (

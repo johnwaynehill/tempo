@@ -24,6 +24,7 @@ import { FocusModePage } from '@/pages/FocusMode'
 import { PlanMyDayPage } from '@/pages/PlanMyDay'
 import { PlaylistsPage } from '@/pages/Playlists'
 import { PlaylistDetailPage } from '@/pages/PlaylistDetail'
+import { MoodPage } from '@/pages/Mood'
 
 function AuthenticatedApp() {
   return (
@@ -45,6 +46,7 @@ function AuthenticatedApp() {
         <Route path="/habits/:habitId" element={<HabitDetailPage />} />
         <Route path="/playlists" element={<PlaylistsPage />} />
         <Route path="/playlists/:id" element={<PlaylistDetailPage />} />
+        <Route path="/mood" element={<MoodPage />} />
         <Route path="/calendar" element={<Navigate to="/backlog" replace />} />
         <Route path="/completed" element={<CompletedPage />} />
         <Route path="/chat" element={<AIChatPage />} />

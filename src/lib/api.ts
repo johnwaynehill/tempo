@@ -114,6 +114,18 @@ export const api = {
     }).then(r => fromApi(r, EVENT_DATES)),
     delete: (id: string) => apiFetch<void>(`/api/events/${id}`, { method: 'DELETE' }),
   },
+  mood: {
+    log: (data: { value: number; note?: string }) =>
+      apiFetch<Record<string, unknown>>('/api/mood', {
+        method: 'POST', body: JSON.stringify(data),
+      }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    history: (days = 7) =>
+      apiFetch<Record<string, unknown>[]>(`/api/mood?days=${days}`)
+        .then(rows => rows.map(r => fromApi(r, TIMESTAMP_DATES))),
+    latest: () =>
+      apiFetch<Record<string, unknown> | null>('/api/mood/latest')
+        .then(r => r ? fromApi(r, TIMESTAMP_DATES) : null),
+  },
   preferences: {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences')
       .then(r => fromApi(r, [])),

@@ -104,6 +104,14 @@ export interface PlaylistItem {
   project?: string
 }
 
+export interface MoodEntry {
+  id: string
+  userId: string
+  value: number
+  note?: string
+  createdAt: string
+}
+
 export interface Playlist {
   id: string
   userId: string
@@ -160,6 +168,14 @@ export const api = {
       apiFetch<Playlist>(`/api/playlists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id: string) => apiFetch<void>(`/api/playlists/${id}`, { method: 'DELETE' }),
     start: (id: string) => apiFetch<{ todoIds: string[]; count: number }>(`/api/playlists/${id}/start`, { method: 'POST' }),
+  },
+  mood: {
+    log: (data: { value: number; note?: string }) =>
+      apiFetch<MoodEntry>('/api/mood', { method: 'POST', body: JSON.stringify(data) }),
+    history: (days = 7) =>
+      apiFetch<MoodEntry[]>(`/api/mood?days=${days}`),
+    latest: () =>
+      apiFetch<MoodEntry | null>('/api/mood/latest'),
   },
   preferences: {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences'),

@@ -186,6 +186,16 @@ export const playlistItems = pgTable('playlist_items', {
   project: text('project'),
 })
 
+// --- Mood Entries ---
+
+export const moodEntries = pgTable('mood_entries', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
+  value: integer('value').notNull(), // 1-100 continuous scale
+  note: text('note'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 // --- MCP OAuth State ---
 
 export const mcpOauthState = pgTable('mcp_oauth_state', {

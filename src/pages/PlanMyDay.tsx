@@ -1,16 +1,17 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router'
-import { EnergySelector } from '@/components/ui/EnergySelector'
+import { MoodSlider } from '@/components/ui/MoodSlider'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
+import { useMood } from '@/hooks/useMood'
 import { suggestTodayTodos } from '@/lib/scoring'
 import { defaultEstimate, formatMinutes } from '@/hooks/useTimer'
 import { api } from '@/lib/api'
-import type { Todo, EnergyLevel } from '@/types'
+import type { Todo } from '@/types'
 
-type Step = 'energy' | 'yesterday' | 'pick' | 'estimates' | 'ready'
+type Step = 'checkin' | 'yesterday' | 'pick' | 'estimates' | 'ready'
 
-const STEPS: Step[] = ['energy', 'yesterday', 'pick', 'estimates', 'ready']
+const STEPS: Step[] = ['checkin', 'yesterday', 'pick', 'estimates', 'ready']
 
 function todayDateString(): string {
   const d = new Date()
@@ -24,10 +25,13 @@ function getEstimate(todo: Todo): number {
 export function PlanMyDayPage() {
   const navigate = useNavigate()
   const { todos, pinned, backlog, done, pinToToday, updateTodo, loading: todosLoading } = useTodos()
-  const { preferences, updatePreferences } = usePreferences()
+  const { preferences } = usePreferences()
+  const { latestMood, logMood } = useMood()
 
-  const [step, setStep] = useState<Step>('energy')
-  const [energy, setEnergy] = useState<EnergyLevel | undefined>(preferences.current_energy)
+  const [step, setStep] = useState<Step>('checkin')
+  const energy = preferences.current_energy ?? undefined
+  const moodValueRef = useRef<number | null>(null)
+  const [moodCommitted, setMoodCommitted] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(pinned.map((t) => t.id)))
   const [initialized, setInitialized] = useState(false)
 
@@ -113,13 +117,13 @@ export function PlanMyDayPage() {
   const handleNext = useCallback(() => {
     const i = STEPS.indexOf(step)
     if (i < STEPS.length - 1) {
-      // When leaving energy step, persist the energy choice
-      if (step === 'energy' && energy) {
-        updatePreferences({ current_energy: energy })
+      // When leaving checkin step, persist mood
+      if (step === 'checkin' && moodValueRef.current !== null) {
+        logMood(moodValueRef.current)
       }
       setStep(STEPS[i + 1])
     }
-  }, [step, energy, updatePreferences])
+  }, [step, logMood])
 
   const handleBack = useCallback(() => {
     const i = STEPS.indexOf(step)
@@ -183,23 +187,22 @@ export function PlanMyDayPage() {
       {/* Main content — centered */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 max-w-lg mx-auto w-full">
 
-        {/* Step 1: Energy */}
-        {step === 'energy' && (
+        {/* Step 1: Check-in (Mood) */}
+        {step === 'checkin' && (
           <div className="w-full animate-gentle-appear">
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <h1 className="font-display text-2xl md:text-3xl font-bold text-on-surface mb-2">
                 Good morning
               </h1>
               <p className="text-on-surface-variant text-sm">
-                How's your energy right now?
+                How are you feeling right now?
               </p>
             </div>
-            <div className="flex justify-center">
-              <EnergySelector
-                value={energy}
-                onChange={(level) => setEnergy(energy === level ? undefined : level)}
-              />
-            </div>
+            <MoodSlider
+              initialValue={latestMood?.value ?? 50}
+              onCommit={(v) => { moodValueRef.current = v; setMoodCommitted(true) }}
+              compact
+            />
           </div>
         )}
 
@@ -401,7 +404,7 @@ export function PlanMyDayPage() {
             onClick={handleNext}
             className="px-8 py-3 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
           >
-            {step === 'energy' && !energy ? 'Skip' : 'Next'}
+            {step === 'checkin' && !moodCommitted ? 'Skip' : 'Next'}
           </button>
         )}
       </div>
