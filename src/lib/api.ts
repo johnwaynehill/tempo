@@ -157,6 +157,30 @@ export const api = {
     }).then(r => fromApi(r, TIMESTAMP_DATES)),
     delete: (id: string) => apiFetch<void>(`/api/projects/${id}`, { method: 'DELETE' }),
   },
+  playlists: {
+    list: () => apiFetch<Record<string, unknown>[]>('/api/playlists')
+      .then(rows => rows.map(r => {
+        const p = fromApi<Record<string, unknown>>(r, TIMESTAMP_DATES)
+        const items = (r.items as Record<string, unknown>[]) ?? []
+        return { ...p, items: items.map(i => fromApi(i, [])) }
+      })),
+    get: (id: string) => apiFetch<Record<string, unknown>>(`/api/playlists/${id}`)
+      .then(r => {
+        const p = fromApi<Record<string, unknown>>(r, TIMESTAMP_DATES)
+        const items = (r.items as Record<string, unknown>[]) ?? []
+        return { ...p, items: items.map(i => fromApi(i, [])) }
+      }),
+    create: (data: Record<string, unknown>) => apiFetch<Record<string, unknown>>('/api/playlists', {
+      method: 'POST', body: JSON.stringify(toApi(data)),
+    }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    update: (id: string, data: Record<string, unknown>) => apiFetch<Record<string, unknown>>(`/api/playlists/${id}`, {
+      method: 'PUT', body: JSON.stringify(toApi(data)),
+    }).then(r => fromApi(r, TIMESTAMP_DATES)),
+    delete: (id: string) => apiFetch<void>(`/api/playlists/${id}`, { method: 'DELETE' }),
+    start: (id: string) => apiFetch<{ todoIds: string[]; count: number }>(`/api/playlists/${id}/start`, {
+      method: 'POST',
+    }),
+  },
   apiKeys: {
     list: () => apiFetch<Record<string, unknown>[]>('/api/api-keys'),
     create: (name: string) => apiFetch<Record<string, unknown>>('/api/api-keys', {

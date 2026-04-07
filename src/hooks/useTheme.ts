@@ -20,6 +20,7 @@ function applyTheme(resolved: 'light' | 'dark') {
 
 /**
  * Reads the theme preference and applies `data-theme` to <html>.
+ * Also applies `data-energy` when adaptive theme is enabled.
  * Listens for system theme changes when set to 'system'.
  */
 export function useTheme() {
@@ -43,4 +44,14 @@ export function useTheme() {
     mq.addEventListener('change', handler)
     return () => mq.removeEventListener('change', handler)
   }, [preferences.theme])
+
+  // Adaptive energy theme
+  useEffect(() => {
+    const el = document.documentElement
+    if (preferences.adaptive_theme && preferences.current_energy) {
+      el.setAttribute('data-energy', preferences.current_energy)
+    } else {
+      el.removeAttribute('data-energy')
+    }
+  }, [preferences.adaptive_theme, preferences.current_energy])
 }

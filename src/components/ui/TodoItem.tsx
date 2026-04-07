@@ -5,6 +5,7 @@ import { ENERGY_LABELS } from '@/types'
 import { describeRecurrence } from '@/lib/recurrence'
 import { useNotes } from '@/hooks/useNotes'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
+import { CompletionSparkle } from '@/components/ui/CompletionSparkle'
 import { formatElapsed, formatMinutes, defaultEstimate } from '@/hooks/useTimer'
 
 const SIZE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' } as const
@@ -23,12 +24,15 @@ interface TodoItemProps {
 export function TodoItem({ todo, onComplete, onDefer, showEnergy = true, timerActive, timerElapsed, onStartTimer }: TodoItemProps) {
   const [completing, setCompleting] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+  const [sparklePos, setSparklePos] = useState<{ x: number; y: number } | null>(null)
   const { notes } = useNotes()
   const navigate = useNavigate()
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
 
-  const handleComplete = () => {
+  const handleComplete = (e: React.MouseEvent) => {
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setSparklePos({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 })
     setCompleting(true)
     setTimeout(() => {
       onComplete(todo.id)
@@ -164,6 +168,15 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true, timerAc
           </button>
         </div>
       </div>
+
+      {/* Completion sparkle */}
+      {sparklePos && (
+        <CompletionSparkle
+          x={sparklePos.x}
+          y={sparklePos.y}
+          onComplete={() => setSparklePos(null)}
+        />
+      )}
 
       {/* Detail drawer */}
       {drawerOpen && !completing && (
