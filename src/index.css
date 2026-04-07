@@ -73,48 +73,79 @@
 
 /* --- Adaptive Energy Theme (Light) --- */
 
+/* Low: warm, soft, low-contrast — gentle & calming */
 [data-energy='low'] {
-  --color-primary: #6b7a74;
-  --color-primary-dim: #5e6d67;
-  --color-primary-container: #dde3df;
-  --color-on-surface: #3d4241;
-  --color-on-surface-variant: #6e7372;
+  --color-primary: #8a9590;
+  --color-primary-dim: #7d8884;
+  --color-primary-container: #e8e5e0;
+  --color-on-primary: #f5f3f0;
+  --color-surface: #faf9f6;
+  --color-surface-container-lowest: #fffefa;
+  --color-surface-container-low: #f5f3ef;
+  --color-surface-container: #efede9;
+  --color-on-surface: #4a4845;
+  --color-on-surface-variant: #7d7b78;
+  --color-outline-variant: #d5d3cf;
 }
 
+/* Med-low: slightly muted, easing in */
 [data-energy='medium_low'] {
-  --color-primary: #5a6e65;
-  --color-primary-dim: #4e6159;
-  --color-on-surface: #353a39;
+  --color-primary: #6b7e74;
+  --color-primary-dim: #5e7167;
+  --color-surface: #f9f9f7;
+  --color-on-surface: #3d403e;
+  --color-on-surface-variant: #6e7270;
 }
 
+/* High: saturated, crisp, high-contrast — energized */
 [data-energy='high'] {
-  --color-primary: #3d5a4e;
-  --color-primary-dim: #334d42;
-  --color-primary-container: #c5d9cf;
-  --color-on-surface: #252a29;
+  --color-primary: #2d7a5a;
+  --color-primary-dim: #256b4e;
+  --color-primary-container: #b4e4cf;
+  --color-on-primary: #ffffff;
+  --color-surface: #f7faf8;
+  --color-surface-container-lowest: #ffffff;
+  --color-surface-container-low: #eef5f1;
+  --color-surface-container: #e5efe9;
+  --color-on-surface: #1a2420;
+  --color-on-surface-variant: #3d4f47;
+  --color-outline-variant: #b8cec4;
 }
 
 /* --- Adaptive Energy Theme (Dark) --- */
 
+/* Low: warm-tinted, muted, gentle on eyes */
 [data-theme='dark'][data-energy='low'] {
-  --color-primary: #7a9e90;
-  --color-primary-dim: #6e9184;
-  --color-primary-container: #344a42;
-  --color-on-surface: #c8cac8;
-  --color-on-surface-variant: #8a8e8c;
+  --color-primary: #8a9e95;
+  --color-primary-dim: #7d9188;
+  --color-primary-container: #3a3f3b;
+  --color-surface: #1c1b19;
+  --color-surface-container-lowest: #131210;
+  --color-surface-container-low: #22201e;
+  --color-surface-container: #282624;
+  --color-on-surface: #c5c3c0;
+  --color-on-surface-variant: #8a8886;
 }
 
+/* Med-low: slightly softened */
 [data-theme='dark'][data-energy='medium_low'] {
   --color-primary: #85aa9a;
   --color-primary-dim: #789d8d;
-  --color-on-surface: #d5d7d5;
+  --color-on-surface: #d0d2d0;
+  --color-on-surface-variant: #8e918f;
 }
 
+/* High: vivid, bright, energized feel */
 [data-theme='dark'][data-energy='high'] {
-  --color-primary: #a0c8b5;
-  --color-primary-dim: #8fbaa6;
-  --color-primary-container: #405e52;
-  --color-on-surface: #edefed;
+  --color-primary: #5ee0a8;
+  --color-primary-dim: #4dd398;
+  --color-primary-container: #1f5e42;
+  --color-surface: #151d19;
+  --color-surface-container-lowest: #0d130f;
+  --color-surface-container-low: #1a251f;
+  --color-surface-container: #202d26;
+  --color-on-surface: #e8f2ed;
+  --color-on-surface-variant: #98b5a8;
 }
 
 /* --- Base Styles --- */
