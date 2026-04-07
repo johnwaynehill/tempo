@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-04-06
+- Fix due date 500 error (plain YYYY-MM-DD strings crashed Drizzle) and add 6 playlist MCP tools + energy/time fields to todo tools (#53)
 - Fix adaptive theme contrast — dramatically increased color differentiation between energy levels (#52)
 - Add P3: completion sparkle on checkbox, adaptive energy theme toggle in Settings, routine playlists with full CRUD and "Start" flow (#51)
 - Add P2: momentum streaks (flame indicator), "Just pick for me" AI task picker, smart quick capture with AI metadata suggestions (#50)
