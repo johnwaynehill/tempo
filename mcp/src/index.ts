@@ -26,6 +26,8 @@ if (STDIO_MODE) {
   // HTTP MODE (remote)
   // ========================
 
+  const ICON_SVG = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M376 0H136C60.8893 0 0 60.8893 0 136V376C0 451.111 60.8893 512 136 512H376C451.111 512 512 451.111 512 376V136C512 60.8893 451.111 0 376 0Z" fill="url(#tempo-bg)"/><path d="M366 96H130C106.804 96 88 112.118 88 132V156C88 175.882 106.804 192 130 192H366C389.196 192 408 175.882 408 156V132C408 112.118 389.196 96 366 96Z" fill="#F4F1EC"/><path d="M256 152C256 121.072 234.51 96 208 96C181.49 96 160 121.072 160 152V368C160 398.928 181.49 424 208 424C234.51 424 256 398.928 256 368V152Z" fill="#F4F1EC"/><path d="M356 424C384.719 424 408 400.719 408 372C408 343.281 384.719 320 356 320C327.281 320 304 343.281 304 372C304 400.719 327.281 424 356 424Z" fill="#F4F1EC"/><defs><linearGradient id="tempo-bg" x1="52" y1="36" x2="470" y2="470" gradientUnits="userSpaceOnUse"><stop stop-color="#9BAAA2"/><stop offset="1" stop-color="#465A53"/></linearGradient></defs></svg>`
+
   const PORT = parseInt(process.env.PORT || '3001', 10)
   const API_KEY = process.env.TEMPO_API_KEY || ''
   const SERVER_URL = new URL(process.env.PUBLIC_URL || `http://localhost:${PORT}`)
@@ -49,6 +51,13 @@ if (STDIO_MODE) {
   // Health check
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok', server: 'tempo-mcp' })
+  })
+
+  // Serve app icon for Claude.ai integration
+  app.get('/icon.svg', (_req, res) => {
+    res.setHeader('Content-Type', 'image/svg+xml')
+    res.setHeader('Cache-Control', 'public, max-age=86400')
+    res.send(ICON_SVG)
   })
 
   // Dual auth middleware — API key (Claude Code) OR Bearer token (Claude.ai OAuth)

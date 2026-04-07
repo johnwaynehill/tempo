@@ -4,9 +4,12 @@ import { z } from 'zod'
 import { api } from './api.js'
 
 export function createServer(): McpServer {
+  const serverUrl = process.env.PUBLIC_URL || ''
+
   const server = new McpServer({
-    name: 'tempo',
+    name: 'Tempo',
     version: '1.0.0',
+    icons: serverUrl ? [{ src: `${serverUrl}/icon.svg`, mimeType: 'image/svg+xml' }] : undefined,
   })
 
   // --- Helper ---
