@@ -165,4 +165,15 @@ export const api = {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences'),
     update: (data: Record<string, unknown>) => apiFetch<Record<string, unknown>>('/api/preferences', { method: 'PUT', body: JSON.stringify(data) }),
   },
+  mcpOauth: {
+    get: <T>(type: string, key: string) =>
+      apiFetch<T>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`).catch(() => null),
+    set: (type: string, key: string, data: unknown, expiresAt?: string) =>
+      apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, {
+        method: 'PUT',
+        body: JSON.stringify({ data, expiresAt }),
+      }),
+    delete: (type: string, key: string) =>
+      apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, { method: 'DELETE' }),
+  },
 }

@@ -15,6 +15,7 @@ import anthropicRouter from './routes/anthropic.js'
 import conversationsRouter from './routes/conversations.js'
 import projectsRouter from './routes/projects.js'
 import playlistsRouter from './routes/playlists.js'
+import mcpOauthRouter from './routes/mcp-oauth.js'
 
 // Init Firebase Admin (for token verification)
 admin.initializeApp({
@@ -68,6 +69,7 @@ app.use('/api/anthropic', anthropicRouter)
 app.use('/api/conversations', conversationsRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/playlists', playlistsRouter)
+app.use('/api/mcp-oauth', mcpOauthRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Tempo API running on port ${port}`)
