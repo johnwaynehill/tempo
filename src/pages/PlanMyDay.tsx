@@ -1,15 +1,13 @@
-import { useState, useMemo, useCallback } from 'react'
+import { useState, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router'
-import { MoodBlob, MOOD_VALUES, MOOD_LABELS, type MoodKey } from '@/components/ui/MoodBlob'
+import { MoodSlider } from '@/components/ui/MoodSlider'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useMood } from '@/hooks/useMood'
 import { suggestTodayTodos } from '@/lib/scoring'
 import { defaultEstimate, formatMinutes } from '@/hooks/useTimer'
 import { api } from '@/lib/api'
-import type { Todo, EnergyLevel } from '@/types'
-
-const PLAN_MOODS: MoodKey[] = ['awful', 'bad', 'meh', 'good', 'great']
+import type { Todo } from '@/types'
 
 type Step = 'checkin' | 'yesterday' | 'pick' | 'estimates' | 'ready'
 
@@ -27,12 +25,13 @@ function getEstimate(todo: Todo): number {
 export function PlanMyDayPage() {
   const navigate = useNavigate()
   const { todos, pinned, backlog, done, pinToToday, updateTodo, loading: todosLoading } = useTodos()
-  const { preferences, updatePreferences } = usePreferences()
+  const { preferences } = usePreferences()
   const { latestMood, logMood } = useMood()
 
   const [step, setStep] = useState<Step>('checkin')
-  const [energy, setEnergy] = useState<EnergyLevel | undefined>(preferences.current_energy)
-  const [selectedMood, setSelectedMood] = useState<MoodKey | null>(null)
+  const energy = preferences.current_energy ?? undefined
+  const moodValueRef = useRef<number | null>(null)
+  const [moodCommitted, setMoodCommitted] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(() => new Set(pinned.map((t) => t.id)))
   const [initialized, setInitialized] = useState(false)
 
@@ -118,14 +117,13 @@ export function PlanMyDayPage() {
   const handleNext = useCallback(() => {
     const i = STEPS.indexOf(step)
     if (i < STEPS.length - 1) {
-      // When leaving checkin step, persist mood and energy
-      if (step === 'checkin') {
-        if (selectedMood) logMood(MOOD_VALUES[selectedMood])
-        if (energy) updatePreferences({ current_energy: energy })
+      // When leaving checkin step, persist mood
+      if (step === 'checkin' && moodValueRef.current !== null) {
+        logMood(moodValueRef.current)
       }
       setStep(STEPS[i + 1])
     }
-  }, [step, energy, updatePreferences])
+  }, [step, logMood])
 
   const handleBack = useCallback(() => {
     const i = STEPS.indexOf(step)
@@ -192,7 +190,7 @@ export function PlanMyDayPage() {
         {/* Step 1: Check-in (Mood) */}
         {step === 'checkin' && (
           <div className="w-full animate-gentle-appear">
-            <div className="text-center mb-10">
+            <div className="text-center mb-6">
               <h1 className="font-display text-2xl md:text-3xl font-bold text-on-surface mb-2">
                 Good morning
               </h1>
@@ -200,32 +198,11 @@ export function PlanMyDayPage() {
                 How are you feeling right now?
               </p>
             </div>
-            <div className="flex justify-center gap-3 md:gap-5">
-              {PLAN_MOODS.map((mood) => {
-                const isSelected = selectedMood === mood
-                return (
-                  <button
-                    key={mood}
-                    onClick={() => setSelectedMood(selectedMood === mood ? null : mood)}
-                    className={`flex flex-col items-center gap-2.5 p-3 rounded-2xl transition-all duration-300 cursor-pointer
-                      ${isSelected
-                        ? 'bg-primary/8 scale-110 ring-2 ring-primary/20'
-                        : 'hover:bg-surface-container-low hover:scale-105 active:scale-95'
-                      }
-                    `}
-                    aria-label={`${MOOD_LABELS[mood]} mood`}
-                    aria-pressed={isSelected}
-                  >
-                    <MoodBlob mood={mood} size={56} selected={isSelected} />
-                    <span className={`text-xs font-medium transition-colors ${
-                      isSelected ? 'text-on-surface' : 'text-on-surface-variant'
-                    }`}>
-                      {MOOD_LABELS[mood]}
-                    </span>
-                  </button>
-                )
-              })}
-            </div>
+            <MoodSlider
+              initialValue={latestMood?.value ?? 50}
+              onCommit={(v) => { moodValueRef.current = v; setMoodCommitted(true) }}
+              compact
+            />
           </div>
         )}
 
@@ -427,7 +404,7 @@ export function PlanMyDayPage() {
             onClick={handleNext}
             className="px-8 py-3 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
           >
-            {step === 'checkin' && !selectedMood ? 'Skip' : 'Next'}
+            {step === 'checkin' && !moodCommitted ? 'Skip' : 'Next'}
           </button>
         )}
       </div>

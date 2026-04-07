@@ -13,7 +13,7 @@ interface MoodBlobProps {
 }
 
 /** Color palette — warm pastels keyed to mood */
-const BLOB_COLORS: Record<MoodBlobProps['mood'], { bg: string; face: string; glow: string }> = {
+export const BLOB_COLORS: Record<MoodBlobProps['mood'], { bg: string; face: string; glow: string }> = {
   awful:  { bg: '#E8B4B8', face: '#6B3A3E', glow: '#E8B4B840' },  // dusty rose
   bad:    { bg: '#C9B8D9', face: '#4A3660', glow: '#C9B8D940' },  // soft lavender
   meh:    { bg: '#D5D0C8', face: '#5A5650', glow: '#D5D0C840' },  // warm gray

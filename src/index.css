@@ -368,6 +368,24 @@ html {
   animation: mood-bounce 0.4s ease-out;
 }
 
+@keyframes mood-fade-in {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mood-fade-out {
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.8); }
+}
+
+.animate-mood-fade-in {
+  animation: mood-fade-in 0.3s ease-out forwards;
+}
+
+.animate-mood-fade-out {
+  animation: mood-fade-out 0.3s ease-out forwards;
+}
+
 @keyframes focus-breathe {
   0%   { opacity: 0; transform: scale(0.9); }
   40%  { opacity: 1; transform: scale(1.05); }
