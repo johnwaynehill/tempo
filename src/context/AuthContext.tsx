@@ -13,6 +13,29 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 
+const IS_DEV_AUTH = import.meta.env.VITE_DEV_AUTH === 'true'
+
+// Minimal mock that satisfies the User type for components that read .uid, .email, .displayName
+const DEV_USER = {
+  uid: 'dev-test-user',
+  email: 'dev@tempo.test',
+  displayName: 'Dev User',
+  photoURL: null,
+  emailVerified: true,
+  isAnonymous: false,
+  metadata: {},
+  providerData: [],
+  providerId: 'dev',
+  refreshToken: '',
+  tenantId: null,
+  phoneNumber: null,
+  delete: async () => {},
+  getIdToken: async () => 'dev-token',
+  getIdTokenResult: async () => ({ token: 'dev-token', claims: {}, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
+  reload: async () => {},
+  toJSON: () => ({}),
+} as unknown as User
+
 interface AuthContextValue {
   user: User | null
   loading: boolean
@@ -23,10 +46,11 @@ interface AuthContextValue {
 const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [user, setUser] = useState<User | null>(IS_DEV_AUTH ? DEV_USER : null)
+  const [loading, setLoading] = useState(!IS_DEV_AUTH)
 
   useEffect(() => {
+    if (IS_DEV_AUTH) return
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUser(user)
       setLoading(false)
@@ -35,10 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signIn = async () => {
+    if (IS_DEV_AUTH) return
     await signInWithPopup(auth, googleProvider)
   }
 
   const signOut = async () => {
+    if (IS_DEV_AUTH) {
+      setUser(null)
+      return
+    }
     await firebaseSignOut(auth)
   }
 
