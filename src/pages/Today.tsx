@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
-import { EnergySelector } from '@/components/ui/EnergySelector'
+import { CheckInWidget } from '@/components/ui/CheckInWidget'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import { CompletionToast } from '@/components/ui/CompletionToast'
@@ -12,6 +12,7 @@ import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useTimer } from '@/hooks/useTimer'
 import { useStreak } from '@/hooks/useStreak'
 import { usePickForMe } from '@/hooks/usePickForMe'
+import { useMood } from '@/hooks/useMood'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
 import { PickForMeCard } from '@/components/ui/PickForMeCard'
 import { AI_ENABLED } from '@/lib/anthropic'
@@ -25,6 +26,7 @@ export function TodayPage() {
   const timer = useTimer()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { pick: pickResult, loading: pickLoading, pickForMe, dismiss: dismissPick } = usePickForMe(todayTodos, preferences.current_energy)
+  const { latestMood, logMood } = useMood()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -91,11 +93,13 @@ export function TodayPage() {
         </div>
       </div>
 
-      {/* Energy selector — always visible per PRD §7.5 */}
+      {/* Mood + Energy check-in — always visible per PRD §7.5 */}
       <div className="mb-8">
-        <EnergySelector
-          value={preferences.current_energy}
-          onChange={(level) => updatePreferences({ current_energy: preferences.current_energy === level ? undefined : level })}
+        <CheckInWidget
+          energy={preferences.current_energy}
+          onEnergyChange={(level) => updatePreferences({ current_energy: level })}
+          latestMood={latestMood}
+          onMoodCommit={logMood}
         />
       </div>
 

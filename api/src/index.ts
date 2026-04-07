@@ -15,6 +15,7 @@ import anthropicRouter from './routes/anthropic.js'
 import conversationsRouter from './routes/conversations.js'
 import projectsRouter from './routes/projects.js'
 import playlistsRouter from './routes/playlists.js'
+import moodRouter from './routes/mood.js'
 import mcpOauthRouter from './routes/mcp-oauth.js'
 
 // Init Firebase Admin (for token verification)
@@ -69,6 +70,7 @@ app.use('/api/anthropic', anthropicRouter)
 app.use('/api/conversations', conversationsRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/playlists', playlistsRouter)
+app.use('/api/mood', moodRouter)
 app.use('/api/mcp-oauth', mcpOauthRouter)
 
 app.listen(port, '0.0.0.0', () => {
