@@ -3,8 +3,8 @@
 
 **Version:** 1.0
 **Author:** Staff PM / UX (Claude)
-**Date:** 2026-04-05
-**Status:** v1–v3 Complete — ongoing feature work
+**Date:** 2026-04-06
+**Status:** v1–v3 Complete, P1–P3 ADHD features shipped — ongoing feature work
 
 **Related Docs:**
 - [CHANGELOG.md](CHANGELOG.md) — Detailed history of shipped work by date
@@ -132,18 +132,23 @@ Tempo is a PWA that gives you a distraction-reduced interface for your todos and
 
 ```
 Tempo
-├── Today             ← Default landing view (≤5 daily todos + energy selector)
+├── Today             ← Default landing view (≤5 daily todos + energy selector + timer + streaks)
+├── Plan My Day       ← Guided morning planning ritual (5-step flow)
+├── Focus Mode        ← One-task view with timer + Done/Skip/Break
+├── Tempo AI          ← Claude-powered chat assistant (ADHD task breakdown)
 ├── Inbox             ← Unprocessed captures
 ├── Backlog           ← Full todo list (collapsed by project, energy filter)
-├── Projects          ← Project folders with filtered views
-├── Calendar          ← Month grid with event CRUD
 ├── Notes             ← Note list + WYSIWYG Markdown editor (Milkdown)
+├── Projects          ← Project folders with filtered views
+├── Brain Dump        ← Quick capture scratchpad
 ├── Habits            ← Daily habit tracker + contribution grid
+├── Playlists         ← Routine task sequences ("press play" to start)
+├── Completed         ← Archive of done todos
 ├── Insights          ← Todo visualizations (completed, by project, trends)
 ├── Weekly Review     ← Reflection + summary cards
-├── Completed         ← Archive of done todos
-├── Tempo AI          ← Claude-powered chat assistant (ADHD task breakdown)
 └── Settings
+    ├── Theme (Light / Dark / System)
+    ├── Adaptive Theme (energy-responsive colors)
     ├── Notification preferences (Mac)
     ├── Import from Coda (CSV)
     └── PWA update check
@@ -341,23 +346,31 @@ MCP/external tools use API keys (X-API-Key header) instead of tokens
 
 ### What's Been Built
 
-All v1 (P0/P1) and v2 (P2) features are shipped. Most v3 (P3) features are shipped. Summary of key capabilities beyond the v1 MVP:
+All v1 (P0/P1), v2, and research-informed P1–P3 ADHD features are shipped. Summary of key capabilities beyond the v1 MVP:
 
-**Editor & Notes:** Floating formatting toolbar, mobile Markdown bar above keyboard, Create Note button, delete confirmation, inline todo checkboxes in notes, hashtag extraction with visual badges
+**Editor & Notes:** Floating formatting toolbar, mobile Markdown bar above keyboard, Create Note button, delete confirmation, inline todo checkboxes in notes, hashtag extraction with visual badges, project field for notes
 
-**Today & Focus:** Fixed daily set of 5 todos (shrinks on completion, no backfill), energy matching, AI-powered task breakdown ("Unstick Me"), Tempo AI chat assistant with chat history persistence
+**Today & Focus:** Fixed daily set of 5 todos (shrinks on completion, no backfill), energy matching, visual timer with dynamic end-time ("Done by ~X:XX PM"), momentum streaks, "Just pick for me" AI task picker, smart quick capture with AI metadata suggestions
 
-**Organization:** Projects as first-class sidebar folders with filtered views, project typeahead, backlog collapsible sections and sort, Projects view with project field for notes
+**Focus Mode:** One-task full-screen view with countdown timer, Done/Skip/Break actions, transition breathing space with micro-reflection, "Not Now" quick capture to Inbox
 
-**Habits & Insights:** Daily habit tracker with GitHub-style contribution grid, todo visualizations (completed by project, on-time, trends), weekly review with reflection, Insights page
+**Planning:** Guided daily planning ritual (5-step morning flow: energy check-in → yesterday review → AI suggestions → confirm/swap → time estimates), Plan My Day accessible from Today header
 
-**Calendar:** Month grid view with event CRUD, recurring todo support
+**AI:** Tempo AI chat assistant with chat history, "Unstick Me" task breakdown with granularity slider (1–5: broad strokes → baby steps), AI-powered task picker, smart capture metadata suggestions
+
+**Organization:** Projects as first-class sidebar folders with filtered views, project typeahead, backlog collapsible sections and sort, Projects view
+
+**Habits & Playlists:** Daily habit tracker with GitHub-style contribution grid, routine playlists with "Start" to create today tasks from a sequence
+
+**Insights & Review:** Todo visualizations (completed by project, on-time, trends), weekly review with reflection, Insights page
+
+**Sensory Design:** Completion sparkle animation on checkbox, adaptive energy theme (warm/soft colors on low energy, vivid/crisp on high), respects prefers-reduced-motion
 
 **Mobile & PWA:** 44px touch targets, iOS safe-area insets, responsive drawers, mobile settings/profile in header, manual PWA update check
 
 **Infrastructure:** Migrated from Firestore to Postgres (Railway), Express API with Drizzle ORM, TanStack Query data layer, MCP server with 17 tools for AI integration, Anthropic Claude AI proxy
 
-**UX Polish:** Dark mode, keyboard shortcuts, Coda CSV import, celebratory empty states, soft reminders, completion animations, inbox triage flow
+**UX Polish:** Dark mode, keyboard shortcuts, Coda CSV import, celebratory empty states, soft reminders, inbox triage flow
 
 For the full changelog, see [CHANGELOG.md](CHANGELOG.md). For future ideas, see [Future.md](Future.md).
 
@@ -365,37 +378,42 @@ For the full changelog, see [CHANGELOG.md](CHANGELOG.md). For future ideas, see 
 
 Prioritized based on [ADHD productivity research](ADHD-Productivity-Apps-Research.md). Each feature maps to a core ADHD cognitive challenge identified in the literature.
 
-#### P1 — Time Blindness & Task Initiation (highest impact)
+#### ~~P1 — Time Blindness & Task Initiation~~ ✅ Complete
 
-| Feature | ADHD Challenge | Inspiration | Notes |
-|---------|---------------|-------------|-------|
-| Visual timer with dynamic end-time | Time blindness | Llama Life | Countdown timer on Today view + "you'll finish at X:XX PM" across all tasks. Subtle, always-visible — a filling sage gradient, not an aggressive red countdown. Addresses the #1 gap in Tempo's current design. |
-| Guided daily planning ritual | Task initiation, decision fatigue | Sunsama | Morning flow: review yesterday → set energy → AI suggests tasks → confirm/swap → set time estimates → start. Under 2 minutes, feels like a calm check-in. Sunsama charges $20/mo for this. |
-| AI task decomposition with granularity slider | Task initiation, overwhelm | Goblin.tools | Extend "Unstick Me" with a granularity control — low: 3 broad steps, high: 12 micro-steps. Adjusts to current executive function capacity. Leverages existing Claude integration. |
-| One-task focus mode | Working memory, overwhelm | Llama Life, Routinery | Toggle that hides the 5-task list, shows only current task + timer + "Done / Skip / Break" actions. Swipe to peek at what's next. The most consistently praised pattern across ADHD apps. |
+All P1 features shipped in PRs #46–#49:
+- Visual timer with dynamic end-time (#46)
+- One-task Focus Mode (#47)
+- Granularity slider for AI task breakdown (#48)
+- Guided daily planning ritual (#49)
 
 #### P2 — Emotional Safety & Flow Protection (high impact)
 
-| Feature | ADHD Challenge | Inspiration | Notes |
-|---------|---------------|-------------|-------|
-| "Not Now" quick capture | Distractibility during focus | Llama Life | Persistent shortcut during focus mode — single text field, captures thought to Inbox, immediately returns to current task. Zero navigation, zero context switch. |
-| Transition breathing space | Task-switching difficulty | Research-backed | 3–5 second pause between tasks with a gentle animation (leaves settling, water rippling). Optional micro-reflection: "How did that go?" Reinforces Quiet Rhythm identity. |
-| Overcommitment detection | Optimism bias | Sunsama | When tasks have time estimates, compare total vs. available hours. Gentle nudge: "This looks like 7 hours of work. You have 5 hours free. Want to move something to tomorrow?" |
-| Daily shutdown ritual | Hyperfocus overwork, reflection | Sunsama | Evening flow: review completed tasks (celebrate) → defer unfinished (no shame) → one-sentence reflection → set tomorrow's energy expectation. Enforces work-life boundaries. |
-| Shame-free visual language audit | Emotional dysregulation, Wall of Awful | Tiimo | Review all UI for implicit judgment. No "overdue" indicators — missed tasks float forward silently. Add encouraging microcopy variety: "Good start," "Every step counts," "Tomorrow's a fresh page." |
+Partially complete. Shipped features marked with ✅.
+
+| Feature | ADHD Challenge | Inspiration | Status |
+|---------|---------------|-------------|--------|
+| ✅ "Not Now" quick capture | Distractibility during focus | Llama Life | Shipped in Focus Mode (#47) |
+| ✅ Transition breathing space | Task-switching difficulty | Research-backed | Shipped in Focus Mode (#47) |
+| ✅ Momentum streaks | Positive reinforcement | Multiple | Shipped (#50) — flame indicator on Today |
+| ✅ "Just pick for me" AI picker | Decision paralysis | BeeDone | Shipped (#50) — AI selects task with reasoning |
+| ✅ Smart quick capture | Capture friction | Multiple | Shipped (#50) — AI suggests metadata while typing |
+| Overcommitment detection | Optimism bias | Sunsama | Not started — compare total estimates vs. available hours |
+| Daily shutdown ritual | Hyperfocus overwork | Sunsama | Not started — evening review + defer + reflection |
+| Shame-free visual language audit | Emotional dysregulation | Tiimo | Not started — review all UI for implicit judgment |
 
 #### P3 — Delight & Differentiation
 
-| Feature | ADHD Challenge | Inspiration | Notes |
-|---------|---------------|-------------|-------|
-| Task Roulette ("Surprise me") | Decision paralysis | BeeDone, Llama Life | Random task selection from Today's list with a gentle shuffle animation. Simple to build, surprisingly powerful. |
-| Micro-celebration variety | Hedonic adaptation | Research-backed | Vary completion feedback: color bloom, gentle sound, encouraging text, brief animation. Randomize to combat habituation. Keep within calm sage palette. |
-| Routine playlists for Habits | Sequencing, working memory | Routinery | Extend Habits with "press play" guided sequences. Morning routine becomes a timer-guided flow. Routinery charges $40/yr for this. |
-| Energy-adaptive interface density | Variable arousal states | Novel (no competitor) | Low energy → fewer elements, more whitespace, simpler nav. High energy → more detail and options. The app breathes with the user. Unique differentiator. |
-| Time estimation calibration | Time blindness (metacognitive) | Novel | Track actual vs. estimated time per task. Weekly Review shows patterns: "You consistently underestimate writing tasks by 40%." Teaches the brain to estimate better over time. |
-| Ambient soundscapes | Under-arousal, focus | Research-backed | White/pink/brown noise + nature sounds. Peer-reviewed research confirms stochastic resonance improves ADHD cognition. 4–6 sounds matching Tempo's nature aesthetic. |
-| Voice input + transcription | Capture friction | Multiple | Capture todos and notes by voice. See [Future.md](Future.md). |
-| Work/Personal modes | Context bleed | Multiple | Isolated databases with mode indicator. See [Future.md](Future.md). |
+Partially complete. Shipped features marked with ✅.
+
+| Feature | ADHD Challenge | Inspiration | Status |
+|---------|---------------|-------------|--------|
+| ✅ Completion sparkle | Hedonic adaptation | Research-backed | Shipped (#51) — SVG particle burst on checkbox |
+| ✅ Energy-adaptive theme | Variable arousal states | Novel | Shipped (#51, #52) — warm/soft at low energy, vivid/crisp at high |
+| ✅ Routine playlists | Sequencing, working memory | Routinery | Shipped (#51) — full CRUD + "Start" flow |
+| Time estimation calibration | Time blindness (metacognitive) | Novel | Not started — track actual vs. estimated, show patterns in Review |
+| Ambient soundscapes | Under-arousal, focus | Research-backed | Not started — white/pink/brown noise + nature sounds |
+| Voice input + transcription | Capture friction | Multiple | Not started — see [Future.md](Future.md) |
+| Work/Personal modes | Context bleed | Multiple | Not started — see [Future.md](Future.md) |
 
 ---
 

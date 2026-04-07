@@ -9,6 +9,7 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 ## Today View
 - Consider adding a view of Habits into Today
 - Keep Tempo AI Chat bar at the bottom and visible even if the page scrolls
+- Overcommitment detection: warn when total estimated time exceeds available hours
 
 ## Tempo AI
 - Chat bar should stay fixed at the bottom
@@ -20,8 +21,10 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 
 ## Navigation
 - Simplify the navigation for mobile. Do a UX Designer pass to first understand what the navigation should be. Max of 5 nav items for mobile.
+- Nav icons should be unified; do not use emoji
 
 ## Modes
+**Nulled by loging in with different accounts**
 Ability to switch contexts between Work and Personal modes, each with their own database.
 - Ability to switch into Work only mode
 - Ability to switch into Personal only mode
@@ -37,39 +40,30 @@ Like https://www.tiimoapp.com/product/mood-tracking. A simple slider with a big,
 - Sync to Apple Health (optional)
 
 ## Time Tracker & Time Blindness
-Like https://www.tiimoapp.com/product/focus and Llama Life. A countdown timer built for time agnosia.
-- Count down timer from a small list (5, 15, 25, 45 mins)
-- Ability to add 1 min from a button
-- Select ToDos to accomplish during this timer
-- Dynamic end-time: "You'll finish everything at X:XX PM" — updates in real time as tasks complete
+~~Built~~ — Timer, dynamic end-time, and time estimates shipped (#46). Remaining:
 - Time estimation calibration: track actual vs. estimated time, show patterns in Weekly Review
 
 ## Guided Planning & Rituals
-Structured flows that externalize executive function. Inspired by Sunsama.
-- Morning planning ritual: review yesterday → set energy → AI suggests tasks → confirm → set time estimates → start
+~~Built~~ — Morning planning (#49), Focus Mode (#47), transition breathing space (#47) shipped. Remaining:
 - Daily shutdown ritual: review completed → defer unfinished → one-sentence reflection → set tomorrow's energy
-- One-task focus mode: hide everything except current task + timer + Done/Skip/Break actions
-- Transition breathing space: 3–5 second pause with gentle animation between tasks
 
 ## Decision Paralysis & Quick Capture
-- Task Roulette: "Surprise me" button that randomly picks the next task from Today's list
-- "Not Now" quick capture: ultra-low-friction single text field during focus mode, captures to Inbox instantly
-- Overcommitment detection: warn when total estimated time exceeds available hours
+~~Built~~ — "Just pick for me" AI picker (#50), smart quick capture (#50), "Not Now" capture in Focus Mode (#47) shipped.
 
 ## ADHD Paralysis
 We created "Unstick Me" prompts for hard-to-tackle todos. Build more features that help with ADHD paralysis. See https://www.tiimoapp.com/resource-hub/adhd-paralysis for inspiration.
 
 ## Sensory & Emotional Design
+~~Partially built~~ — Completion sparkle (#51), adaptive energy theme (#51, #52) shipped. Remaining:
 - Ambient soundscapes: white/pink/brown noise + nature sounds (research-backed for ADHD focus)
-- Micro-celebration variety: randomize completion feedback to combat hedonic adaptation
-- Energy-adaptive interface density: fewer elements on low-energy days, more detail on high-energy days
+- Micro-celebration variety: randomize completion feedback to combat hedonic adaptation (sparkle is v1; add sound, text, color bloom variety)
 - Shame-free visual language audit: ensure no implicit judgment anywhere in the UI
 
 ## Routine Playlists
-Extend Habits with Routinery's "press play" paradigm. Like https://www.routinery.co/
-- Pre-sequenced, timer-guided routines (morning, evening, etc.)
+~~Built~~ — Full CRUD + "Start" flow shipped (#51). Remaining enhancements:
 - Voice-guided step-by-step execution
-- Auto-advance between steps
+- Auto-advance between steps with timer
+- Timer integration per playlist item during playback
 
 ## Auth
 - Migrate from Firebase Auth to Better Auth (self-hosted). Full plan in `BetterAuthMigration.md`.
@@ -79,3 +73,8 @@ Extend Habits with Routinery's "press play" paradigm. Like https://www.routinery
 
 ## Tech Stack
 - Consider moving to Swift to build native Mac, iPhone, and iPad apps. Create a Pros/Cons list and really understand the limitations of this. Only after using the app for 2 weeks.
+
+## Remote MCP
+- Take the local MCP and make it remove
+- Create a Connector for Claude usage across the board
+- How would we handle authentication for both myself and my work laptop usage?

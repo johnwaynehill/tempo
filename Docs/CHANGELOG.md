@@ -1,5 +1,17 @@
 # Changelog
 
+## 2026-04-06
+- Fix adaptive theme contrast — dramatically increased color differentiation between energy levels (#52)
+- Add P3: completion sparkle on checkbox, adaptive energy theme toggle in Settings, routine playlists with full CRUD and "Start" flow (#51)
+- Add P2: momentum streaks (flame indicator), "Just pick for me" AI task picker, smart quick capture with AI metadata suggestions (#50)
+- Add guided daily planning ritual — 5-step morning flow: energy check-in → yesterday review → AI suggestions → confirm → time estimates (#49)
+- Add granularity slider (1–5) to AI task breakdown — from broad strokes to baby steps (#48)
+- Add one-task Focus Mode — full-screen current task with timer, Done/Skip/Break actions, transition breathing space (#47)
+- Add time estimates to todos (5/15/25/45/60/90 min pills) and visual timer with dynamic end-time on Today view (#46)
+- Update PRD with research-backed ADHD feature roadmap from competitive analysis (#45)
+- Fix hashtag extraction and add visual hashtag badges in note editor (#44)
+- Add Projects view page and project field for Notes (#43)
+
 ## 2026-04-05
 - Update app icon to new Figma design (#40)
 - Fix: New Todo and New Note create buttons — Drizzle expects Date objects, not ISO strings (#39)
