@@ -47,7 +47,19 @@ async function verifyApiKey(key: string): Promise<string | null> {
   return result[0].userId
 }
 
+const DEV_USER_ID = 'dev-test-user'
+
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
+  // Dev auth bypass — must be explicitly opted-in via env var
+  const devToken = process.env.DEV_AUTH_TOKEN
+  if (devToken) {
+    const authHeader = req.headers.authorization
+    if (authHeader === `Bearer ${devToken}`) {
+      req.userId = DEV_USER_ID
+      return next()
+    }
+  }
+
   // Try API key first (X-API-Key header)
   const apiKey = req.headers['x-api-key']
   if (typeof apiKey === 'string' && apiKey.startsWith('tempo_')) {

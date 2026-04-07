@@ -1,8 +1,15 @@
 import { auth } from '@/lib/firebase'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://tempo-api-production.up.railway.app'
+const DEV_AUTH_TOKEN = import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined
 
 async function getAuthHeaders(): Promise<HeadersInit> {
+  if (DEV_AUTH_TOKEN) {
+    return {
+      'Authorization': `Bearer ${DEV_AUTH_TOKEN}`,
+      'Content-Type': 'application/json',
+    }
+  }
   const user = auth.currentUser
   if (!user) throw new Error('Not authenticated')
   const token = await user.getIdToken()
