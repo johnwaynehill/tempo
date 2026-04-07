@@ -48,13 +48,13 @@ async function verifyApiKey(key: string): Promise<string | null> {
 }
 
 const DEV_USER_ID = 'dev-test-user'
-const DEV_TOKEN = 'dev-token'
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
-  // Dev auth bypass — only in development
-  if (process.env.NODE_ENV !== 'production') {
+  // Dev auth bypass — must be explicitly opted-in via env var
+  const devToken = process.env.DEV_AUTH_TOKEN
+  if (devToken) {
     const authHeader = req.headers.authorization
-    if (authHeader === `Bearer ${DEV_TOKEN}`) {
+    if (authHeader === `Bearer ${devToken}`) {
       req.userId = DEV_USER_ID
       return next()
     }

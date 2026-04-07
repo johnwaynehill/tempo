@@ -13,7 +13,8 @@ import {
 } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase'
 
-const IS_DEV_AUTH = import.meta.env.VITE_DEV_AUTH === 'true'
+const DEV_AUTH_TOKEN = import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined
+const IS_DEV_AUTH = !!DEV_AUTH_TOKEN
 
 // Minimal mock that satisfies the User type for components that read .uid, .email, .displayName
 const DEV_USER = {
@@ -30,8 +31,8 @@ const DEV_USER = {
   tenantId: null,
   phoneNumber: null,
   delete: async () => {},
-  getIdToken: async () => 'dev-token',
-  getIdTokenResult: async () => ({ token: 'dev-token', claims: {}, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
+  getIdToken: async () => DEV_AUTH_TOKEN!,
+  getIdTokenResult: async () => ({ token: DEV_AUTH_TOKEN!, claims: {}, authTime: '', issuedAtTime: '', expirationTime: '', signInProvider: null, signInSecondFactor: null }),
   reload: async () => {},
   toJSON: () => ({}),
 } as unknown as User

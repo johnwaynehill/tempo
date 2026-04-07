@@ -1,12 +1,12 @@
 import { auth } from '@/lib/firebase'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://tempo-api-production.up.railway.app'
-const IS_DEV_AUTH = import.meta.env.VITE_DEV_AUTH === 'true'
+const DEV_AUTH_TOKEN = import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined
 
 async function getAuthHeaders(): Promise<HeadersInit> {
-  if (IS_DEV_AUTH) {
+  if (DEV_AUTH_TOKEN) {
     return {
-      'Authorization': 'Bearer dev-token',
+      'Authorization': `Bearer ${DEV_AUTH_TOKEN}`,
       'Content-Type': 'application/json',
     }
   }
