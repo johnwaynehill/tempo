@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto'
+import cors from 'cors'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
@@ -32,6 +33,9 @@ if (STDIO_MODE) {
 
   const app = createMcpExpressApp({ host: '0.0.0.0' })
   const oauthProvider = new TempoOAuthProvider()
+
+  // CORS — allow Claude.ai and other browser clients
+  app.use(cors())
 
   // OAuth routes — adds /authorize, /token, /register, /.well-known/*
   app.use(mcpAuthRouter({
