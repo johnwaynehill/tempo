@@ -62,7 +62,7 @@ function ProjectSection({
           {todos.length}
         </span>
       </div>
-      <div className="space-y-0">
+      <div className="space-y-3">
         {todos.map((todo) => (
           <TodoItem
             key={todo.id}
@@ -269,7 +269,7 @@ export function BacklogPage() {
               />
             ))
           ) : (
-            <div className="space-y-0">
+            <div className="space-y-3">
               {sorted.map((todo) => (
                 <TodoItem
                   key={todo.id}
