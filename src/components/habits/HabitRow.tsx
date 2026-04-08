@@ -22,8 +22,11 @@ export function HabitRow({ habit }: HabitRowProps) {
   }
 
   return (
-    <button
+    <div
       onClick={() => navigate(`/habits/${habit.id}`)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/habits/${habit.id}`) } }}
       className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl group"
     >
       {/* Check-in circle */}
@@ -59,6 +62,6 @@ export function HabitRow({ habit }: HabitRowProps) {
       <svg className="w-4 h-4 text-on-surface-variant/40 shrink-0 group-hover:text-on-surface-variant transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <path d="M6 4l4 4-4 4" />
       </svg>
-    </button>
+    </div>
   )
 }

@@ -159,7 +159,7 @@ export function BacklogPage() {
       </div>
 
       {/* Unified toolbar */}
-      <div className="flex items-center gap-2 mb-6 flex-wrap">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto scrollbar-hide">
         {/* View toggle — segmented control */}
         <div className="flex rounded-xl bg-surface-container-high p-1">
           <button
