@@ -3,13 +3,11 @@ import { useNavigate } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { MobileMenu } from '@/components/ui/MobileMenu'
 import { CompletionToast } from '@/components/ui/CompletionToast'
-import { TimerBar } from '@/components/ui/TimerBar'
 import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
-import { useTimer } from '@/hooks/useTimer'
 import { useStreak } from '@/hooks/useStreak'
 import { usePickForMe } from '@/hooks/usePickForMe'
 import { useMood } from '@/hooks/useMood'
@@ -23,7 +21,6 @@ export function TodayPage() {
   const { preferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
-  const timer = useTimer()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { pick: pickResult, loading: pickLoading, pickForMe, dismiss: dismissPick } = usePickForMe(todayTodos, preferences.current_energy)
   const { latestMood } = useMood()
@@ -152,34 +149,16 @@ export function TodayPage() {
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
       ) : (
         <>
-          {/* Timer bar — dynamic end-time and active timer */}
-          <TimerBar
-            todos={todayTodos}
-            timer={timer}
-            onStartTimer={(id) => timer.start(id)}
-          />
-
-          <div className="space-y-0">
+          <div className="space-y-3">
             {todayTodos.map((todo) => (
               <TodoItem
                 key={todo.id}
                 todo={todo}
                 onComplete={(id) => {
-                  // If this task had the timer, stop it and auto-start next
-                  if (timer.activeTaskId === id) {
-                    const currentIndex = todayTodos.findIndex((t) => t.id === id)
-                    const nextTodo = todayTodos[currentIndex + 1]
-                    if (nextTodo) {
-                      timer.start(nextTodo.id)
-                    } else {
-                      timer.stop()
-                    }
-                  }
                   completeTodo(id)
                   triggerToast(todo.title)
                 }}
                 onDefer={(id, until) => {
-                  if (timer.activeTaskId === id) timer.stop()
                   if (todo.status === 'today_pinned') {
                     deferTodo(id, until)
                   } else {
@@ -187,9 +166,6 @@ export function TodayPage() {
                     dismissFromToday(id)
                   }
                 }}
-                timerActive={timer.activeTaskId === todo.id && timer.isRunning}
-                timerElapsed={timer.activeTaskId === todo.id ? timer.elapsedSeconds : undefined}
-                onStartTimer={(id) => timer.start(id)}
               />
             ))}
           </div>
@@ -221,9 +197,9 @@ export function TodayPage() {
         </>
       )}
 
-      {/* AI Chat Bar */}
+      {/* AI Chat Bar — sticky above bottom nav */}
       {AI_ENABLED && (
-        <div className="mt-8">
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-52 z-30 px-4 pb-2 pt-2 bg-surface/80 backdrop-blur-xl">
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -231,7 +207,7 @@ export function TodayPage() {
               if (!text) return
               navigate(`/chat?mode=today&q=${encodeURIComponent(text)}`)
             }}
-            className="flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 py-2.5 border border-outline-variant/15 focus-within:border-primary/30 transition-colors"
+            className="max-w-3xl mx-auto flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 py-2.5 border border-outline-variant/15 focus-within:border-primary/30 transition-colors"
           >
             <svg className="w-4 h-4 text-primary/50 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
               <path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z" />

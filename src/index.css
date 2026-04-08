@@ -37,13 +37,61 @@
   --font-display: 'Manrope', sans-serif;
   --font-body: 'Inter', sans-serif;
 
-  /* --- Spacing Scale (from Design.md "Tempo" spacing) --- */
+  /* --- Spacing Scale (8px grid) --- */
   --spacing-18: 6.25rem;
   --spacing-20: 7rem;
 
   /* --- Border Radius --- */
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
+
+  /* --- Chip Colors: Project Palette --- */
+  --color-project-0-bg: #c0d8d0;
+  --color-project-0-fg: #3a5248;
+  --color-project-1-bg: #d8cec0;
+  --color-project-1-fg: #5a4e3a;
+  --color-project-2-bg: #cfc8d8;
+  --color-project-2-fg: #4a3e5a;
+  --color-project-3-bg: #c0ced8;
+  --color-project-3-fg: #3a4a58;
+  --color-project-4-bg: #d8c0c8;
+  --color-project-4-fg: #5a3a44;
+  --color-project-5-bg: #c8d4c0;
+  --color-project-5-fg: #44523a;
+  --color-project-6-bg: #d8d0c0;
+  --color-project-6-fg: #585038;
+  --color-project-7-bg: #c8ccd0;
+  --color-project-7-fg: #3e4448;
+
+  /* --- Chip Colors: Energy --- */
+  --color-energy-low-bg: #e8e5e0;
+  --color-energy-low-fg: #7d7b78;
+  --color-energy-medlow-bg: #e0e5e2;
+  --color-energy-medlow-fg: #606860;
+  --color-energy-medium-bg: #d8e4dc;
+  --color-energy-medium-fg: #4a5e52;
+  --color-energy-high-bg: #cce4d4;
+  --color-energy-high-fg: #2d6048;
+
+  /* --- Chip Colors: Size --- */
+  --color-size-small-bg: #e8e8e6;
+  --color-size-small-fg: #6e706e;
+  --color-size-medium-bg: #dde0dc;
+  --color-size-medium-fg: #585e58;
+  --color-size-large-bg: #d0d6d0;
+  --color-size-large-fg: #444e44;
+
+  /* --- Chip Colors: Impact --- */
+  --color-impact-1-bg: #e8e6e4;
+  --color-impact-1-fg: #787572;
+  --color-impact-2-bg: #e4e0da;
+  --color-impact-2-fg: #6e6860;
+  --color-impact-3-bg: #e0dace;
+  --color-impact-3-fg: #645a4a;
+  --color-impact-4-bg: #dcd2c2;
+  --color-impact-4-fg: #5a4e38;
+  --color-impact-5-bg: #d6cab4;
+  --color-impact-5-fg: #504228;
 }
 
 /* --- Dark Theme --- */
@@ -69,6 +117,54 @@
   --color-outline-variant: #4a4e4d;
 
   --color-error: #e5726f;
+
+  /* --- Chip Colors: Project Palette (Dark) --- */
+  --color-project-0-bg: #2a3f37;
+  --color-project-0-fg: #a0c4b6;
+  --color-project-1-bg: #3f3729;
+  --color-project-1-fg: #c4b8a0;
+  --color-project-2-bg: #352e40;
+  --color-project-2-fg: #b8aec4;
+  --color-project-3-bg: #29353f;
+  --color-project-3-fg: #a0b8c8;
+  --color-project-4-bg: #40292f;
+  --color-project-4-fg: #c8a0ae;
+  --color-project-5-bg: #2f3d27;
+  --color-project-5-fg: #b0c0a0;
+  --color-project-6-bg: #3f3a28;
+  --color-project-6-fg: #c8c0a0;
+  --color-project-7-bg: #2d3236;
+  --color-project-7-fg: #a8b0b8;
+
+  /* --- Chip Colors: Energy (Dark) --- */
+  --color-energy-low-bg: #332f2b;
+  --color-energy-low-fg: #a8a5a0;
+  --color-energy-medlow-bg: #2b332e;
+  --color-energy-medlow-fg: #98a89c;
+  --color-energy-medium-bg: #283830;
+  --color-energy-medium-fg: #90b0a0;
+  --color-energy-high-bg: #1e3f2e;
+  --color-energy-high-fg: #80c8a0;
+
+  /* --- Chip Colors: Size (Dark) --- */
+  --color-size-small-bg: #30322f;
+  --color-size-small-fg: #a0a2a0;
+  --color-size-medium-bg: #2c302c;
+  --color-size-medium-fg: #98a098;
+  --color-size-large-bg: #262e26;
+  --color-size-large-fg: #88a088;
+
+  /* --- Chip Colors: Impact (Dark) --- */
+  --color-impact-1-bg: #33302e;
+  --color-impact-1-fg: #a8a5a2;
+  --color-impact-2-bg: #302c26;
+  --color-impact-2-fg: #a89e94;
+  --color-impact-3-bg: #2e281e;
+  --color-impact-3-fg: #a89680;
+  --color-impact-4-bg: #2c2418;
+  --color-impact-4-fg: #a89070;
+  --color-impact-5-bg: #2a2014;
+  --color-impact-5-fg: #a88a60;
 }
 
 /* --- Adaptive Energy Theme (Light) --- */

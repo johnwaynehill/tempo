@@ -236,7 +236,7 @@ export function ProjectDetailPage() {
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
       ) : (
         <>
-          <div className="space-y-0">
+          <div className="space-y-3">
             {sorted.map((todo) => (
               <TodoItem
                 key={todo.id}

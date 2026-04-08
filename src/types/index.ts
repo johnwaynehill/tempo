@@ -17,6 +17,44 @@ export const ENERGY_LABELS: Record<EnergyLevel, string> = {
   high: 'High',
 }
 
+// --- Chip Color Helpers ---
+
+/** Deterministic hash of a project name → palette index (0–7) */
+export function projectColorIndex(name: string): number {
+  let hash = 0
+  for (let i = 0; i < name.length; i++) {
+    hash = ((hash << 5) - hash + name.charCodeAt(i)) | 0
+  }
+  return ((hash % 8) + 8) % 8
+}
+
+/** CSS variable pair for a project chip */
+export function projectChipStyle(name: string) {
+  const i = projectColorIndex(name)
+  return { background: `var(--color-project-${i}-bg)`, color: `var(--color-project-${i}-fg)` }
+}
+
+/** CSS variable pair for an energy chip */
+export const ENERGY_CHIP_STYLE: Record<EnergyLevel, { background: string; color: string }> = {
+  low: { background: 'var(--color-energy-low-bg)', color: 'var(--color-energy-low-fg)' },
+  medium_low: { background: 'var(--color-energy-medlow-bg)', color: 'var(--color-energy-medlow-fg)' },
+  medium: { background: 'var(--color-energy-medium-bg)', color: 'var(--color-energy-medium-fg)' },
+  high: { background: 'var(--color-energy-high-bg)', color: 'var(--color-energy-high-fg)' },
+}
+
+/** CSS variable pair for a size chip */
+export const SIZE_CHIP_STYLE: Record<TodoSize, { background: string; color: string }> = {
+  small: { background: 'var(--color-size-small-bg)', color: 'var(--color-size-small-fg)' },
+  medium: { background: 'var(--color-size-medium-bg)', color: 'var(--color-size-medium-fg)' },
+  large: { background: 'var(--color-size-large-bg)', color: 'var(--color-size-large-fg)' },
+}
+
+/** CSS variable pair for an impact chip */
+export function impactChipStyle(impact: number) {
+  const i = Math.max(1, Math.min(5, impact))
+  return { background: `var(--color-impact-${i}-bg)`, color: `var(--color-impact-${i}-fg)` }
+}
+
 // --- Todo ---
 
 export type TodoStatus = 'inbox' | 'today_pinned' | 'backlog' | 'deferred' | 'done'
