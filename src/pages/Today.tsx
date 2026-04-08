@@ -40,29 +40,29 @@ export function TodayPage() {
       : `All done. You knocked out ${todayCompletedCount} tasks today.`
 
   return (
-    <div>
+    <div className="pb-16">
       {/* Page header */}
-      <div className="mb-8 flex items-start justify-between gap-4">
-        <div>
-          <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-            Today
-          </h1>
-          <div className="flex items-center gap-2">
-            <p className="text-on-surface-variant text-sm">
-              {new Date().toLocaleDateString('en-US', {
-                weekday: 'long',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </p>
+      <div className="mb-6 md:mb-8 flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight">
+              Today
+            </h1>
             <StreakIndicator currentStreak={currentStreak} hasCompletedToday={hasCompletedToday} />
           </div>
+          <p className="text-on-surface-variant text-sm mt-0.5">
+            {new Date().toLocaleDateString('en-US', {
+              weekday: 'long',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           <button
             onClick={() => navigate('/plan')}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
             title="Plan my day"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -73,7 +73,7 @@ export function TodayPage() {
           {todayTodos.length > 0 && (
             <button
               onClick={() => navigate('/focus')}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
               title="Focus mode (F)"
             >
               <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -90,7 +90,7 @@ export function TodayPage() {
       {/* Mood check-in — compact entry point to /mood page */}
       <button
         onClick={() => navigate('/mood')}
-        className="mb-6 w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left cursor-pointer transition-all hover:bg-surface-container-low group min-h-[44px]"
+        className="mb-4 md:mb-6 w-full flex items-center gap-3 px-4 py-2.5 md:py-3 rounded-xl text-left cursor-pointer transition-all hover:bg-surface-container-low group min-h-[44px]"
       >
         {latestMood ? (
           <>
