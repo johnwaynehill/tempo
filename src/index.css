@@ -45,7 +45,11 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
 
-  /* --- Chip Colors: Project Palette --- */
+}
+
+/* --- Chip Colors (in :root, not @theme — numeric segments break Tailwind v4 @theme) --- */
+:root {
+  /* Project Palette */
   --color-project-0-bg: #c0d8d0;
   --color-project-0-fg: #3a5248;
   --color-project-1-bg: #d8cec0;
@@ -63,7 +67,7 @@
   --color-project-7-bg: #c8ccd0;
   --color-project-7-fg: #3e4448;
 
-  /* --- Chip Colors: Energy --- */
+  /* Energy */
   --color-energy-low-bg: #e8e5e0;
   --color-energy-low-fg: #7d7b78;
   --color-energy-medlow-bg: #e0e5e2;
@@ -73,7 +77,7 @@
   --color-energy-high-bg: #cce4d4;
   --color-energy-high-fg: #2d6048;
 
-  /* --- Chip Colors: Size --- */
+  /* Size */
   --color-size-small-bg: #e8e8e6;
   --color-size-small-fg: #6e706e;
   --color-size-medium-bg: #dde0dc;
@@ -81,7 +85,7 @@
   --color-size-large-bg: #d0d6d0;
   --color-size-large-fg: #444e44;
 
-  /* --- Chip Colors: Impact --- */
+  /* Impact */
   --color-impact-1-bg: #e8e6e4;
   --color-impact-1-fg: #787572;
   --color-impact-2-bg: #e4e0da;
