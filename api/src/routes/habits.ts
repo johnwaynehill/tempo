@@ -32,7 +32,10 @@ router.put('/:id', async (req, res) => {
 
 // Toggle habit completion for a specific date
 router.patch('/:id/completions', async (req, res) => {
-  const { date, completed } = req.body as { date: string; completed: boolean }
+  // The date middleware auto-converts ISO strings to Date objects, but we need the raw string key
+  const rawDate = req.body.date
+  const date = rawDate instanceof Date ? rawDate.toISOString().slice(0, 10) : String(rawDate)
+  const { completed } = req.body as { date: string; completed: boolean }
   const [habit] = await db.select().from(schema.habits)
     .where(and(eq(schema.habits.id, req.params.id), eq(schema.habits.userId, req.userId!)))
 

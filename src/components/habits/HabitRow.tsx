@@ -18,12 +18,19 @@ export function HabitRow({ habit }: HabitRowProps) {
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
+    e.preventDefault()
     toggleCompletion(habit.id, today)
+  }
+
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't navigate if click was on the toggle button
+    if ((e.target as HTMLElement).closest('button')) return
+    navigate(`/habits/${habit.id}`)
   }
 
   return (
     <div
-      onClick={() => navigate(`/habits/${habit.id}`)}
+      onClick={handleRowClick}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/habits/${habit.id}`) } }}
@@ -31,6 +38,7 @@ export function HabitRow({ habit }: HabitRowProps) {
     >
       {/* Check-in circle */}
       <button
+        type="button"
         onClick={handleToggle}
         className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
         aria-label={isCompletedToday ? 'Mark incomplete' : 'Mark complete'}

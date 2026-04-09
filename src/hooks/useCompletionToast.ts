@@ -58,8 +58,11 @@ export function useCompletionToast() {
       })
 
       clearTimeout(fallbackTimer)
-      const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
-      showMessage(text || fallback)
+      // Only show AI response if fallback hasn't already been displayed
+      if (!shown.current) {
+        const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+        showMessage(text || fallback)
+      }
     } catch {
       clearTimeout(fallbackTimer)
       if (!shown.current) showMessage(fallback)
