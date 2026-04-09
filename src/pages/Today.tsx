@@ -92,7 +92,7 @@ export function TodayPage() {
         onClick={() => navigate('/mood')}
         className="mb-4 md:mb-6 w-full flex items-center gap-3 px-4 py-2.5 md:py-3 rounded-xl text-left cursor-pointer transition-all hover:bg-surface-container-low group min-h-[44px]"
       >
-        {latestMood ? (
+        {latestMood && latestMood.created_at >= new Date(new Date().setHours(0, 0, 0, 0)) ? (
           <>
             <MoodBlob mood={moodFromValue(latestMood.value)} size={28} />
             <div className="flex-1 min-w-0">
