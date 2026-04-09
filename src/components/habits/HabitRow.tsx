@@ -18,16 +18,27 @@ export function HabitRow({ habit }: HabitRowProps) {
 
   const handleToggle = (e: React.MouseEvent) => {
     e.stopPropagation()
+    e.preventDefault()
     toggleCompletion(habit.id, today)
   }
 
+  const handleRowClick = (e: React.MouseEvent) => {
+    // Don't navigate if click was on the toggle button
+    if ((e.target as HTMLElement).closest('button')) return
+    navigate(`/habits/${habit.id}`)
+  }
+
   return (
-    <button
-      onClick={() => navigate(`/habits/${habit.id}`)}
+    <div
+      onClick={handleRowClick}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/habits/${habit.id}`) } }}
       className="w-full flex items-center gap-4 px-4 py-3.5 hover:bg-surface-container-low transition-colors duration-200 cursor-pointer rounded-xl group"
     >
       {/* Check-in circle */}
       <button
+        type="button"
         onClick={handleToggle}
         className="w-11 h-11 rounded-full flex items-center justify-center shrink-0 cursor-pointer"
         aria-label={isCompletedToday ? 'Mark incomplete' : 'Mark complete'}
@@ -59,6 +70,6 @@ export function HabitRow({ habit }: HabitRowProps) {
       <svg className="w-4 h-4 text-on-surface-variant/40 shrink-0 group-hover:text-on-surface-variant transition-colors" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <path d="M6 4l4 4-4 4" />
       </svg>
-    </button>
+    </div>
   )
 }

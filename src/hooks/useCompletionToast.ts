@@ -16,28 +16,36 @@ const FALLBACK_MESSAGES = [
 export function useCompletionToast() {
   const [message, setMessage] = useState<string | null>(null)
   const dismissTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const shown = useRef(false)
 
   const dismiss = useCallback(() => {
     setMessage(null)
+    shown.current = false
     if (dismissTimer.current) clearTimeout(dismissTimer.current)
   }, [])
+
+  const showMessage = useCallback((text: string) => {
+    if (dismissTimer.current) clearTimeout(dismissTimer.current)
+    shown.current = true
+    setMessage(text)
+    dismissTimer.current = setTimeout(dismiss, DISMISS_DELAY)
+  }, [dismiss])
 
   const trigger = useCallback(async (todoTitle: string) => {
     // Roll the dice
     if (Math.random() > TRIGGER_CHANCE) return
 
-    // Show a fallback immediately, then try to replace with AI
     const fallback = FALLBACK_MESSAGES[Math.floor(Math.random() * FALLBACK_MESSAGES.length)]
 
     if (!AI_ENABLED) {
-      setMessage(fallback)
-      dismissTimer.current = setTimeout(dismiss, DISMISS_DELAY)
+      showMessage(fallback)
       return
     }
 
-    // Optimistic: show fallback first so there's no delay
-    setMessage(fallback)
-    dismissTimer.current = setTimeout(dismiss, DISMISS_DELAY)
+    // Give AI 800ms to respond before showing fallback
+    const fallbackTimer = setTimeout(() => {
+      if (!shown.current) showMessage(fallback)
+    }, 800)
 
     try {
       const response = await anthropic.messages.create({
@@ -49,17 +57,17 @@ export function useCompletionToast() {
         ],
       })
 
-      const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
-      if (text) {
-        // Clear existing timer and restart with AI message
-        if (dismissTimer.current) clearTimeout(dismissTimer.current)
-        setMessage(text)
-        dismissTimer.current = setTimeout(dismiss, DISMISS_DELAY)
+      clearTimeout(fallbackTimer)
+      // Only show AI response if fallback hasn't already been displayed
+      if (!shown.current) {
+        const text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+        showMessage(text || fallback)
       }
     } catch {
-      // Fallback already showing — just keep it
+      clearTimeout(fallbackTimer)
+      if (!shown.current) showMessage(fallback)
     }
-  }, [dismiss])
+  }, [showMessage])
 
   return { message, trigger, dismiss }
 }
