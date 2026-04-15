@@ -1,3 +1,6 @@
+import { useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+
 interface FilterOption<T extends string> {
   value: T
   label: string
@@ -30,6 +33,28 @@ export function FilterDropdown<T extends string>({
 }: FilterDropdownProps<T>) {
   const isActive = value !== undefined
   const activeOption = isActive ? options.find((o) => o.value === value) : undefined
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
+
+  // Position the menu relative to the button using fixed positioning so it
+  // can escape any overflow-clipping ancestors (e.g. overflow-x-auto filter rows).
+  useLayoutEffect(() => {
+    if (!open || !buttonRef.current) {
+      setPos(null)
+      return
+    }
+    const update = () => {
+      const rect = buttonRef.current!.getBoundingClientRect()
+      setPos({ top: rect.bottom + 4, left: rect.left })
+    }
+    update()
+    window.addEventListener('scroll', update, true)
+    window.addEventListener('resize', update)
+    return () => {
+      window.removeEventListener('scroll', update, true)
+      window.removeEventListener('resize', update)
+    }
+  }, [open])
 
   const select = (optionValue: T | undefined) => {
     onChange(optionValue)
@@ -39,6 +64,7 @@ export function FilterDropdown<T extends string>({
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={onToggle}
         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] ${
           isActive
@@ -56,10 +82,13 @@ export function FilterDropdown<T extends string>({
         </svg>
       </button>
 
-      {open && (
+      {open && pos && createPortal(
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
-          <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
+          <div
+            className="fixed z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]"
+            style={{ top: pos.top, left: pos.left }}
+          >
             {isActive && clearLabel && (
               <button
                 onClick={() => select(undefined)}
@@ -82,7 +111,8 @@ export function FilterDropdown<T extends string>({
               </button>
             ))}
           </div>
-        </>
+        </>,
+        document.body,
       )}
     </div>
   )

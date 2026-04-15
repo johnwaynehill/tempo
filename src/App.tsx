@@ -65,7 +65,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3">
+      <div className="min-h-dvh bg-surface flex flex-col items-center justify-center gap-3">
         <img src="/favicon.svg" alt="Tempo" className="w-12 h-12" />
         <p className="text-on-surface-variant text-xs tracking-wide">Loading...</p>
       </div>

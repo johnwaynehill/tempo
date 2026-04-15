@@ -60,6 +60,16 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
     })
   }, [])
 
+  // Lock background scroll while the drawer is open. Without this, the iOS
+  // virtual keyboard or scroll bubbling from inputs inside the drawer can
+  // shift the page underneath, leaving the page scrolled past its header
+  // when the drawer closes.
+  useEffect(() => {
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = prevOverflow }
+  }, [])
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
