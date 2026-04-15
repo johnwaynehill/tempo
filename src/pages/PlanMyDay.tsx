@@ -152,14 +152,14 @@ export function PlanMyDayPage() {
 
   if (todosLoading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
         <p className="text-on-surface-variant text-sm">Loading...</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-dvh bg-surface flex flex-col">
       {/* Top bar */}
       <div className="flex items-center justify-between px-6 py-4">
         <button

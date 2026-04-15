@@ -113,7 +113,7 @@ export function FocusModePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-surface flex items-center justify-center">
+      <div className="min-h-dvh bg-surface flex items-center justify-center">
         <p className="text-on-surface-variant text-sm">Loading...</p>
       </div>
     )
@@ -121,7 +121,7 @@ export function FocusModePage() {
 
   if (!currentTodo) {
     return (
-      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-4 px-6">
+      <div className="min-h-dvh bg-surface flex flex-col items-center justify-center gap-4 px-6">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
           <svg className="w-8 h-8 text-primary" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
             <path d="M5 12l5 5L19 7" />
@@ -149,7 +149,7 @@ export function FocusModePage() {
   const offset = circumference - (Math.min(progress, 100) / 100) * circumference
 
   return (
-    <div className="min-h-screen bg-surface flex flex-col">
+    <div className="min-h-dvh bg-surface flex flex-col">
       {/* Top bar: exit + task count */}
       <div className="flex items-center justify-between px-6 py-4">
         <button

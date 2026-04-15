@@ -52,14 +52,18 @@ router.get('/:id', async (req, res) => {
 // Create playlist
 router.post('/', async (req, res) => {
   const { items, ...playlistData } = req.body
+  // The deployed Postgres stores `playlists.id` as `text NOT NULL` with no
+  // default (legacy migration), so we must generate the id explicitly here
+  // rather than relying on Drizzle's `default` SQL keyword.
   const [row] = await db.insert(schema.playlists)
-    .values({ ...playlistData, userId: req.userId! })
+    .values({ id: randomUUID(), ...playlistData, userId: req.userId! })
     .returning()
 
   // Insert items if provided
   if (items && Array.isArray(items) && items.length > 0) {
     await db.insert(schema.playlistItems).values(
       items.map((item: any, i: number) => ({
+        id: randomUUID(),
         ...item,
         playlistId: row.id,
         sortOrder: item.sortOrder ?? i,
@@ -93,6 +97,7 @@ router.put('/:id', async (req, res) => {
     if (items.length > 0) {
       await db.insert(schema.playlistItems).values(
         items.map((item: any, i: number) => ({
+          id: randomUUID(),
           title: item.title,
           size: item.size || null,
           energyLevel: item.energyLevel || null,

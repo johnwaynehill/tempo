@@ -27,9 +27,15 @@ export function usePlaylists() {
 
   const addPlaylist = useCallback(async (input: CreatePlaylistInput): Promise<string> => {
     const result = await api.playlists.create(input as unknown as Record<string, unknown>)
+    const created = result as unknown as Playlist
+    // Optimistically inject into cache so callers can navigate to the detail
+    // page immediately without seeing a "not found" flash before refetch.
+    qc.setQueryData<Playlist[]>(['playlists', user?.uid], (prev) =>
+      prev ? [...prev, { ...created, items: created.items ?? [] }] : [created],
+    )
     invalidate()
-    return (result as unknown as Playlist).id
-  }, [])
+    return created.id
+  }, [qc, user?.uid])
 
   const updatePlaylist = useCallback(async (id: string, data: Partial<Playlist> & { items?: Omit<PlaylistItem, 'id' | 'playlist_id'>[] }) => {
     await api.playlists.update(id, data as unknown as Record<string, unknown>)

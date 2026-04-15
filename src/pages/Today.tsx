@@ -59,28 +59,28 @@ export function TodayPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => navigate('/plan')}
-            className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+            className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="Plan my day"
             title="Plan my day"
           >
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
             </svg>
-            <span className="hidden md:inline">Plan</span>
           </button>
           {todayTodos.length > 0 && (
             <button
               onClick={() => navigate('/focus')}
-              className="flex items-center gap-1.5 px-2.5 py-2 rounded-xl bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+              className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+              aria-label="Focus mode"
               title="Focus mode (F)"
             >
-              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                 <circle cx="12" cy="12" r="10" />
                 <circle cx="12" cy="12" r="4" />
               </svg>
-              <span className="hidden md:inline">Focus</span>
             </button>
           )}
           <MobileMenu />
@@ -175,7 +175,7 @@ export function TodayPage() {
 
       {/* AI Chat Bar — sticky above bottom nav */}
       {AI_ENABLED && (
-        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 md:left-52 z-30 px-4 pb-2 pt-2 bg-surface/80 backdrop-blur-xl">
+        <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 md:left-52 z-30 px-4 pb-2 pt-2 bg-surface/80 backdrop-blur-xl">
           <form
             onSubmit={(e) => {
               e.preventDefault()
