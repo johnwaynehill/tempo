@@ -34,10 +34,13 @@ export function FilterDropdown<T extends string>({
   const isActive = value !== undefined
   const activeOption = isActive ? options.find((o) => o.value === value) : undefined
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null)
 
   // Position the menu relative to the button using fixed positioning so it
   // can escape any overflow-clipping ancestors (e.g. overflow-x-auto filter rows).
+  // Flip horizontally so the menu stays inside the viewport when the trigger
+  // is near the right edge.
   useLayoutEffect(() => {
     if (!open || !buttonRef.current) {
       setPos(null)
@@ -45,12 +48,21 @@ export function FilterDropdown<T extends string>({
     }
     const update = () => {
       const rect = buttonRef.current!.getBoundingClientRect()
-      setPos({ top: rect.bottom + 4, left: rect.left })
+      const menuWidth = menuRef.current?.offsetWidth ?? 140
+      const margin = 8
+      let left = rect.left
+      if (left + menuWidth > window.innerWidth - margin) {
+        left = Math.max(margin, rect.right - menuWidth)
+      }
+      setPos({ top: rect.bottom + 4, left })
     }
     update()
+    // Re-measure once the menu has rendered with its real width.
+    const raf = requestAnimationFrame(update)
     window.addEventListener('scroll', update, true)
     window.addEventListener('resize', update)
     return () => {
+      cancelAnimationFrame(raf)
       window.removeEventListener('scroll', update, true)
       window.removeEventListener('resize', update)
     }
@@ -86,6 +98,7 @@ export function FilterDropdown<T extends string>({
         <>
           <div className="fixed inset-0 z-40" onClick={onClose} />
           <div
+            ref={menuRef}
             className="fixed z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]"
             style={{ top: pos.top, left: pos.left }}
           >
