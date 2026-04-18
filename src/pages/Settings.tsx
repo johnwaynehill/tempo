@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useAuth } from '@/context/AuthContext'
+import { api } from '@/lib/api'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { usePreferences } from '@/hooks/usePreferences'
@@ -21,6 +22,45 @@ export function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'updating'>('idle')
+  const [apiKeys, setApiKeys] = useState<{ id: string; keyPrefix: string; name: string; createdAt: string; lastUsedAt: string | null }[]>([])
+  const [apiKeysLoading, setApiKeysLoading] = useState(false)
+  const [newKeyName, setNewKeyName] = useState('')
+  const [createdKey, setCreatedKey] = useState<string | null>(null)
+  const [copiedKey, setCopiedKey] = useState(false)
+  const [showApiKeys, setShowApiKeys] = useState(false)
+
+  const loadApiKeys = useCallback(async () => {
+    setApiKeysLoading(true)
+    try {
+      const keys = await api.apiKeys.list() as typeof apiKeys
+      setApiKeys(keys)
+    } catch { /* ignore */ }
+    setApiKeysLoading(false)
+  }, [])
+
+  useEffect(() => {
+    if (showApiKeys && apiKeys.length === 0) loadApiKeys()
+  }, [showApiKeys, loadApiKeys])
+
+  const handleCreateApiKey = async () => {
+    const name = newKeyName.trim() || 'Default'
+    const result = await api.apiKeys.create(name) as { key: string }
+    setCreatedKey(result.key)
+    setNewKeyName('')
+    setCopiedKey(false)
+    await loadApiKeys()
+  }
+
+  const handleDeleteApiKey = async (id: string) => {
+    await api.apiKeys.delete(id)
+    await loadApiKeys()
+  }
+
+  const handleCopyKey = async (key: string) => {
+    await navigator.clipboard.writeText(key)
+    setCopiedKey(true)
+    setTimeout(() => setCopiedKey(false), 3000)
+  }
 
   const handleCheckForUpdates = useCallback(async () => {
     setUpdateStatus('checking')
@@ -128,6 +168,100 @@ export function SettingsPage() {
             </div>
           </div>
         )}
+      </section>
+
+      {/* API Keys */}
+      <section className="mb-10">
+        <h2 className="font-display text-lg font-semibold text-on-surface mb-4">API Keys</h2>
+        <div className="bg-surface-container-lowest rounded-xl p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Manage API keys</p>
+              <p className="text-on-surface-variant text-xs">Used by Claude Code and other MCP clients</p>
+            </div>
+            <button
+              onClick={() => setShowApiKeys(!showApiKeys)}
+              className="px-4 py-1.5 rounded-lg text-xs font-medium bg-surface-container-high text-on-surface-variant hover:text-on-surface transition-colors duration-200 cursor-pointer"
+            >
+              {showApiKeys ? 'Hide' : 'Show'}
+            </button>
+          </div>
+
+          {showApiKeys && (
+            <>
+              {/* Create new key */}
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={newKeyName}
+                  onChange={(e) => setNewKeyName(e.target.value)}
+                  placeholder="Key name (e.g. Work laptop)"
+                  className="flex-1 bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                  onKeyDown={(e) => e.key === 'Enter' && handleCreateApiKey()}
+                />
+                <button
+                  onClick={handleCreateApiKey}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer"
+                >
+                  Create
+                </button>
+              </div>
+
+              {/* Newly created key (show once) */}
+              {createdKey && (
+                <div className="bg-primary/10 rounded-lg p-4 space-y-2">
+                  <p className="text-on-surface text-xs font-medium">New API key created — copy it now, it won't be shown again:</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 text-xs font-mono text-on-surface bg-surface-container rounded px-2 py-1.5 select-all break-all">
+                      {createdKey}
+                    </code>
+                    <button
+                      onClick={() => handleCopyKey(createdKey)}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer shrink-0"
+                    >
+                      {copiedKey ? 'Copied' : 'Copy'}
+                    </button>
+                  </div>
+                  <button
+                    onClick={() => setCreatedKey(null)}
+                    className="text-xs text-on-surface-variant hover:text-on-surface cursor-pointer"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              )}
+
+              {/* Existing keys */}
+              {apiKeysLoading ? (
+                <p className="text-on-surface-variant text-xs">Loading...</p>
+              ) : apiKeys.length === 0 ? (
+                <p className="text-on-surface-variant text-xs">No API keys yet</p>
+              ) : (
+                <div className="space-y-2">
+                  {apiKeys.map((k) => (
+                    <div key={k.id} className="flex items-center justify-between bg-surface-container rounded-lg px-3 py-2">
+                      <div>
+                        <p className="text-on-surface text-sm font-medium">{k.name}</p>
+                        <p className="text-on-surface-variant text-xs font-mono">{k.keyPrefix}</p>
+                        <p className="text-on-surface-variant text-xs mt-0.5">
+                          {k.lastUsedAt
+                            ? `Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+                            : 'Never used'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => handleDeleteApiKey(k.id)}
+                        className="px-3 py-1 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </section>
 
       {/* Data */}
