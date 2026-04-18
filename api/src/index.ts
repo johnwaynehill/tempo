@@ -22,13 +22,24 @@ import authRouter from './routes/auth.js'
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
 const saPrivateKey = process.env.FIREBASE_SA_PRIVATE_KEY
+const saClientEmail = process.env.FIREBASE_SA_CLIENT_EMAIL
+const saProjectId = process.env.FIREBASE_SA_PROJECT_ID || process.env.FIREBASE_PROJECT_ID
+
+if (serviceAccount) {
+  console.log('Firebase Admin: using FIREBASE_SERVICE_ACCOUNT JSON')
+} else if (saPrivateKey) {
+  console.log(`Firebase Admin: using split SA vars (email=${saClientEmail}, project=${saProjectId}, key length=${saPrivateKey.length})`)
+} else {
+  console.log('Firebase Admin: using projectId only (no user lookups)')
+}
+
 admin.initializeApp(
   serviceAccount
     ? { credential: admin.credential.cert(JSON.parse(serviceAccount)) }
     : saPrivateKey
       ? { credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_SA_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_SA_CLIENT_EMAIL,
+          projectId: saProjectId,
+          clientEmail: saClientEmail,
           privateKey: saPrivateKey.replace(/\\n/g, '\n'),
         } as admin.ServiceAccount) }
       : { projectId: process.env.FIREBASE_PROJECT_ID }
