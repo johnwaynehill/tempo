@@ -1,9 +1,10 @@
 /** Shared MCP server with all Tempo tools registered */
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { z } from 'zod'
-import { api } from './api.js'
+import { createApi } from './api.js'
 
-export function createServer(): McpServer {
+export function createServer(apiKey?: string): McpServer {
+  const api = createApi(apiKey)
   const serverUrl = process.env.PUBLIC_URL || ''
 
   const server = new McpServer({

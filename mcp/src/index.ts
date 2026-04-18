@@ -29,7 +29,7 @@ if (STDIO_MODE) {
   const ICON_SVG = `<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M376 0H136C60.8893 0 0 60.8893 0 136V376C0 451.111 60.8893 512 136 512H376C451.111 512 512 451.111 512 376V136C512 60.8893 451.111 0 376 0Z" fill="url(#tempo-bg)"/><path d="M366 96H130C106.804 96 88 112.118 88 132V156C88 175.882 106.804 192 130 192H366C389.196 192 408 175.882 408 156V132C408 112.118 389.196 96 366 96Z" fill="#F4F1EC"/><path d="M256 152C256 121.072 234.51 96 208 96C181.49 96 160 121.072 160 152V368C160 398.928 181.49 424 208 424C234.51 424 256 398.928 256 368V152Z" fill="#F4F1EC"/><path d="M356 424C384.719 424 408 400.719 408 372C408 343.281 384.719 320 356 320C327.281 320 304 343.281 304 372C304 400.719 327.281 424 356 424Z" fill="#F4F1EC"/><defs><linearGradient id="tempo-bg" x1="52" y1="36" x2="470" y2="470" gradientUnits="userSpaceOnUse"><stop stop-color="#9BAAA2"/><stop offset="1" stop-color="#465A53"/></linearGradient></defs></svg>`
 
   const PORT = parseInt(process.env.PORT || '3001', 10)
-  const API_KEY = process.env.TEMPO_API_KEY || ''
+  const API_BASE = process.env.TEMPO_API_URL || 'https://tempo-api-production.up.railway.app'
   const SERVER_URL = new URL(process.env.PUBLIC_URL || `http://localhost:${PORT}`)
   const MCP_URL = new URL('/mcp', SERVER_URL)
 
@@ -67,11 +67,21 @@ if (STDIO_MODE) {
     resourceMetadataUrl: getOAuthProtectedResourceMetadataUrl(MCP_URL),
   })
 
-  app.use('/mcp', (req, res, next) => {
-    // Path 1: X-API-Key header (Claude Code)
+  app.use('/mcp', async (req, res, next) => {
+    // Path 1: X-API-Key header (Claude Code) — validate against backend
     const apiKey = req.headers['x-api-key'] as string | undefined
-    if (apiKey && apiKey === API_KEY) {
-      return next()
+    if (apiKey && apiKey.startsWith('tempo_')) {
+      try {
+        const resp = await fetch(`${API_BASE}/api/preferences`, {
+          headers: { 'X-API-Key': apiKey },
+        })
+        if (resp.ok) {
+          ;(req as any).tempoApiKey = apiKey
+          return next()
+        }
+      } catch { /* fall through to bearer auth */ }
+      res.status(401).json({ error: 'Invalid API key' })
+      return
     }
 
     // Path 2: Bearer token (Claude.ai via OAuth)
@@ -105,7 +115,7 @@ if (STDIO_MODE) {
           }
         }
 
-        const server = createServer()
+        const server = createServer((req as any).tempoApiKey)
         await server.connect(transport)
         await transport.handleRequest(req, res, req.body)
         return
