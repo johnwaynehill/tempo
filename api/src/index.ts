@@ -21,10 +21,17 @@ import authRouter from './routes/auth.js'
 
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+const saPrivateKey = process.env.FIREBASE_SA_PRIVATE_KEY
 admin.initializeApp(
   serviceAccount
     ? { credential: admin.credential.cert(JSON.parse(serviceAccount)) }
-    : { projectId: process.env.FIREBASE_PROJECT_ID }
+    : saPrivateKey
+      ? { credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_SA_PROJECT_ID || process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_SA_CLIENT_EMAIL,
+          privateKey: saPrivateKey.replace(/\\n/g, '\n'),
+        } as admin.ServiceAccount) }
+      : { projectId: process.env.FIREBASE_PROJECT_ID }
 )
 
 const app = express()
