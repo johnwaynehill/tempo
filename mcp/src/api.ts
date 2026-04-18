@@ -1,25 +1,27 @@
 /** Tempo API client for MCP server */
 
 const API_BASE = process.env.TEMPO_API_URL || 'https://tempo-api-production.up.railway.app'
-const API_KEY = process.env.TEMPO_API_KEY || ''
+const DEFAULT_API_KEY = process.env.TEMPO_API_KEY || ''
 
-async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-API-Key': API_KEY,
-      ...options.headers,
-    },
-  })
+function createApiFetch(apiKey: string) {
+  return async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+    const res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': apiKey,
+        ...options.headers,
+      },
+    })
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => ({}))
-    throw new Error(`API ${res.status}: ${(body as { error?: string }).error || res.statusText}`)
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(`API ${res.status}: ${(body as { error?: string }).error || res.statusText}`)
+    }
+
+    if (res.status === 204) return undefined as T
+    return res.json() as T
   }
-
-  if (res.status === 204) return undefined as T
-  return res.json() as T
 }
 
 // --- Types matching API response (camelCase from Drizzle) ---
@@ -122,74 +124,83 @@ export interface Playlist {
   updatedAt: string
 }
 
-// --- API methods ---
+// --- API client factory ---
 
-export const api = {
-  todos: {
-    list: () => apiFetch<Todo[]>('/api/todos'),
-    get: (id: string) => apiFetch<Todo>(`/api/todos/${id}`),
-    create: (data: Partial<Todo>) => apiFetch<Todo>('/api/todos', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<Todo>) => apiFetch<Todo>(`/api/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => apiFetch<void>(`/api/todos/${id}`, { method: 'DELETE' }),
-  },
-  habits: {
-    list: () => apiFetch<Habit[]>('/api/habits'),
-    toggleCompletion: (id: string, date: string, completed: boolean) =>
-      apiFetch<Habit>(`/api/habits/${id}/completions`, { method: 'PATCH', body: JSON.stringify({ date, completed }) }),
-  },
-  notes: {
-    list: () => apiFetch<Note[]>('/api/notes'),
-    get: (id: string) => apiFetch<Note>(`/api/notes/${id}`),
-    create: (data: Partial<Note>) => apiFetch<Note>('/api/notes', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: Partial<Note>) => apiFetch<Note>(`/api/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  },
-  projects: {
-    list: () => apiFetch<Project[]>('/api/projects'),
-    create: (name: string) => apiFetch<Project>('/api/projects', { method: 'POST', body: JSON.stringify({ name }) }),
-    rename: (id: string, name: string) => apiFetch<Project>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
-    delete: (id: string) => apiFetch<void>(`/api/projects/${id}`, { method: 'DELETE' }),
-  },
-  events: {
-    list: () => apiFetch<CalendarEvent[]>('/api/events'),
-    create: (data: Partial<CalendarEvent>) => apiFetch<CalendarEvent>('/api/events', { method: 'POST', body: JSON.stringify(data) }),
-  },
-  reviews: {
-    list: () => apiFetch<WeeklyReview[]>('/api/reviews'),
-  },
-  todaySet: {
-    get: (date: string) => apiFetch<{ date: string; todoIds: string[] }>(`/api/today-set?date=${date}`),
-  },
-  playlists: {
-    list: () => apiFetch<Playlist[]>('/api/playlists'),
-    get: (id: string) => apiFetch<Playlist>(`/api/playlists/${id}`),
-    create: (data: { name: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
-      apiFetch<Playlist>('/api/playlists', { method: 'POST', body: JSON.stringify(data) }),
-    update: (id: string, data: { name?: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
-      apiFetch<Playlist>(`/api/playlists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-    delete: (id: string) => apiFetch<void>(`/api/playlists/${id}`, { method: 'DELETE' }),
-    start: (id: string) => apiFetch<{ todoIds: string[]; count: number }>(`/api/playlists/${id}/start`, { method: 'POST' }),
-  },
-  mood: {
-    log: (data: { value: number; note?: string }) =>
-      apiFetch<MoodEntry>('/api/mood', { method: 'POST', body: JSON.stringify(data) }),
-    history: (days = 7) =>
-      apiFetch<MoodEntry[]>(`/api/mood?days=${days}`),
-    latest: () =>
-      apiFetch<MoodEntry | null>('/api/mood/latest'),
-  },
-  preferences: {
-    get: () => apiFetch<Record<string, unknown>>('/api/preferences'),
-    update: (data: Record<string, unknown>) => apiFetch<Record<string, unknown>>('/api/preferences', { method: 'PUT', body: JSON.stringify(data) }),
-  },
-  mcpOauth: {
-    get: <T>(type: string, key: string) =>
-      apiFetch<T>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`).catch(() => null),
-    set: (type: string, key: string, data: unknown, expiresAt?: string) =>
-      apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, {
-        method: 'PUT',
-        body: JSON.stringify({ data, expiresAt }),
-      }),
-    delete: (type: string, key: string) =>
-      apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, { method: 'DELETE' }),
-  },
+export function createApi(apiKey?: string) {
+  const apiFetch = createApiFetch(apiKey || DEFAULT_API_KEY)
+
+  return {
+    todos: {
+      list: () => apiFetch<Todo[]>('/api/todos'),
+      get: (id: string) => apiFetch<Todo>(`/api/todos/${id}`),
+      create: (data: Partial<Todo>) => apiFetch<Todo>('/api/todos', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<Todo>) => apiFetch<Todo>(`/api/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+      delete: (id: string) => apiFetch<void>(`/api/todos/${id}`, { method: 'DELETE' }),
+    },
+    habits: {
+      list: () => apiFetch<Habit[]>('/api/habits'),
+      toggleCompletion: (id: string, date: string, completed: boolean) =>
+        apiFetch<Habit>(`/api/habits/${id}/completions`, { method: 'PATCH', body: JSON.stringify({ date, completed }) }),
+    },
+    notes: {
+      list: () => apiFetch<Note[]>('/api/notes'),
+      get: (id: string) => apiFetch<Note>(`/api/notes/${id}`),
+      create: (data: Partial<Note>) => apiFetch<Note>('/api/notes', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: Partial<Note>) => apiFetch<Note>(`/api/notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    },
+    projects: {
+      list: () => apiFetch<Project[]>('/api/projects'),
+      create: (name: string) => apiFetch<Project>('/api/projects', { method: 'POST', body: JSON.stringify({ name }) }),
+      rename: (id: string, name: string) => apiFetch<Project>(`/api/projects/${id}`, { method: 'PUT', body: JSON.stringify({ name }) }),
+      delete: (id: string) => apiFetch<void>(`/api/projects/${id}`, { method: 'DELETE' }),
+    },
+    events: {
+      list: () => apiFetch<CalendarEvent[]>('/api/events'),
+      create: (data: Partial<CalendarEvent>) => apiFetch<CalendarEvent>('/api/events', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    reviews: {
+      list: () => apiFetch<WeeklyReview[]>('/api/reviews'),
+    },
+    todaySet: {
+      get: (date: string) => apiFetch<{ date: string; todoIds: string[] }>(`/api/today-set?date=${date}`),
+    },
+    playlists: {
+      list: () => apiFetch<Playlist[]>('/api/playlists'),
+      get: (id: string) => apiFetch<Playlist>(`/api/playlists/${id}`),
+      create: (data: { name: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
+        apiFetch<Playlist>('/api/playlists', { method: 'POST', body: JSON.stringify(data) }),
+      update: (id: string, data: { name?: string; description?: string; items?: Partial<PlaylistItem>[] }) =>
+        apiFetch<Playlist>(`/api/playlists/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+      delete: (id: string) => apiFetch<void>(`/api/playlists/${id}`, { method: 'DELETE' }),
+      start: (id: string) => apiFetch<{ todoIds: string[]; count: number }>(`/api/playlists/${id}/start`, { method: 'POST' }),
+    },
+    mood: {
+      log: (data: { value: number; note?: string }) =>
+        apiFetch<MoodEntry>('/api/mood', { method: 'POST', body: JSON.stringify(data) }),
+      history: (days = 7) =>
+        apiFetch<MoodEntry[]>(`/api/mood?days=${days}`),
+      latest: () =>
+        apiFetch<MoodEntry | null>('/api/mood/latest'),
+    },
+    preferences: {
+      get: () => apiFetch<Record<string, unknown>>('/api/preferences'),
+      update: (data: Record<string, unknown>) => apiFetch<Record<string, unknown>>('/api/preferences', { method: 'PUT', body: JSON.stringify(data) }),
+    },
+    mcpOauth: {
+      get: <T>(type: string, key: string) =>
+        apiFetch<T>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`).catch(() => null),
+      set: (type: string, key: string, data: unknown, expiresAt?: string) =>
+        apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, {
+          method: 'PUT',
+          body: JSON.stringify({ data, expiresAt }),
+        }),
+      delete: (type: string, key: string) =>
+        apiFetch<void>(`/api/mcp-oauth/${type}/${encodeURIComponent(key)}`, { method: 'DELETE' }),
+    },
+  }
 }
+
+export type TempoApi = ReturnType<typeof createApi>
+
+// Default instance using env var (STDIO mode, oauth-provider)
+export const api = createApi()
