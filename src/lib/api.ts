@@ -2,6 +2,19 @@ import { auth } from '@/lib/firebase'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'https://tempo-api-production.up.railway.app'
 const DEV_AUTH_TOKEN = import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined
+const API_KEY_STORAGE_KEY = 'tempo_api_key'
+
+export function setStoredApiKey(key: string) {
+  sessionStorage.setItem(API_KEY_STORAGE_KEY, key)
+}
+
+export function clearStoredApiKey() {
+  sessionStorage.removeItem(API_KEY_STORAGE_KEY)
+}
+
+export function getStoredApiKey(): string | null {
+  return sessionStorage.getItem(API_KEY_STORAGE_KEY)
+}
 
 async function getAuthHeaders(): Promise<HeadersInit> {
   if (DEV_AUTH_TOKEN) {
@@ -10,6 +23,15 @@ async function getAuthHeaders(): Promise<HeadersInit> {
       'Content-Type': 'application/json',
     }
   }
+
+  const apiKey = getStoredApiKey()
+  if (apiKey) {
+    return {
+      'X-API-Key': apiKey,
+      'Content-Type': 'application/json',
+    }
+  }
+
   const user = auth.currentUser
   if (!user) throw new Error('Not authenticated')
   const token = await user.getIdToken()
@@ -206,5 +228,8 @@ export const api = {
       method: 'POST', body: JSON.stringify({ name }),
     }),
     delete: (id: string) => apiFetch<void>(`/api/api-keys/${id}`, { method: 'DELETE' }),
+  },
+  auth: {
+    me: () => apiFetch<{ uid: string; email: string | null; displayName: string | null; photoURL: string | null }>('/api/auth/me'),
   },
 }
