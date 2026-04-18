@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-17
+- Fix MCP server to forward client API key to backend — remote server was using a single server-side key for all API calls, causing all clients to operate as the same user. Now validates and forwards the client's key so each account is isolated (#67)
+
+## 2026-04-14
+- Fix mobile UX bugs round 2: FilterDropdown portals to escape overflow clipping (Backlog Sort/Project/Energy dropdowns) with viewport-aware flipping, playlists Create works (server: explicit UUIDs for legacy `id text` columns; client: optimistic cache injection so detail page renders immediately), Today header Plan/Focus buttons match hamburger ghost style, `min-h-dvh` for correct iOS PWA viewport, Today chat bar clears safe-area home indicator, TodoDetailDrawer locks body scroll so page doesn't scroll out from under the modal (#66)
+- Only show mood on Today page if logged today — filter the mood widget to today's date only (#65)
+- Fix Tempo project todos round 1: double completion toast race condition, habits toggle (API date middleware was stringifying JSONB completion keys), Projects menu separator, Today view mobile layout (#64)
+
 ## 2026-04-07
 - Fix CORS preflight on MCP endpoint so Claude.ai browser OAuth flow completes (#56)
 - Add OAuth 2.0 to MCP server — authorization code flow with PKCE, consent page, token refresh, dual-auth (API key for Claude Code + Bearer for Claude.ai) (#55)
