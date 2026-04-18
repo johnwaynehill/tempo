@@ -12,7 +12,7 @@ import { MobileMenu } from '@/components/ui/MobileMenu'
 import type { UserPreferences } from '@/types'
 
 export function SettingsPage() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const { todos } = useTodos()
   const { notes } = useNotes()
   const { preferences, updatePreferences } = usePreferences()
@@ -156,16 +156,24 @@ export function SettingsPage() {
       <section className="mb-10">
         <h2 className="font-display text-lg font-semibold text-on-surface mb-4">Account</h2>
         {user && (
-          <div className="flex items-center gap-4 bg-surface-container-lowest rounded-xl p-5">
-            <img
-              src={user.photoURL ?? ''}
-              alt=""
-              className="w-10 h-10 rounded-full"
-            />
-            <div>
-              <p className="text-on-surface text-sm font-medium">{user.displayName}</p>
-              <p className="text-on-surface-variant text-xs">{user.email}</p>
+          <div className="flex items-center justify-between bg-surface-container-lowest rounded-xl p-5">
+            <div className="flex items-center gap-4">
+              <img
+                src={user.photoURL ?? ''}
+                alt=""
+                className="w-10 h-10 rounded-full"
+              />
+              <div>
+                <p className="text-on-surface text-sm font-medium">{user.displayName}</p>
+                <p className="text-on-surface-variant text-xs">{user.email}</p>
+              </div>
             </div>
+            <button
+              onClick={signOut}
+              className="px-4 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer"
+            >
+              Log out
+            </button>
           </div>
         )}
       </section>
