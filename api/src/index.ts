@@ -19,10 +19,13 @@ import moodRouter from './routes/mood.js'
 import mcpOauthRouter from './routes/mcp-oauth.js'
 import authRouter from './routes/auth.js'
 
-// Init Firebase Admin (for token verification)
-admin.initializeApp({
-  projectId: process.env.FIREBASE_PROJECT_ID,
-})
+// Init Firebase Admin (for token verification + user lookups)
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
+admin.initializeApp(
+  serviceAccount
+    ? { credential: admin.credential.cert(JSON.parse(serviceAccount)) }
+    : { projectId: process.env.FIREBASE_PROJECT_ID }
+)
 
 const app = express()
 const port = parseInt(process.env.PORT || '3001', 10)
