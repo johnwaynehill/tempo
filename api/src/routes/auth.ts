@@ -4,8 +4,10 @@ import admin from 'firebase-admin'
 const router = Router()
 
 router.get('/me', async (req, res) => {
+  const uid = req.userId!
+
   try {
-    const userRecord = await admin.auth().getUser(req.userId!)
+    const userRecord = await admin.auth().getUser(uid)
     res.json({
       uid: userRecord.uid,
       email: userRecord.email ?? null,
@@ -13,7 +15,12 @@ router.get('/me', async (req, res) => {
       photoURL: userRecord.photoURL ?? null,
     })
   } catch {
-    res.status(404).json({ error: 'User not found' })
+    res.json({
+      uid,
+      email: null,
+      displayName: null,
+      photoURL: null,
+    })
   }
 })
 
