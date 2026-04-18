@@ -14,8 +14,7 @@ router.get('/me', async (req, res) => {
       displayName: userRecord.displayName ?? null,
       photoURL: userRecord.photoURL ?? null,
     })
-  } catch (err) {
-    console.error('auth/me getUser failed:', err)
+  } catch {
     res.json({
       uid,
       email: null,
