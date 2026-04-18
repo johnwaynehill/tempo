@@ -17,6 +17,7 @@ import projectsRouter from './routes/projects.js'
 import playlistsRouter from './routes/playlists.js'
 import moodRouter from './routes/mood.js'
 import mcpOauthRouter from './routes/mcp-oauth.js'
+import authRouter from './routes/auth.js'
 
 // Init Firebase Admin (for token verification)
 admin.initializeApp({
@@ -72,6 +73,7 @@ app.use('/api/projects', projectsRouter)
 app.use('/api/playlists', playlistsRouter)
 app.use('/api/mood', moodRouter)
 app.use('/api/mcp-oauth', mcpOauthRouter)
+app.use('/api/auth', authRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Tempo API running on port ${port}`)
