@@ -20,7 +20,7 @@ function dueDateUrgency(dueDate?: Date): number {
   const daysUntil = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
   if (daysUntil < 0) return 1.0   // Overdue
-  if (daysUntil === 0) return 0.9  // Due today
+  if (daysUntil === 0) return 1.0  // Due today
   if (daysUntil === 1) return 0.7  // Tomorrow
   if (daysUntil <= 7) return 0.4   // This week
   return 0.1                       // Later
