@@ -78,13 +78,13 @@ export function FilterDropdown<T extends string>({
       <button
         ref={buttonRef}
         onClick={onToggle}
-        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] ${
+        className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] max-w-[160px] ${
           isActive
-            ? 'bg-primary/10 text-primary'
+            ? 'bg-primary/15 text-primary'
             : 'bg-surface-container-high text-on-surface-variant'
         }`}
       >
-        {activeOption ? activeOption.label : label}
+        <span className="truncate">{activeOption ? activeOption.label : label}</span>
         <svg
           className={`w-3 h-3 transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
           viewBox="0 0 12 12"
