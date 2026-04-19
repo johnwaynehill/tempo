@@ -28,6 +28,7 @@ export const todos = pgTable('todos', {
   userId: text('user_id').notNull(),
   firestoreId: text('firestore_id'),
   title: text('title').notNull(),
+  description: text('description'),
   status: todoStatusEnum('status').notNull().default('inbox'),
   progress: integer('progress'),
   project: text('project'),

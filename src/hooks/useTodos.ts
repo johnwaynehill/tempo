@@ -8,6 +8,7 @@ import type { Todo, TodoStatus, EnergyLevel, TodoSize, RecurrenceRule } from '@/
 
 export interface AddTodoInput {
   title: string
+  description?: string
   status?: TodoStatus
   project?: string
   impact?: number

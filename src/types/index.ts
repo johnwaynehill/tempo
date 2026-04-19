@@ -70,6 +70,7 @@ export interface RecurrenceRule {
 export interface Todo {
   id: string
   title: string
+  description?: string
   status: TodoStatus
   progress?: number
   project?: string

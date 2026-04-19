@@ -40,6 +40,9 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const [granularity, setGranularity] = useState(3)
   const [visible, setVisible] = useState(false)
   const [liveTitle, setLiveTitle] = useState(todo.title)
+  const [showDescription, setShowDescription] = useState(!!todo.description)
+  const [liveDescription, setLiveDescription] = useState(todo.description ?? '')
+  const descRef = useRef<HTMLTextAreaElement>(null)
 
   const linkedNote = todo.note_id ? notes.find((n) => n.id === todo.note_id) : undefined
   const isNewTodo = !todo.title.trim()
@@ -155,6 +158,34 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
             />
             {todo.project && (
               <p className="text-on-surface-variant text-xs mt-1">{todo.project}</p>
+            )}
+            {showDescription ? (
+              <textarea
+                value={liveDescription}
+                onChange={(e) => {
+                  setLiveDescription(e.target.value)
+                  e.target.style.height = 'auto'
+                  e.target.style.height = e.target.scrollHeight + 'px'
+                }}
+                onBlur={() => {
+                  const v = liveDescription.trim()
+                  if (v !== (todo.description ?? '')) setField('description', v || null)
+                }}
+                ref={(el) => {
+                  (descRef as React.MutableRefObject<HTMLTextAreaElement | null>).current = el
+                  if (el) { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px' }
+                }}
+                className="w-full bg-transparent text-on-surface-variant text-sm outline-none placeholder:text-on-surface-variant/40 mt-2 resize-none"
+                placeholder="Add a description..."
+                rows={1}
+              />
+            ) : (
+              <button
+                onClick={() => { setShowDescription(true); requestAnimationFrame(() => descRef.current?.focus()) }}
+                className="text-on-surface-variant/50 text-xs mt-2 hover:text-on-surface-variant transition-colors cursor-pointer"
+              >
+                + Add description
+              </button>
             )}
           </div>
 
