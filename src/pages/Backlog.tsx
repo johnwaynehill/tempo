@@ -78,7 +78,10 @@ function ProjectSection({
 
 export function BacklogPage() {
   const { backlog, completeTodo, deferTodo, loading } = useTodos()
-  const { newTodo, createTodo, closeNewTodo } = useNewTodo('backlog')
+  const { newTodo, createTodo, closeNewTodo } = useNewTodo('backlog', {
+    project: projectFilter,
+    energy_level: energyFilter,
+  })
   const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
   const [viewMode, setViewMode] = useState<ViewMode>('list')

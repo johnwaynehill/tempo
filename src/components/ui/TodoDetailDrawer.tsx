@@ -31,7 +31,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
   const { notes, addNote, updateNote } = useNotes()
   const { projects } = useProjects()
   const navigate = useNavigate()
-  const titleRef = useRef<HTMLInputElement>(null)
+  const titleRef = useRef<HTMLTextAreaElement>(null)
 
   const [showNotePicker, setShowNotePicker] = useState(false)
   const [showReminderPicker, setShowReminderPicker] = useState(false)
@@ -55,11 +55,16 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
     updateTodo(todo.id, { [field]: value })
   }
 
-  // Animate in and focus title
+  // Animate in, focus title, and auto-size for existing long titles
   useEffect(() => {
     requestAnimationFrame(() => {
       setVisible(true)
-      titleRef.current?.focus()
+      const el = titleRef.current
+      if (el) {
+        el.focus()
+        el.style.height = 'auto'
+        el.style.height = el.scrollHeight + 'px'
+      }
     })
   }, [])
 
@@ -144,16 +149,21 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
         <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 space-y-7">
           {/* Title */}
           <div>
-            <input
+            <textarea
               ref={titleRef}
-              type="text"
               defaultValue={todo.title}
-              onChange={(e) => setLiveTitle(e.target.value)}
+              onChange={(e) => {
+                setLiveTitle(e.target.value)
+                e.target.style.height = 'auto'
+                e.target.style.height = e.target.scrollHeight + 'px'
+              }}
               onBlur={(e) => {
                 const v = e.target.value.trim()
                 if (v && v !== todo.title) setField('title', v)
               }}
-              className="w-full bg-transparent text-on-surface text-lg font-medium outline-none placeholder:text-on-surface-variant/50"
+              onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault() }}
+              rows={1}
+              className="w-full bg-transparent text-on-surface text-lg font-medium outline-none placeholder:text-on-surface-variant/50 resize-none"
               placeholder="Todo title..."
             />
             {todo.project && (
@@ -334,7 +344,7 @@ export function TodoDetailDrawer({ todo, onClose, onComplete, onDefer }: TodoDet
                   type="date"
                   defaultValue={todo.due_date?.toISOString().split('T')[0] ?? ''}
                   onChange={(e) => setField('due_date', e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
-                  className="w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-base outline-none min-h-[44px]"
+                  className="w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-sm outline-none min-h-[44px] max-w-full"
                 />
               </div>
             </div>
