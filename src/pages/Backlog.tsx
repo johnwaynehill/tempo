@@ -78,15 +78,15 @@ function ProjectSection({
 
 export function BacklogPage() {
   const { backlog, completeTodo, deferTodo, loading } = useTodos()
-  const { newTodo, createTodo, closeNewTodo } = useNewTodo('backlog', {
-    project: projectFilter,
-    energy_level: energyFilter,
-  })
   const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
   const [viewMode, setViewMode] = useState<ViewMode>('list')
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
   const [projectFilter, setProjectFilter] = useState<string | undefined>(undefined)
+  const { newTodo, createTodo, closeNewTodo } = useNewTodo('backlog', {
+    project: projectFilter,
+    energy_level: energyFilter,
+  })
   const [sortMode, setSortMode] = useState<SortMode>('score')
   const [energyOpen, setEnergyOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
