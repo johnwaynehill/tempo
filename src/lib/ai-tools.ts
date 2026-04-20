@@ -14,6 +14,10 @@ export const AI_TOOLS: ToolDefinition[] = [
           type: 'string',
           description: 'The title of the todo',
         },
+        description: {
+          type: 'string',
+          description: 'Longer description or notes for the todo',
+        },
         status: {
           type: 'string',
           enum: ['inbox', 'today_pinned', 'backlog'],
@@ -64,6 +68,7 @@ export const AI_TOOLS: ToolDefinition[] = [
           description: 'The ID of the todo to update',
         },
         title: { type: 'string' },
+        description: { type: 'string', description: 'Longer description or notes for the todo' },
         project: { type: 'string' },
         energy_level: {
           type: 'string',

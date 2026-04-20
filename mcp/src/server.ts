@@ -87,6 +87,7 @@ export function createServer(apiKey?: string): McpServer {
     'Create a new todo',
     {
       title: z.string().describe('Todo title'),
+      description: z.string().optional().describe('Longer description or notes for the todo'),
       status: z.enum(['inbox', 'today_pinned', 'backlog']).default('inbox').describe('Initial status'),
       project: z.string().optional().describe('Project name'),
       size: z.enum(['small', 'medium', 'large']).optional().describe('Task size'),
@@ -98,6 +99,7 @@ export function createServer(apiKey?: string): McpServer {
     async (input) => {
       const todo = await api.todos.create({
         title: input.title,
+        description: input.description,
         status: input.status,
         project: input.project,
         size: input.size,
@@ -120,6 +122,7 @@ export function createServer(apiKey?: string): McpServer {
     {
       id: z.string().describe('Todo ID'),
       title: z.string().optional().describe('New title'),
+      description: z.string().optional().describe('Longer description or notes for the todo'),
       status: z.enum(['inbox', 'today_pinned', 'backlog', 'deferred', 'done']).optional().describe('New status'),
       project: z.string().optional().describe('Project name'),
       size: z.enum(['small', 'medium', 'large']).optional().describe('Task size'),
@@ -131,6 +134,7 @@ export function createServer(apiKey?: string): McpServer {
     async ({ id, ...updates }) => {
       const data: Record<string, unknown> = {}
       if (updates.title !== undefined) data.title = updates.title
+      if (updates.description !== undefined) data.description = updates.description
       if (updates.status !== undefined) data.status = updates.status
       if (updates.project !== undefined) data.project = updates.project
       if (updates.size !== undefined) data.size = updates.size
