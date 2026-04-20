@@ -1,0 +1,1332 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tempo · Design System</title>
+<link rel="icon" href="/favicon.svg" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    /* Surface Hierarchy */
+    --color-surface: #f9f9f8;
+    --color-surface-container-lowest: #ffffff;
+    --color-surface-container-low: #f3f4f3;
+    --color-surface-container: #edeeed;
+    --color-surface-container-high: #e7e8e7;
+    --color-surface-container-highest: #e1e2e1;
+
+    /* Primary — Muted Sage */
+    --color-primary: #4f645b;
+    --color-primary-dim: #43574f;
+    --color-on-primary: #ffffff;
+    --color-primary-container: #d1ddd6;
+
+    /* On-Surface */
+    --color-on-surface: #2f3333;
+    --color-on-surface-variant: #5b605f;
+
+    /* Secondary / Outline / Error */
+    --color-secondary-container: #dce5df;
+    --color-outline-variant: #afb3b2;
+    --color-error: #a83836;
+
+    /* Projects */
+    --project-0-bg: #c0d8d0; --project-0-fg: #3a5248;
+    --project-1-bg: #d8cec0; --project-1-fg: #5a4e3a;
+    --project-2-bg: #cfc8d8; --project-2-fg: #4a3e5a;
+    --project-3-bg: #c0ced8; --project-3-fg: #3a4a58;
+    --project-4-bg: #d8c0c8; --project-4-fg: #5a3a44;
+    --project-5-bg: #c8d4c0; --project-5-fg: #44523a;
+    --project-6-bg: #d8d0c0; --project-6-fg: #585038;
+    --project-7-bg: #c8ccd0; --project-7-fg: #3e4448;
+
+    /* Energy */
+    --energy-low-bg: #e8e5e0; --energy-low-fg: #7d7b78;
+    --energy-medlow-bg: #e0e5e2; --energy-medlow-fg: #606860;
+    --energy-medium-bg: #d8e4dc; --energy-medium-fg: #4a5e52;
+    --energy-high-bg: #cce4d4; --energy-high-fg: #2d6048;
+
+    /* Size */
+    --size-small-bg: #e8e8e6; --size-small-fg: #6e706e;
+    --size-medium-bg: #dde0dc; --size-medium-fg: #585e58;
+    --size-large-bg: #d0d6d0; --size-large-fg: #444e44;
+
+    /* Impact */
+    --impact-1-bg: #e8e6e4; --impact-1-fg: #787572;
+    --impact-2-bg: #e4e0da; --impact-2-fg: #6e6860;
+    --impact-3-bg: #e0dace; --impact-3-fg: #645a4a;
+    --impact-4-bg: #dcd2c2; --impact-4-fg: #5a4e38;
+    --impact-5-bg: #d6cab4; --impact-5-fg: #504228;
+
+    --font-display: 'Manrope', system-ui, sans-serif;
+    --font-body: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    --radius-sm: 0.5rem;
+    --radius-lg: 1rem;
+    --radius-xl: 1.5rem;
+  }
+
+  [data-theme='dark'] {
+    --color-surface: #1a1c1b;
+    --color-surface-container-lowest: #111312;
+    --color-surface-container-low: #1f2120;
+    --color-surface-container: #252726;
+    --color-surface-container-high: #2f3130;
+    --color-surface-container-highest: #3a3c3b;
+    --color-primary: #8fb5a4;
+    --color-primary-dim: #7da393;
+    --color-on-primary: #1a2e26;
+    --color-primary-container: #3a544a;
+    --color-on-surface: #e1e3e1;
+    --color-on-surface-variant: #9fa3a1;
+    --color-secondary-container: #3a4a40;
+    --color-outline-variant: #4a4e4d;
+    --color-error: #e5726f;
+
+    --project-0-bg: #2a3f37; --project-0-fg: #a0c4b6;
+    --project-1-bg: #3f3729; --project-1-fg: #c4b8a0;
+    --project-2-bg: #352e40; --project-2-fg: #b8aec4;
+    --project-3-bg: #29353f; --project-3-fg: #a0b8c8;
+    --project-4-bg: #40292f; --project-4-fg: #c8a0ae;
+    --project-5-bg: #2f3d27; --project-5-fg: #b0c0a0;
+    --project-6-bg: #3f3a28; --project-6-fg: #c8c0a0;
+    --project-7-bg: #2d3236; --project-7-fg: #a8b0b8;
+
+    --energy-low-bg: #332f2b; --energy-low-fg: #a8a5a0;
+    --energy-medlow-bg: #2b332e; --energy-medlow-fg: #98a89c;
+    --energy-medium-bg: #283830; --energy-medium-fg: #90b0a0;
+    --energy-high-bg: #1e3f2e; --energy-high-fg: #80c8a0;
+
+    --size-small-bg: #30322f; --size-small-fg: #a0a2a0;
+    --size-medium-bg: #2c302c; --size-medium-fg: #98a098;
+    --size-large-bg: #262e26; --size-large-fg: #88a088;
+
+    --impact-1-bg: #33302e; --impact-1-fg: #a8a5a2;
+    --impact-2-bg: #302c26; --impact-2-fg: #a89e94;
+    --impact-3-bg: #2e281e; --impact-3-fg: #a89680;
+    --impact-4-bg: #2c2418; --impact-4-fg: #a89070;
+    --impact-5-bg: #2a2014; --impact-5-fg: #a88a60;
+  }
+
+  /* Energy variants (light) */
+  [data-energy='low'] {
+    --color-primary: #8a9590; --color-primary-dim: #7d8884;
+    --color-primary-container: #e8e5e0; --color-on-primary: #f5f3f0;
+    --color-surface: #faf9f6; --color-surface-container-lowest: #fffefa;
+    --color-surface-container-low: #f5f3ef; --color-surface-container: #efede9;
+    --color-on-surface: #4a4845; --color-on-surface-variant: #7d7b78;
+  }
+  [data-energy='high'] {
+    --color-primary: #2d7a5a; --color-primary-dim: #256b4e;
+    --color-primary-container: #b4e4cf; --color-surface: #f7faf8;
+    --color-surface-container-lowest: #ffffff; --color-surface-container-low: #eef5f1;
+    --color-surface-container: #e5efe9; --color-on-surface: #1a2420;
+    --color-on-surface-variant: #3d4f47;
+  }
+  [data-theme='dark'][data-energy='high'] {
+    --color-primary: #5ee0a8; --color-primary-container: #1f5e42;
+    --color-surface: #151d19; --color-surface-container-lowest: #0d130f;
+    --color-surface-container-low: #1a251f; --color-surface-container: #202d26;
+    --color-on-surface: #e8f2ed;
+  }
+
+  * { box-sizing: border-box; }
+  html {
+    font-family: var(--font-body);
+    color: var(--color-on-surface);
+    background: var(--color-surface);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.4s ease, color 0.4s ease;
+    scroll-behavior: smooth;
+  }
+  body { margin: 0; }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--color-on-surface);
+    margin: 0;
+  }
+
+  /* ---- Layout ---- */
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 48px 32px 128px;
+  }
+  @media (max-width: 640px) {
+    .page { padding: 32px 20px 80px; }
+  }
+
+  /* ---- Top bar ---- */
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    background: color-mix(in srgb, var(--color-surface-container-lowest) 80%, transparent);
+    padding: 14px 0;
+    margin: -48px -32px 48px;
+    padding-left: 32px;
+    padding-right: 32px;
+  }
+  .topbar-inner {
+    max-width: 1120px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .brand-mark {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 15px;
+    color: var(--color-on-surface);
+  }
+  .brand-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: var(--color-primary);
+    box-shadow: 0 0 0 4px var(--color-primary-container);
+  }
+  .topbar-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .segmented {
+    display: inline-flex;
+    padding: 3px;
+    background: var(--color-surface-container);
+    border-radius: 10px;
+  }
+  .segmented button {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 0;
+    background: transparent;
+    color: var(--color-on-surface-variant);
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .segmented button[aria-pressed="true"] {
+    background: var(--color-surface-container-lowest);
+    color: var(--color-on-surface);
+  }
+
+  /* ---- Hero ---- */
+  .hero {
+    padding: 72px 0 88px;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 30%, transparent);
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin-bottom: 20px;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 8vw, 96px);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+  .hero-lede {
+    font-size: clamp(18px, 2vw, 22px);
+    color: var(--color-on-surface-variant);
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .hero-meta {
+    margin-top: 48px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 24px;
+  }
+  .hero-meta dt {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 6px;
+  }
+  .hero-meta dd {
+    margin: 0;
+    font-size: 15px;
+    color: var(--color-on-surface);
+    font-weight: 500;
+  }
+
+  /* ---- Section ---- */
+  section { padding: 88px 0; border-bottom: 1px solid color-mix(in srgb, var(--color-outline-variant) 30%, transparent); }
+  .section-head { margin-bottom: 40px; max-width: 720px; }
+  .section-head h2 {
+    font-size: clamp(28px, 3vw, 40px);
+    margin-bottom: 12px;
+  }
+  .section-head p {
+    font-size: 16px;
+    color: var(--color-on-surface-variant);
+    margin: 0;
+  }
+  .section-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    color: var(--color-on-surface-variant);
+    margin-bottom: 16px;
+    text-transform: uppercase;
+  }
+
+  /* ---- Swatch Grid ---- */
+  .swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
+  .swatch {
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--color-surface-container-lowest);
+    outline: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+    outline-offset: -1px;
+  }
+  .swatch-chip {
+    height: 112px;
+    display: block;
+  }
+  .swatch-body {
+    padding: 14px 16px 16px;
+  }
+  .swatch-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--color-on-surface);
+    font-family: var(--font-display);
+  }
+  .swatch-hex {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+    margin-top: 4px;
+    letter-spacing: 0.02em;
+  }
+  .swatch-role {
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+    margin-top: 2px;
+    line-height: 1.4;
+  }
+
+  /* Surface hierarchy strip */
+  .surface-strip {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+    outline: 1px solid color-mix(in srgb, var(--color-outline-variant) 20%, transparent);
+  }
+  .surface-strip > div {
+    padding: 28px 20px 24px;
+    min-height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+  .surface-strip .sname {
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-display);
+    color: var(--color-on-surface);
+  }
+  .surface-strip .shex {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--color-on-surface-variant);
+    margin-top: 3px;
+  }
+  @media (max-width: 720px) {
+    .surface-strip { grid-template-columns: repeat(3, 1fr); }
+  }
+
+  /* ---- Chip rows ---- */
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  .chip-group {
+    margin-top: 32px;
+  }
+  .chip-group:first-child { margin-top: 0; }
+  .chip-group-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-on-surface-variant);
+  }
+
+  /* ---- Typography ---- */
+  .type-stack > * + * { margin-top: 28px; padding-top: 28px; border-top: 1px solid color-mix(in srgb, var(--color-outline-variant) 25%, transparent); }
+  .type-row { display: grid; grid-template-columns: 200px 1fr; gap: 32px; align-items: baseline; }
+  @media (max-width: 640px) { .type-row { grid-template-columns: 1fr; gap: 8px; } }
+  .type-meta { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--color-on-surface-variant); line-height: 1.6; }
+  .type-meta strong { color: var(--color-on-surface); font-weight: 600; display: block; font-size: 12px; }
+  .type-sample { font-family: var(--font-display); color: var(--color-on-surface); letter-spacing: -0.02em; }
+  .t-display { font-size: 72px; font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; }
+  .t-h1 { font-size: 40px; font-weight: 700; line-height: 1.1; }
+  .t-h2 { font-size: 28px; font-weight: 700; line-height: 1.2; }
+  .t-h3 { font-size: 20px; font-weight: 600; line-height: 1.3; }
+  .t-body { font-family: var(--font-body); font-size: 16px; font-weight: 400; line-height: 1.6; color: var(--color-on-surface); max-width: 620px; }
+  .t-small { font-family: var(--font-body); font-size: 13px; color: var(--color-on-surface-variant); }
+  .t-mono { font-family: var(--font-mono); font-size: 13px; color: var(--color-on-surface-variant); }
+  @media (max-width: 640px) { .t-display { font-size: 48px; } }
+
+  /* ---- Spacing ---- */
+  .spacing-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+  }
+  .spacing-card {
+    padding: 24px;
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-lg);
+  }
+  .spacing-bar {
+    height: 8px;
+    background: var(--color-primary);
+    border-radius: 4px;
+    margin-bottom: 16px;
+  }
+  .spacing-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--color-on-surface);
+    font-weight: 600;
+  }
+  .spacing-value {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+    margin-top: 2px;
+  }
+
+  /* ---- Radius ---- */
+  .radius-row {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+  .radius-card {
+    flex: 1;
+    min-width: 140px;
+    padding: 28px 20px;
+    background: var(--color-surface-container);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .radius-card .box {
+    width: 72px;
+    height: 72px;
+    background: var(--color-primary);
+  }
+  .radius-card .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+    text-align: center;
+  }
+  .radius-card .label strong {
+    display: block;
+    color: var(--color-on-surface);
+    font-size: 13px;
+    font-family: var(--font-display);
+    margin-bottom: 2px;
+  }
+  .rounded-sm { border-radius: 4px; }
+  .rounded-md { border-radius: 8px; }
+  .rounded-lg { border-radius: 16px; }
+  .rounded-xl { border-radius: 24px; }
+  .rounded-full { border-radius: 9999px; }
+  .radius-card:nth-child(1) { border-radius: 4px; }
+  .radius-card:nth-child(2) { border-radius: 8px; }
+  .radius-card:nth-child(3) { border-radius: 16px; }
+  .radius-card:nth-child(4) { border-radius: 24px; }
+  .radius-card:nth-child(5) { border-radius: 9999px; padding: 48px 40px; }
+
+  /* ---- Mood Blobs ---- */
+  .mood-row {
+    display: flex;
+    gap: 28px;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 40px 24px;
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-xl);
+  }
+  .mood-cell { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+  .mood-cell span { font-size: 13px; color: var(--color-on-surface-variant); font-family: var(--font-body); font-weight: 500; }
+
+  /* ---- TodoItem demo ---- */
+  .todo-mock {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-xl);
+  }
+  .todo {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 16px;
+    background: var(--color-surface-container-lowest);
+    border-radius: var(--radius-lg);
+    transition: background 0.2s ease;
+  }
+  .todo:hover { background: var(--color-surface-container); }
+  .todo .check {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--color-outline-variant);
+    flex-shrink: 0;
+    margin-top: 2px;
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .todo .check.done {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    position: relative;
+  }
+  .todo .check.done::after {
+    content: '';
+    position: absolute;
+    left: 5px; top: 1px;
+    width: 6px; height: 11px;
+    border: solid var(--color-on-primary);
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+  }
+  .todo .content { flex: 1; min-width: 0; }
+  .todo .title { font-weight: 500; color: var(--color-on-surface); font-size: 15px; }
+  .todo .title.done { text-decoration: line-through; color: var(--color-on-surface-variant); }
+  .todo .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+
+  /* ---- Components grid ---- */
+  .components-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .demo-card {
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+  }
+  .demo-card .demo-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .demo-body { min-height: 90px; display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+
+  /* Buttons */
+  .btn {
+    font-family: var(--font-body);
+    font-weight: 500;
+    font-size: 14px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .btn-primary { background: var(--color-primary); color: var(--color-on-primary); }
+  .btn-primary:hover { background: var(--color-primary-dim); }
+  .btn-secondary { background: var(--color-secondary-container); color: var(--color-on-surface); }
+  .btn-ghost { background: transparent; color: var(--color-on-surface-variant); }
+  .btn-ghost:hover { background: var(--color-surface-container); color: var(--color-on-surface); }
+
+  /* Slider */
+  .demo-slider {
+    -webkit-appearance: none;
+    width: 100%;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--color-surface-container-high);
+    outline: none;
+  }
+  .demo-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: var(--color-primary);
+    border: 2px solid var(--color-surface-container-lowest);
+    cursor: pointer;
+  }
+
+  /* Progress ring */
+  .ring-row { display: flex; gap: 24px; align-items: center; }
+
+  /* Streak */
+  .streak {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--color-primary-container);
+    color: var(--color-primary);
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: 13px;
+  }
+
+  /* Contribution grid */
+  .contrib {
+    display: grid;
+    grid-template-columns: repeat(14, 1fr);
+    gap: 4px;
+  }
+  .contrib .cell {
+    aspect-ratio: 1;
+    border-radius: 3px;
+    background: var(--color-surface-container-high);
+  }
+  .contrib .cell.l1 { background: color-mix(in srgb, var(--color-primary) 25%, var(--color-surface-container-high)); }
+  .contrib .cell.l2 { background: color-mix(in srgb, var(--color-primary) 50%, var(--color-surface-container-high)); }
+  .contrib .cell.l3 { background: color-mix(in srgb, var(--color-primary) 75%, var(--color-surface-container-high)); }
+  .contrib .cell.l4 { background: var(--color-primary); }
+
+  /* Principles */
+  .principles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+  }
+  .principle {
+    padding: 28px;
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-xl);
+  }
+  .principle h3 {
+    font-size: 18px;
+    margin-bottom: 8px;
+    font-weight: 700;
+  }
+  .principle p {
+    font-size: 14px;
+    color: var(--color-on-surface-variant);
+    margin: 0;
+    line-height: 1.6;
+  }
+  .principle .mark {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-primary);
+    margin-bottom: 10px;
+    letter-spacing: 0.08em;
+  }
+
+  /* Animation demos */
+  .anim-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+  }
+  .anim-card {
+    padding: 32px 20px;
+    background: var(--color-surface-container-low);
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    cursor: pointer;
+  }
+  .anim-dot {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--color-primary);
+  }
+  .anim-card:hover .a-bounce { animation: mood-bounce 0.4s ease-out; }
+  .anim-card:hover .a-breathe { animation: focus-breathe 2.2s ease-in-out infinite; }
+  .anim-card:hover .a-fade { animation: gentle-appear 0.5s ease-out; }
+  .anim-card:hover .a-slide { animation: slide-up 0.3s ease-out; }
+  .anim-card span {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--color-on-surface-variant);
+  }
+
+  @keyframes mood-bounce { 0%,100%{transform:scale(1)} 30%{transform:scale(1.15)} 60%{transform:scale(0.95)} }
+  @keyframes focus-breathe { 0%,100%{opacity:0.6;transform:scale(1)} 50%{opacity:1;transform:scale(1.1)} }
+  @keyframes gentle-appear { from{opacity:0;transform:scale(0.85)} to{opacity:1;transform:scale(1)} }
+  @keyframes slide-up { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
+
+  /* Footer */
+  footer {
+    padding: 48px 0 0;
+    color: var(--color-on-surface-variant);
+    font-size: 13px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  footer a { color: var(--color-primary); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+
+  /* Utilities */
+  .mt-8 { margin-top: 8px; }
+  .mt-16 { margin-top: 16px; }
+  .mt-24 { margin-top: 24px; }
+  .mt-32 { margin-top: 32px; }
+  .mt-40 { margin-top: 40px; }
+
+  /* Energy demo */
+  .energy-demo {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .energy-card {
+    padding: 24px;
+    border-radius: var(--radius-xl);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .energy-card h4 {
+    font-size: 16px;
+    font-weight: 700;
+  }
+  .energy-card p {
+    font-size: 13px;
+    margin: 0;
+    line-height: 1.5;
+  }
+  .energy-card .dot {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+  }
+
+  /* Icon grid */
+  .icon-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 8px;
+  }
+  .icon-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-surface-container-low);
+    border-radius: 10px;
+    color: var(--color-on-surface-variant);
+  }
+  .icon-cell:hover { background: var(--color-surface-container); color: var(--color-on-surface); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-mark">
+      <span class="brand-dot"></span>
+      <span>Tempo · Design System</span>
+    </div>
+    <div class="topbar-controls">
+      <div class="segmented" role="group" aria-label="Theme">
+        <button data-theme-btn="light" aria-pressed="true">Light</button>
+        <button data-theme-btn="dark" aria-pressed="false">Dark</button>
+      </div>
+      <div class="segmented" role="group" aria-label="Energy">
+        <button data-energy-btn="" aria-pressed="true">Base</button>
+        <button data-energy-btn="low" aria-pressed="false">Low</button>
+        <button data-energy-btn="high" aria-pressed="false">High</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="eyebrow">The Quiet Rhythm · v1</div>
+    <h1>A sanctuary<br/>for <em>neurodivergent</em><br/>momentum.</h1>
+    <p class="hero-lede">
+      Tempo's design system prioritises cognitive ease over visual stimulation.
+      Low-stimulation surfaces, muted palettes, tonal layering — and not a single
+      hard border in sight.
+    </p>
+    <dl class="hero-meta">
+      <div><dt>Framework</dt><dd>React 19 · Vite · Tailwind v4</dd></div>
+      <div><dt>Typography</dt><dd>Manrope · Inter</dd></div>
+      <div><dt>Grid</dt><dd>8px base · 16/24 radius</dd></div>
+      <div><dt>Motion</dt><dd>0.3–0.5s · ease-out only</dd></div>
+    </dl>
+  </header>
+
+  <!-- SURFACES -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">01 · Surfaces</div>
+      <h2>Six layers, zero borders.</h2>
+      <p>The "no-line" rule: boundaries emerge from background hierarchy, never from 1px strokes. Each step up in elevation is a subtle warming shift.</p>
+    </div>
+    <div class="surface-strip">
+      <div style="background:var(--color-surface)"><div class="sname">Surface</div><div class="shex" data-hex="surface">–</div></div>
+      <div style="background:var(--color-surface-container-lowest)"><div class="sname">Lowest</div><div class="shex" data-hex="surface-container-lowest">–</div></div>
+      <div style="background:var(--color-surface-container-low)"><div class="sname">Low</div><div class="shex" data-hex="surface-container-low">–</div></div>
+      <div style="background:var(--color-surface-container)"><div class="sname">Container</div><div class="shex" data-hex="surface-container">–</div></div>
+      <div style="background:var(--color-surface-container-high)"><div class="sname">High</div><div class="shex" data-hex="surface-container-high">–</div></div>
+      <div style="background:var(--color-surface-container-highest)"><div class="sname">Highest</div><div class="shex" data-hex="surface-container-highest">–</div></div>
+    </div>
+  </section>
+
+  <!-- CORE PALETTE -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">02 · Core Palette</div>
+      <h2>Muted sage, never red.</h2>
+      <p>Primary is sage — a colour that accepts being looked at for hours. Error is warm umber, because pure red is an alarm bell.</p>
+    </div>
+    <div class="swatches">
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-primary)"></span><div class="swatch-body"><div class="swatch-name">Primary</div><div class="swatch-hex" data-hex="primary">–</div><div class="swatch-role">Active states · buttons · focus</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-primary-dim)"></span><div class="swatch-body"><div class="swatch-name">Primary Dim</div><div class="swatch-hex" data-hex="primary-dim">–</div><div class="swatch-role">Hover · pressed states</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-primary-container)"></span><div class="swatch-body"><div class="swatch-name">Primary Container</div><div class="swatch-hex" data-hex="primary-container">–</div><div class="swatch-role">Active backgrounds · badges</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-secondary-container)"></span><div class="swatch-body"><div class="swatch-name">Secondary Container</div><div class="swatch-hex" data-hex="secondary-container">–</div><div class="swatch-role">Soft emphasis</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-on-surface)"></span><div class="swatch-body"><div class="swatch-name">On Surface</div><div class="swatch-hex" data-hex="on-surface">–</div><div class="swatch-role">Body text · headings</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-on-surface-variant)"></span><div class="swatch-body"><div class="swatch-name">On Surface Variant</div><div class="swatch-hex" data-hex="on-surface-variant">–</div><div class="swatch-role">Secondary text · labels</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-outline-variant)"></span><div class="swatch-body"><div class="swatch-name">Outline Variant</div><div class="swatch-hex" data-hex="outline-variant">–</div><div class="swatch-role">Ghost borders · underlines</div></div></div>
+      <div class="swatch"><span class="swatch-chip" style="background:var(--color-error)"></span><div class="swatch-body"><div class="swatch-name">Error</div><div class="swatch-hex" data-hex="error">–</div><div class="swatch-role">Destructive actions only</div></div></div>
+    </div>
+  </section>
+
+  <!-- CHIPS -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">03 · Signal Chips</div>
+      <h2>Metadata without noise.</h2>
+      <p>Four independent scales — project, energy, size, impact — each with its own hue family. Assigned deterministically so the same project is always the same colour.</p>
+    </div>
+
+    <div class="chip-group">
+      <div class="chip-group-label">Projects · hash-assigned</div>
+      <div class="chip-row">
+        <span class="chip" style="background:var(--project-0-bg);color:var(--project-0-fg)">Sage</span>
+        <span class="chip" style="background:var(--project-1-bg);color:var(--project-1-fg)">Sand</span>
+        <span class="chip" style="background:var(--project-2-bg);color:var(--project-2-fg)">Lavender</span>
+        <span class="chip" style="background:var(--project-3-bg);color:var(--project-3-fg)">Sky</span>
+        <span class="chip" style="background:var(--project-4-bg);color:var(--project-4-fg)">Rose</span>
+        <span class="chip" style="background:var(--project-5-bg);color:var(--project-5-fg)">Moss</span>
+        <span class="chip" style="background:var(--project-6-bg);color:var(--project-6-fg)">Amber</span>
+        <span class="chip" style="background:var(--project-7-bg);color:var(--project-7-fg)">Slate</span>
+      </div>
+    </div>
+
+    <div class="chip-group">
+      <div class="chip-group-label">Energy · cool → warm progression</div>
+      <div class="chip-row">
+        <span class="chip" style="background:var(--energy-low-bg);color:var(--energy-low-fg)">Low</span>
+        <span class="chip" style="background:var(--energy-medlow-bg);color:var(--energy-medlow-fg)">Med-Low</span>
+        <span class="chip" style="background:var(--energy-medium-bg);color:var(--energy-medium-fg)">Medium</span>
+        <span class="chip" style="background:var(--energy-high-bg);color:var(--energy-high-fg)">High</span>
+      </div>
+    </div>
+
+    <div class="chip-group">
+      <div class="chip-group-label">Size · neutral intensity</div>
+      <div class="chip-row">
+        <span class="chip" style="background:var(--size-small-bg);color:var(--size-small-fg)">Small</span>
+        <span class="chip" style="background:var(--size-medium-bg);color:var(--size-medium-fg)">Medium</span>
+        <span class="chip" style="background:var(--size-large-bg);color:var(--size-large-fg)">Large</span>
+      </div>
+    </div>
+
+    <div class="chip-group">
+      <div class="chip-group-label">Impact · 1 → 5 warm scale</div>
+      <div class="chip-row">
+        <span class="chip" style="background:var(--impact-1-bg);color:var(--impact-1-fg)">Impact 1</span>
+        <span class="chip" style="background:var(--impact-2-bg);color:var(--impact-2-fg)">Impact 2</span>
+        <span class="chip" style="background:var(--impact-3-bg);color:var(--impact-3-fg)">Impact 3</span>
+        <span class="chip" style="background:var(--impact-4-bg);color:var(--impact-4-fg)">Impact 4</span>
+        <span class="chip" style="background:var(--impact-5-bg);color:var(--impact-5-fg)">Impact 5</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- TYPOGRAPHY -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">04 · Typography</div>
+      <h2>Manrope, then Inter.</h2>
+      <p>Manrope carries display — geometric, warm, a little soft at the corners. Inter takes over for body and UI where neutrality counts.</p>
+    </div>
+    <div class="type-stack">
+      <div class="type-row">
+        <div class="type-meta"><strong>Display</strong>Manrope · 800<br/>72 / 0.95</div>
+        <div class="type-sample t-display">Quiet Rhythm</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>H1</strong>Manrope · 700<br/>40 / 1.1</div>
+        <div class="type-sample t-h1">Today's work, gently.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>H2</strong>Manrope · 700<br/>28 / 1.2</div>
+        <div class="type-sample t-h2">Pick what feels easy</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>H3</strong>Manrope · 600<br/>20 / 1.3</div>
+        <div class="type-sample t-h3">Something small counts</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>Body</strong>Inter · 400<br/>16 / 1.6</div>
+        <div class="t-body">Tempo accepts that you won't do it all today, and that's fine. It asks what energy you have, suggests what fits, and gets out of the way. No streaks you'll feel bad about breaking. No aggressive confetti when you finish something small.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>Small</strong>Inter · 400<br/>13 / 1.5</div>
+        <div class="t-small">Secondary labels, metadata, captions. Always on-surface-variant.</div>
+      </div>
+      <div class="type-row">
+        <div class="type-meta"><strong>Mono</strong>JetBrains · 400<br/>13 / 1.5</div>
+        <div class="t-mono">// token names, times, shortcuts<br/>--color-primary: #4f645b;</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SPACING -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">05 · Spacing</div>
+      <h2>Eight-pixel grid, no exceptions.</h2>
+      <p>Every measurement is a multiple of 8. 4px is permitted for fine detail inside chips. Everything else snaps.</p>
+    </div>
+    <div class="spacing-grid">
+      <div class="spacing-card"><div class="spacing-bar" style="width:4px"></div><div class="spacing-label">space-1</div><div class="spacing-value">4px · chip padding</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:8px"></div><div class="spacing-label">space-2</div><div class="spacing-value">8px · tight gaps</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:12px"></div><div class="spacing-label">space-3</div><div class="spacing-value">12px · chip rows</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:16px"></div><div class="spacing-label">space-4</div><div class="spacing-value">16px · card padding</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:24px"></div><div class="spacing-label">space-5</div><div class="spacing-value">24px · section gaps</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:32px"></div><div class="spacing-label">space-6</div><div class="spacing-value">32px · page sections</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:48px"></div><div class="spacing-label">space-8</div><div class="spacing-value">48px · page margins</div></div>
+      <div class="spacing-card"><div class="spacing-bar" style="width:64px"></div><div class="spacing-label">space-10</div><div class="spacing-value">64px · hero spacing</div></div>
+    </div>
+  </section>
+
+  <!-- RADIUS -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">06 · Corners</div>
+      <h2>Soft, never sharp.</h2>
+      <p>Chips are 8px. Cards are 16px. Drawers and containers are 24px. Everything gentle.</p>
+    </div>
+    <div class="radius-row">
+      <div class="radius-card"><div class="box rounded-sm"></div><div class="label"><strong>4px</strong>subtle</div></div>
+      <div class="radius-card"><div class="box rounded-md"></div><div class="label"><strong>8px</strong>chips</div></div>
+      <div class="radius-card"><div class="box rounded-lg"></div><div class="label"><strong>16px</strong>cards</div></div>
+      <div class="radius-card"><div class="box rounded-xl"></div><div class="label"><strong>24px</strong>drawers</div></div>
+      <div class="radius-card"><div class="box rounded-full"></div><div class="label"><strong>full</strong>pills · avatars</div></div>
+    </div>
+  </section>
+
+  <!-- MOOD BLOBS -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">07 · Mood Blobs</div>
+      <h2>Five creatures, one feeling each.</h2>
+      <p>The signature element. Maps a 1–100 mood value to a discrete character with its own shape, palette, and expression. Inspired by Tiimo and How We Feel.</p>
+    </div>
+    <div class="mood-row" id="moodRow"></div>
+  </section>
+
+  <!-- ENERGY THEMES -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">08 · Adaptive Energy</div>
+      <h2>The UI that reads the room.</h2>
+      <p>The interface adapts to how you're feeling. Low-energy days soften contrast and warm the palette. High-energy days saturate and sharpen. Try the toggle in the top bar.</p>
+    </div>
+    <div class="energy-demo">
+      <div class="energy-card" style="background:#faf9f6;color:#4a4845">
+        <div class="dot" style="background:#8a9590"></div>
+        <h4>Low Energy</h4>
+        <p>Warm, soft, low-contrast. Primary becomes a gentle grey-green. Surfaces warm toward cream. The UI whispers.</p>
+      </div>
+      <div class="energy-card" style="background:var(--color-surface-container-low);color:var(--color-on-surface)">
+        <div class="dot" style="background:var(--color-primary)"></div>
+        <h4>Base</h4>
+        <p>Balanced sage. The default state — suitable for most of the day, most of the time.</p>
+      </div>
+      <div class="energy-card" style="background:#f7faf8;color:#1a2420">
+        <div class="dot" style="background:#2d7a5a"></div>
+        <h4>High Energy</h4>
+        <p>Saturated, crisp, high-contrast. Primary deepens to forest. Surfaces brighten. The UI leans in.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- COMPONENTS -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">09 · Components</div>
+      <h2>Built from scratch, no library.</h2>
+      <p>No shadcn, no Radix, no Material — every component is hand-made to fit the system. Here are a few.</p>
+    </div>
+
+    <div class="components-grid">
+
+      <div class="demo-card">
+        <div class="demo-title">Todo Item · signature</div>
+        <div class="todo-mock">
+          <div class="todo">
+            <button class="check done" aria-label="done"></button>
+            <div class="content">
+              <div class="title done">Write the weekly review</div>
+              <div class="meta">
+                <span class="chip" style="background:var(--project-0-bg);color:var(--project-0-fg)">Tempo</span>
+                <span class="chip" style="background:var(--energy-medium-bg);color:var(--energy-medium-fg)">Medium</span>
+                <span class="chip" style="background:var(--size-small-bg);color:var(--size-small-fg)">Small</span>
+              </div>
+            </div>
+          </div>
+          <div class="todo">
+            <button class="check" aria-label="open"></button>
+            <div class="content">
+              <div class="title">Draft Q2 roadmap</div>
+              <div class="meta">
+                <span class="chip" style="background:var(--project-3-bg);color:var(--project-3-fg)">GatherBound</span>
+                <span class="chip" style="background:var(--energy-high-bg);color:var(--energy-high-fg)">High</span>
+                <span class="chip" style="background:var(--size-large-bg);color:var(--size-large-fg)">Large</span>
+                <span class="chip" style="background:var(--impact-4-bg);color:var(--impact-4-fg)">Impact 4</span>
+              </div>
+            </div>
+          </div>
+          <div class="todo">
+            <button class="check" aria-label="open"></button>
+            <div class="content">
+              <div class="title">Water the plants</div>
+              <div class="meta">
+                <span class="chip" style="background:var(--project-5-bg);color:var(--project-5-fg)">Life</span>
+                <span class="chip" style="background:var(--energy-low-bg);color:var(--energy-low-fg)">Low</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-title">Buttons</div>
+        <div class="demo-body">
+          <button class="btn btn-primary">Capture a thought</button>
+          <button class="btn btn-secondary">Not now</button>
+          <button class="btn btn-ghost">Skip</button>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-title">Mood slider</div>
+        <div class="demo-body">
+          <input type="range" class="demo-slider" min="0" max="100" value="72" />
+          <div class="t-small">How are you feeling, really?</div>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-title">Streak indicator</div>
+        <div class="demo-body">
+          <span class="streak">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5Z"/></svg>
+            7-day streak
+          </span>
+          <span class="streak" style="background:var(--color-surface-container-high);color:var(--color-on-surface-variant)">
+            Today not yet
+          </span>
+        </div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-title">Contribution grid · 14 weeks</div>
+        <div class="contrib" id="contribGrid"></div>
+      </div>
+
+      <div class="demo-card">
+        <div class="demo-title">Progress ring</div>
+        <div class="demo-body">
+          <div class="ring-row">
+            <svg width="72" height="72" viewBox="0 0 72 72">
+              <circle cx="36" cy="36" r="30" fill="none" stroke="var(--color-surface-container-high)" stroke-width="6"/>
+              <circle cx="36" cy="36" r="30" fill="none" stroke="var(--color-primary)" stroke-width="6"
+                stroke-dasharray="188.5" stroke-dashoffset="56" stroke-linecap="round" transform="rotate(-90 36 36)"/>
+              <text x="36" y="40" text-anchor="middle" font-family="Manrope" font-weight="700" font-size="16" fill="var(--color-on-surface)">70%</text>
+            </svg>
+            <div>
+              <div style="font-family:var(--font-display);font-weight:600;font-size:15px;color:var(--color-on-surface)">Today</div>
+              <div class="t-small">7 of 10 complete</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ICONS -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">10 · Iconography</div>
+      <h2>Inline SVG, 1.75 stroke.</h2>
+      <p>No icon library. Every glyph is a hand-authored SVG at 24×24 with a 1.75px stroke — thick enough to read at a glance, thin enough to disappear into a quiet UI.</p>
+    </div>
+    <div class="icon-grid" id="iconGrid"></div>
+  </section>
+
+  <!-- MOTION -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">11 · Motion</div>
+      <h2>Short, ease-out, always.</h2>
+      <p>Animations exist to explain state, not to perform. 300–500ms is the ceiling. No springs, no bounces except mood-bounce (celebration only). <em>prefers-reduced-motion</em> is respected. Hover a card below to trigger it.</p>
+    </div>
+    <div class="anim-row">
+      <div class="anim-card"><div class="anim-dot a-bounce"></div><span>mood-bounce · 400ms</span></div>
+      <div class="anim-card"><div class="anim-dot a-breathe"></div><span>focus-breathe · 3500ms</span></div>
+      <div class="anim-card"><div class="anim-dot a-fade"></div><span>gentle-appear · 500ms</span></div>
+      <div class="anim-card"><div class="anim-dot a-slide"></div><span>slide-up · 300ms</span></div>
+    </div>
+  </section>
+
+  <!-- PRINCIPLES -->
+  <section>
+    <div class="section-head">
+      <div class="section-num">12 · Principles</div>
+      <h2>The rules we hold.</h2>
+      <p>Five commitments that shape every decision.</p>
+    </div>
+    <div class="principles">
+      <div class="principle">
+        <div class="mark">01</div>
+        <h3>No-line rule</h3>
+        <p>Boundaries come from background hierarchy — not 1px borders. The six-step surface scale does the heavy lifting. Exceptions: form-field underlines, markdown separators.</p>
+      </div>
+      <div class="principle">
+        <div class="mark">02</div>
+        <h3>No drop shadows</h3>
+        <p>On ambient UI, shadows are replaced by colour shifts. Only floating modals earn them: 16–32px blur, 6% opacity, nothing more.</p>
+      </div>
+      <div class="principle">
+        <div class="mark">03</div>
+        <h3>Warm over cool</h3>
+        <p>Even neutrals lean warm. Pure greys feel clinical; pure blacks feel punitive. ADHD brains already have enough cold input.</p>
+      </div>
+      <div class="principle">
+        <div class="mark">04</div>
+        <h3>Whitespace is a feature</h3>
+        <p>Density is hostile. 1.6× line-height, generous margins, one primary action per screen. The interface should breathe at the pace you do.</p>
+      </div>
+      <div class="principle">
+        <div class="mark">05</div>
+        <h3>Gentle feedback only</h3>
+        <p>No confetti cannons. No streak-shame red. Completion earns a small sparkle; missing a day earns silence. The app never punishes you.</p>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>Tempo — ADHD-friendly personal OS. · <a href="/">Open the app</a></div>
+    <div class="t-mono">Generated from <span>src/index.css</span></div>
+  </footer>
+
+</div>
+
+<script>
+  // ---- Theme toggle ----
+  const html = document.documentElement;
+  document.querySelectorAll('[data-theme-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.themeBtn;
+      html.dataset.theme = t;
+      document.querySelectorAll('[data-theme-btn]').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      refreshHexes();
+    });
+  });
+  document.querySelectorAll('[data-energy-btn]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const e = btn.dataset.energyBtn;
+      if (e) html.dataset.energy = e; else html.removeAttribute('data-energy');
+      document.querySelectorAll('[data-energy-btn]').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+      refreshHexes();
+    });
+  });
+
+  // ---- Resolve hex values from CSS vars, display them ----
+  function rgbToHex(rgb) {
+    const m = rgb.match(/\d+/g);
+    if (!m || m.length < 3) return rgb;
+    return '#' + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, '0')).join('');
+  }
+  function refreshHexes() {
+    document.querySelectorAll('[data-hex]').forEach(el => {
+      const name = el.dataset.hex;
+      const val = getComputedStyle(html).getPropertyValue('--color-' + name).trim();
+      if (!val) return;
+      let hex = val;
+      if (val.startsWith('rgb')) hex = rgbToHex(val);
+      el.textContent = hex.toLowerCase();
+    });
+  }
+
+  // ---- Mood blobs ----
+  const MOODS = [
+    { key: 'awful', label: 'Awful · 1–15', bg: '#E8B4B8', face: '#6B3A3E' },
+    { key: 'bad',   label: 'Bad · 16–35',  bg: '#C9B8D9', face: '#4A3660' },
+    { key: 'meh',   label: 'Meh · 36–65',  bg: '#D5D0C8', face: '#5A5650' },
+    { key: 'good',  label: 'Good · 66–85', bg: '#B8DBC2', face: '#2D5E3A' },
+    { key: 'great', label: 'Great · 86+',  bg: '#F5D990', face: '#6B5520' },
+  ];
+  function blobSVG(mood) {
+    const { key, bg, face } = mood;
+    const shapes = {
+      awful: `<path d="M50 8 C72 8, 90 22, 90 45 C90 62, 85 78, 72 88 C60 95, 40 95, 28 88 C15 78, 10 62, 10 45 C10 22, 28 8, 50 8Z" fill="${bg}"/>
+        <ellipse cx="36" cy="46" rx="4.5" ry="5.5" fill="${face}"/><ellipse cx="64" cy="46" rx="4.5" ry="5.5" fill="${face}"/>
+        <path d="M27 36 Q33 32, 40 35" stroke="${face}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M73 36 Q67 32, 60 35" stroke="${face}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M35 66 Q42 60, 50 62 Q58 64, 65 58" stroke="${face}" stroke-width="2.8" stroke-linecap="round" fill="none"/>
+        <ellipse cx="72" cy="55" rx="2.5" ry="3.5" fill="${face}" opacity="0.25"/>`,
+      bad: `<path d="M50 10 C74 10, 88 26, 88 48 C88 68, 76 90, 50 90 C24 90, 12 68, 12 48 C12 26, 26 10, 50 10Z" fill="${bg}"/>
+        <path d="M30 46 Q36 42, 42 46" stroke="${face}" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M58 46 Q64 42, 70 46" stroke="${face}" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <circle cx="36" cy="48" r="1.5" fill="${face}" opacity="0.3"/><circle cx="64" cy="48" r="1.5" fill="${face}" opacity="0.3"/>
+        <path d="M38 65 Q50 60, 62 65" stroke="${face}" stroke-width="2.5" stroke-linecap="round" fill="none"/>`,
+      meh: `<circle cx="50" cy="50" r="40" fill="${bg}"/>
+        <circle cx="37" cy="44" r="4" fill="${face}"/><circle cx="63" cy="44" r="4" fill="${face}"/>
+        <circle cx="39" cy="42.5" r="1.5" fill="white" opacity="0.6"/><circle cx="65" cy="42.5" r="1.5" fill="white" opacity="0.6"/>
+        <path d="M38 62 L62 62" stroke="${face}" stroke-width="2.5" stroke-linecap="round"/>`,
+      good: `<path d="M50 8 C76 8, 92 26, 90 48 C88 72, 74 92, 50 92 C26 92, 12 72, 10 48 C8 26, 24 8, 50 8Z" fill="${bg}"/>
+        <ellipse cx="36" cy="44" rx="4.5" ry="4" fill="${face}"/><ellipse cx="64" cy="44" rx="4.5" ry="4" fill="${face}"/>
+        <circle cx="38" cy="42.5" r="1.8" fill="white" opacity="0.5"/><circle cx="66" cy="42.5" r="1.8" fill="white" opacity="0.5"/>
+        <path d="M34 60 Q50 74, 66 60" stroke="${face}" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <circle cx="26" cy="56" r="5" fill="${face}" opacity="0.08"/><circle cx="74" cy="56" r="5" fill="${face}" opacity="0.08"/>`,
+      great: `<path d="M50 6 C78 6, 94 24, 92 50 C90 76, 74 94, 50 94 C26 94, 10 76, 8 50 C6 24, 22 6, 50 6Z" fill="${bg}"/>
+        <path d="M28 42 Q36 34, 44 42" stroke="${face}" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M56 42 Q64 34, 72 42" stroke="${face}" stroke-width="3" stroke-linecap="round" fill="none"/>
+        <path d="M30 58 Q50 80, 70 58" stroke="${face}" stroke-width="2.5" stroke-linecap="round" fill="${face}" fill-opacity="0.12"/>
+        <circle cx="24" cy="54" r="6" fill="${face}" opacity="0.1"/><circle cx="76" cy="54" r="6" fill="${face}" opacity="0.1"/>
+        <path d="M82 18 L84 14 L86 18 L90 20 L86 22 L84 26 L82 22 L78 20Z" fill="${face}" opacity="0.2"/>
+        <path d="M14 26 L15.5 23 L17 26 L20 27.5 L17 29 L15.5 32 L14 29 L11 27.5Z" fill="${face}" opacity="0.15"/>`,
+    };
+    return `<svg width="96" height="96" viewBox="0 0 100 100" fill="none" aria-hidden="true">${shapes[key]}</svg>`;
+  }
+  const moodRow = document.getElementById('moodRow');
+  MOODS.forEach(m => {
+    const cell = document.createElement('div');
+    cell.className = 'mood-cell';
+    cell.innerHTML = blobSVG(m) + `<span>${m.label}</span>`;
+    moodRow.appendChild(cell);
+  });
+
+  // ---- Contribution grid ----
+  const grid = document.getElementById('contribGrid');
+  const rng = (seed => () => ((seed = (seed * 9301 + 49297) % 233280) / 233280))(7);
+  for (let i = 0; i < 14 * 7; i++) {
+    const c = document.createElement('div');
+    const r = rng();
+    const lvl = r < 0.3 ? '' : r < 0.55 ? 'l1' : r < 0.75 ? 'l2' : r < 0.9 ? 'l3' : 'l4';
+    c.className = 'cell ' + lvl;
+    grid.appendChild(c);
+  }
+
+  // ---- Icons (inline SVG family, 1.75 stroke) ----
+  const ICONS = [
+    // check, circle, plus, arrow-right, search, calendar, clock, moon, sun, sparkle,
+    // flame, zap, target, bookmark, heart, home, settings, mail, user, menu
+    '<path d="M4 12l6 6L20 6"/>',
+    '<circle cx="12" cy="12" r="8"/>',
+    '<path d="M12 5v14M5 12h14"/>',
+    '<path d="M5 12h14M13 5l7 7-7 7"/>',
+    '<circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/>',
+    '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 9h18M8 3v4M16 3v4"/>',
+    '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+    '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/>',
+    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>',
+    '<path d="M12 3l2.5 5.5L20 10l-4 4 1 6-5-2.5L7 20l1-6-4-4 5.5-1.5L12 3Z"/>',
+    '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1-2-.2-4 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0Z"/>',
+    '<path d="M13 2L3 14h9l-1 8 10-12h-9l1-8Z"/>',
+    '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5"/>',
+    '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2Z"/>',
+    '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78Z"/>',
+    '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z"/><path d="M9 22V12h6v10"/>',
+    '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+    '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    '<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',
+    '<path d="M4 6h16M4 12h16M4 18h16"/>',
+  ];
+  const iconGrid = document.getElementById('iconGrid');
+  ICONS.forEach(d => {
+    const cell = document.createElement('div');
+    cell.className = 'icon-cell';
+    cell.innerHTML = `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">${d}</svg>`;
+    iconGrid.appendChild(cell);
+  });
+
+  // initial
+  refreshHexes();
+</script>
+</body>
+</html>
