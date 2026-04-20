@@ -382,6 +382,22 @@ export function SettingsPage() {
                     : 'Update'}
             </button>
           </div>
+
+          {/* Design system */}
+          <a
+            href="/design-system.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between cursor-pointer"
+          >
+            <div>
+              <p className="text-on-surface text-sm font-medium">Design system</p>
+              <p className="text-on-surface-variant text-xs">A visual tour of the "Quiet Rhythm"</p>
+            </div>
+            <span className="px-3 py-1.5 rounded-lg text-xs font-medium bg-surface-container-high text-on-surface-variant">
+              Open ↗
+            </span>
+          </a>
         </div>
       </section>
 
