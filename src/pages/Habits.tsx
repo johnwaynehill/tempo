@@ -4,6 +4,7 @@ import { useAllHabitsGrid } from '@/hooks/useHabitStats'
 import { HabitRow } from '@/components/habits/HabitRow'
 import { AddHabitModal } from '@/components/habits/AddHabitModal'
 import { ContributionGrid } from '@/components/charts/ContributionGrid'
+import { MenuButton } from '@/components/ui/MenuButton'
 import { toISODateString } from '@/lib/dateUtils'
 
 export function HabitsPage() {
@@ -28,6 +29,7 @@ export function HabitsPage() {
             </p>
           )}
         </div>
+        <MenuButton />
       </div>
 
       {loading ? (

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
+import { MenuButton } from '@/components/ui/MenuButton'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
@@ -82,6 +83,7 @@ export function TodayPage() {
               </svg>
             </button>
           )}
+          <MenuButton />
         </div>
       </div>
 

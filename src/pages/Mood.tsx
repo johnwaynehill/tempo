@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react'
 import { MoodSlider } from '@/components/ui/MoodSlider'
 import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
 import { useMood } from '@/hooks/useMood'
+import { MenuButton } from '@/components/ui/MenuButton'
 
 function timeAgo(date: Date): string {
   const mins = Math.floor((Date.now() - date.getTime()) / 60_000)
@@ -92,6 +93,7 @@ export function MoodPage() {
               : 'How are you feeling right now?'}
           </p>
         </div>
+        <MenuButton />
       </div>
 
       {/* Mood slider — the main event */}

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useTodos } from '@/hooks/useTodos'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { toISODateString } from '@/lib/dateUtils'
+import { MenuButton } from '@/components/ui/MenuButton'
 import type { Todo } from '@/types'
 
 type TimePeriod = 'today' | 'week' | 'month' | 'all'
@@ -91,6 +92,7 @@ export function CompletedPage() {
             {filtered.length} {filtered.length === 1 ? 'task' : 'tasks'}
           </p>
         </div>
+        <MenuButton />
       </div>
 
       {/* Period filter */}

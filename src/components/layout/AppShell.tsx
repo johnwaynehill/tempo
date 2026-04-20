@@ -61,7 +61,7 @@ export function AppShell() {
 
       <main className="flex-1 min-w-0 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="max-w-2xl mx-auto px-5 md:px-10 pt-[max(2rem,env(safe-area-inset-top))] pb-8 md:py-12">
-          <Outlet />
+          <Outlet context={{ onMenuOpen: () => setMenuOpen(true) }} />
         </div>
       </main>
 
