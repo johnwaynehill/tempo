@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { formatMinutes } from '@/hooks/useTimer'
 
 export function PlaylistsPage() {
@@ -48,7 +47,6 @@ export function PlaylistsPage() {
             </svg>
             New
           </button>
-          <MobileMenu />
         </div>
       </div>
 

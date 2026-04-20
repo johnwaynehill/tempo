@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
 import { useTodos } from '@/hooks/useTodos'
@@ -83,7 +82,6 @@ export function TodayPage() {
               </svg>
             </button>
           )}
-          <MobileMenu />
         </div>
       </div>
 

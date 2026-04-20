@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react'
 import { useTodos } from '@/hooks/useTodos'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { toISODateString } from '@/lib/dateUtils'
 import type { Todo } from '@/types'
@@ -92,7 +91,6 @@ export function CompletedPage() {
             {filtered.length} {filtered.length === 1 ? 'task' : 'tasks'}
           </p>
         </div>
-        <MobileMenu />
       </div>
 
       {/* Period filter */}

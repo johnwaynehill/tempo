@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { useEvents } from '@/hooks/useEvents'
 import { useTodos } from '@/hooks/useTodos'
 import {
@@ -102,7 +101,6 @@ export function CalendarPage() {
             {monthName(viewDate)} {year}
           </p>
         </div>
-        <MobileMenu />
       </div>
 
       {/* Month navigation */}

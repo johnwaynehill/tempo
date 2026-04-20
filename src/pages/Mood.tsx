@@ -1,5 +1,4 @@
 import { useState, useCallback, useMemo } from 'react'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { MoodSlider } from '@/components/ui/MoodSlider'
 import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
 import { useMood } from '@/hooks/useMood'
@@ -93,7 +92,6 @@ export function MoodPage() {
               : 'How are you feeling right now?'}
           </p>
         </div>
-        <MobileMenu />
       </div>
 
       {/* Mood slider — the main event */}

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { MobileMenu } from '@/components/ui/MobileMenu'
 import { ShortcutsSheet } from '@/components/ui/ShortcutsSheet'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { useKeyboardShortcuts, type Shortcut } from '@/hooks/useKeyboardShortcuts'
@@ -18,6 +19,7 @@ export function AppShell() {
   const { completeTodo, deferTodo } = useTodos()
   const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const shortcuts: Shortcut[] = useMemo(
     () => [
@@ -63,7 +65,8 @@ export function AppShell() {
         </div>
       </main>
 
-      <BottomNav />
+      <BottomNav onMenuOpen={() => setMenuOpen(true)} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {newTodo && (
         <TodoDetailDrawer
