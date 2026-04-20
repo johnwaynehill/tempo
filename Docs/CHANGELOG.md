@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-04-19
+- Convert mobile hamburger menu from dropdown to slide-out panel — full-height panel from right with backdrop, body scroll lock, quick-create buttons, active-state nav links, sign-out action, and grouped navigation sections (#74)
+- Move Notes from bottom tab bar to menu panel, replace with "More" button — bottom nav is now Today, Inbox, Backlog, Habits, More (#74)
+- Add consistent hamburger menu button to all page headers via reusable MenuButton component (#74)
+- Shrink large "New" buttons to icon-only style on Inbox, Backlog, Notes, Tempo AI, Playlists, and Projects pages (#74)
+- Make MobileMenu global in AppShell instead of per-page — removed from 9 individual page files (#74)
+- Quick wins: fix Backlog hooks order crash, add description field to todos, bump due-today priority to match overdue, add Brain Dump to mobile menu, fix filter dropdown overflow on mobile (#72, #73)
+
 ## 2026-04-17
 - Fix MCP server to forward client API key to backend — remote server was using a single server-side key for all API calls, causing all clients to operate as the same user. Now validates and forwards the client's key so each account is isolated (#67)
 
