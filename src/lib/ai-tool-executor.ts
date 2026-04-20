@@ -41,6 +41,7 @@ export async function executeToolCall(
       case 'create_todo': {
         const addInput: AddTodoInput = {
           title: input.title as string,
+          description: input.description as string | undefined,
           status: (input.status as AddTodoInput['status']) ?? 'inbox',
           project: input.project as string | undefined,
           energy_level: input.energy_level as EnergyLevel | undefined,
@@ -62,6 +63,7 @@ export async function executeToolCall(
         const name = todoTitle(ctx, todoId)
         const updates: Record<string, unknown> = {}
         if (input.title !== undefined) updates.title = input.title
+        if (input.description !== undefined) updates.description = input.description
         if (input.project !== undefined) updates.project = input.project
         if (input.energy_level !== undefined) updates.energy_level = input.energy_level
         if (input.size !== undefined) updates.size = input.size

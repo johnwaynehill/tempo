@@ -29,6 +29,7 @@ function createApiFetch(apiKey: string) {
 export interface Todo {
   id: string
   title: string
+  description?: string
   status: string
   progress?: number
   project?: string
