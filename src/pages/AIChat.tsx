@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useSearchParams, useNavigate } from 'react-router'
+import { MenuButton } from '@/components/ui/MenuButton'
 import { useAIChat, type ChatMessage, type ToolCallDisplay } from '@/hooks/useAIChat'
 import { useChatHistory, type Conversation } from '@/hooks/useChatHistory'
 import { useTodos } from '@/hooks/useTodos'
@@ -173,20 +174,25 @@ export function AIChatPage() {
               {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
             </p>
           </div>
-          <button
-            onClick={activeConv ? handleNewChat : undefined}
-            disabled={!activeConv}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all duration-200 shrink-0 ${
-              activeConv
-                ? 'bg-primary text-on-primary hover:shadow-md cursor-pointer'
-                : 'bg-surface-container text-on-surface-variant/40 cursor-default'
-            }`}
-          >
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M8 3v10M3 8h10" />
-            </svg>
-            New chat
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={activeConv ? handleNewChat : undefined}
+              disabled={!activeConv}
+              className={`p-2.5 rounded-lg transition-colors ${
+                activeConv
+                  ? 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container cursor-pointer'
+                  : 'text-on-surface-variant/40 cursor-default'
+              }`}
+              aria-label="New chat"
+              title="New chat"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <line x1="12" y1="5" x2="12" y2="19" />
+                <line x1="5" y1="12" x2="19" y2="12" />
+              </svg>
+            </button>
+            <MenuButton />
+          </div>
         </div>
       )}
 

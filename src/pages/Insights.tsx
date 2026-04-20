@@ -5,8 +5,8 @@ import { StatCard } from '@/components/charts/StatCard'
 import { HorizontalBarChart } from '@/components/charts/HorizontalBarChart'
 import { VerticalBarSeries } from '@/components/charts/VerticalBarSeries'
 import { ProgressRing } from '@/components/charts/ProgressRing'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { startOfDay } from '@/lib/dateUtils'
+import { MenuButton } from '@/components/ui/MenuButton'
 
 type TimeRange = '7d' | '30d' | '90d' | 'all'
 type TrendMode = 'daily' | 'weekly' | 'monthly'
@@ -74,7 +74,7 @@ export function InsightsPage() {
               : `Last ${timeRange === '7d' ? '7 days' : timeRange === '30d' ? '30 days' : '90 days'}`}
           </p>
         </div>
-        <MobileMenu />
+        <MenuButton />
       </div>
 
       {/* Time range selector */}

@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Outlet, useNavigate } from 'react-router'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
+import { MobileMenu } from '@/components/ui/MobileMenu'
 import { ShortcutsSheet } from '@/components/ui/ShortcutsSheet'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { useKeyboardShortcuts, type Shortcut } from '@/hooks/useKeyboardShortcuts'
@@ -18,6 +19,7 @@ export function AppShell() {
   const { completeTodo, deferTodo } = useTodos()
   const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const shortcuts: Shortcut[] = useMemo(
     () => [
@@ -59,11 +61,12 @@ export function AppShell() {
 
       <main className="flex-1 min-w-0 pb-[calc(3.5rem+env(safe-area-inset-bottom))] md:pb-0">
         <div className="max-w-2xl mx-auto px-5 md:px-10 pt-[max(2rem,env(safe-area-inset-top))] pb-8 md:py-12">
-          <Outlet />
+          <Outlet context={{ onMenuOpen: () => setMenuOpen(true) }} />
         </div>
       </main>
 
-      <BottomNav />
+      <BottomNav onMenuOpen={() => setMenuOpen(true)} />
+      <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {newTodo && (
         <TodoDetailDrawer

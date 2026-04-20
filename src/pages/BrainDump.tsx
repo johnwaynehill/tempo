@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
+import { MenuButton } from '@/components/ui/MenuButton'
 
 export function BrainDumpPage() {
   const [text, setText] = useState('')
@@ -27,13 +28,16 @@ export function BrainDumpPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
-          Brain Dump
-        </h1>
-        <p className="text-on-surface-variant text-sm">
-          Get it out of your head. One thought per line.
-        </p>
+      <div className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
+            Brain Dump
+          </h1>
+          <p className="text-on-surface-variant text-sm">
+            Get it out of your head. One thought per line.
+          </p>
+        </div>
+        <MenuButton />
       </div>
 
       {/* Confirmation banner */}

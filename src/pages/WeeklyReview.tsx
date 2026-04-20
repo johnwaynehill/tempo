@@ -5,7 +5,6 @@ import { useWeeklyReview } from '@/hooks/useWeeklyReview'
 import { StatCard } from '@/components/charts/StatCard'
 import { HorizontalBarChart } from '@/components/charts/HorizontalBarChart'
 import { VerticalBarSeries } from '@/components/charts/VerticalBarSeries'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import {
   getStartOfWeek,
   getEndOfWeek,
@@ -15,6 +14,7 @@ import {
   isSameDay,
   dayAbbrev,
 } from '@/lib/dateUtils'
+import { MenuButton } from '@/components/ui/MenuButton'
 
 export function WeeklyReviewPage() {
   const { done } = useTodos()
@@ -60,7 +60,7 @@ export function WeeklyReviewPage() {
           <h1 className="font-display text-3xl md:text-4xl font-bold text-on-surface tracking-tight mb-1">
             Weekly Review
           </h1>
-          <MobileMenu />
+          <MenuButton />
         </div>
         <div className="flex items-center gap-3 mt-2">
           <button

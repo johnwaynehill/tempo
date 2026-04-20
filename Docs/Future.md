@@ -8,8 +8,11 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 
 ## Today View
 - Consider adding a view of Habits into Today
-- Keep Tempo AI Chat bar at the bottom and visible even if the page scrolls
 - Overcommitment detection: warn when total estimated time exceeds available hours
+- Ability to Complete a ToDo from the Timer component at the top of the page
+  - ToDo could move into this Card and not have duplicate information.
+
+✓ Chat bar fixed at bottom with safe-area-aware positioning (#66)
 
 ## Tempo AI
 - Chat bar should stay fixed at the bottom
@@ -17,21 +20,14 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 - Weird zoom-in issue when selecting the Chat bar
 - Tempo AI header has weird scrolling issue
 - Proactive daily suggestions when opening Today page
-- Add AI icon to the bottom Nav Bar for iOS (unsure)
 
 ## Navigation
-- Simplify the navigation for mobile. Do a UX Designer pass to first understand what the navigation should be. Max of 5 nav items for mobile.
-- Nav icons should be unified; do not use emoji
-
-## Modes
-**Nulled by loging in with different accounts**
-Ability to switch contexts between Work and Personal modes, each with their own database.
-- Ability to switch into Work only mode
-- Ability to switch into Personal only mode
-- See which mode I'm in at any given time
+~~Built~~ — Slide-out menu panel (#74), Notes moved to menu, 4 core tabs + More button, consistent hamburger on all pages, icon-only New buttons. Remaining:
+- Consider swipe gesture to open/close menu panel
+- Animate tab bar highlight when switching tabs
 
 ## Voice Input
-Ability to input ToDos and Notes with Voice. Mac only for now. Consider https://www.onresonant.com/
+Ability to input ToDos and Notes with Voice. Mac only for now. Consider https://www.onresonant.com/ also consider Google's new Gemma 4 and AI Edge at https://ai.google.dev/edge
 
 ## Mood Tracking
 Like https://www.tiimoapp.com/product/mood-tracking. A simple slider with a big, emotional face.

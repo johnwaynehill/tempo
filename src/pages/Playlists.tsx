@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { formatMinutes } from '@/hooks/useTimer'
+import { MenuButton } from '@/components/ui/MenuButton'
 
 export function PlaylistsPage() {
   const navigate = useNavigate()
@@ -38,17 +38,19 @@ export function PlaylistsPage() {
             Routine task sequences you can start with one tap
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1 shrink-0">
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
+            className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="New playlist"
+            title="New playlist"
           >
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M8 3v10M3 8h10" />
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            New
           </button>
-          <MobileMenu />
+          <MenuButton />
         </div>
       </div>
 

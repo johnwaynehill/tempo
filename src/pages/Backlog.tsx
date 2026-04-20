@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
+import { MenuButton } from '@/components/ui/MenuButton'
 import { useTodos } from '@/hooks/useTodos'
 import { useNewTodo } from '@/hooks/useNewTodo'
 import { useProjects } from '@/hooks/useProjects'
@@ -150,15 +151,20 @@ export function BacklogPage() {
             {backlog.length} total{viewMode === 'list' && <> &middot; {filtered.length} showing</>}
           </p>
         </div>
-        <button
-          onClick={createTodo}
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all duration-200 cursor-pointer shrink-0 min-h-[44px]"
-        >
-          <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-          New todo
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            onClick={createTodo}
+            className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="New todo"
+            title="New todo (C)"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+          </button>
+          <MenuButton />
+        </div>
       </div>
 
       {/* Unified toolbar */}

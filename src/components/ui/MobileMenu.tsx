@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { useEffect } from 'react'
+import { NavLink, useNavigate } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
 import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
@@ -8,9 +8,32 @@ import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 
 const navItems = [
   {
+    to: '/today',
+    label: 'Today',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    divider: true,
+  },
+  {
+    to: '/inbox',
+    label: 'Inbox',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 002 2h16a2 2 0 002-2v-6l-3.45-6.89A2 2 0 0016.76 4H7.24a2 2 0 00-1.79 1.11z"/></svg>',
+  },
+  {
+    to: '/backlog',
+    label: 'Backlog',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
+    divider: true,
+  },
+  {
     to: '/chat?mode=today',
     label: 'Tempo AI',
     icon: '<svg class="w-4 h-4" viewBox="0 0 16 16" fill="currentColor"><path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z"/><path d="M13 0C13 1.2 13.8 2 15 2C13.8 2 13 2.8 13 4C13 2.8 12.2 2 11 2C12.2 2 13 1.2 13 0Z" opacity="0.55"/></svg>',
+    divider: true,
+  },
+  {
+    to: '/braindump',
+    label: 'Brain Dump',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
     divider: true,
   },
   {
@@ -20,10 +43,9 @@ const navItems = [
     divider: true,
   },
   {
-    to: '/braindump',
-    label: 'Brain Dump',
-    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
-    divider: true,
+    to: '/notes',
+    label: 'Notes',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
   },
   {
     to: '/projects',
@@ -54,95 +76,135 @@ const navItems = [
   },
 ]
 
-export function MobileMenu() {
-  const { user } = useAuth()
+interface MobileMenuProps {
+  open: boolean
+  onClose: () => void
+}
+
+export function MobileMenu({ open, onClose }: MobileMenuProps) {
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const { addNote } = useNotes()
   const { completeTodo, deferTodo } = useTodos()
   const { newTodo, createTodo, closeNewTodo } = useNewTodo('inbox')
-  const [open, setOpen] = useState(false)
+
+  // Lock body scroll when open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [open])
 
   return (
-    <div className="relative md:hidden">
-      <button
-        onClick={() => setOpen(!open)}
-        className="p-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-        aria-label="Menu"
-      >
-        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-          <line x1="4" y1="6" x2="20" y2="6" />
-          <line x1="4" y1="12" x2="20" y2="12" />
-          <line x1="4" y1="18" x2="20" y2="18" />
-        </svg>
-      </button>
+    <>
+      {/* Backdrop */}
+      <div
+        className={`fixed inset-0 z-50 bg-black/30 backdrop-blur-sm transition-opacity duration-300 md:hidden ${
+          open ? 'opacity-100' : 'opacity-0 pointer-events-none'
+        }`}
+        onClick={onClose}
+      />
 
-      {open && (
-        <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[200px]">
-            {/* Create actions */}
+      {/* Panel */}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 w-72 bg-surface-container-lowest shadow-2xl transition-transform duration-300 ease-out md:hidden flex flex-col ${
+          open ? 'translate-x-0' : 'translate-x-full'
+        }`}
+        style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-end px-3 py-3">
+          <button
+            onClick={onClose}
+            className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="Close menu"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Create actions */}
+        <div className="px-3 py-3 border-b border-outline-variant/15">
+          <div className="flex gap-2">
             <button
-              onClick={() => { setOpen(false); createTodo() }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+              onClick={() => { onClose(); createTodo() }}
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:shadow-md transition-all cursor-pointer"
             >
-              <span className="text-on-surface-variant">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                  <line x1="12" y1="5" x2="12" y2="19" />
-                  <line x1="5" y1="12" x2="19" y2="12" />
-                </svg>
-              </span>
-              New Todo
+              <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M8 3v10M3 8h10" />
+              </svg>
+              Todo
             </button>
             <button
               onClick={async () => {
-                setOpen(false)
+                onClose()
                 const id = await addNote('Untitled')
                 navigate(`/notes/${id}`)
               }}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+              className="flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-all cursor-pointer"
             >
-              <span className="text-on-surface-variant">
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
-              </span>
-              New Note
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
+              Note
             </button>
-
-            <div className="border-t border-outline-variant/15 my-1.5" />
-
-            {/* Navigation */}
-            {navItems.map(({ to, label, icon, divider }) => (
-              <div key={to}>
-                <button
-                  onClick={() => { navigate(to); setOpen(false) }}
-                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                >
-                  <span className="text-on-surface-variant" dangerouslySetInnerHTML={{ __html: icon }} />
-                  {label}
-                </button>
-                {divider && <div className="border-t border-outline-variant/15 my-1.5" />}
-              </div>
-            ))}
-
-            {user && (
-              <>
-                <div className="border-t border-outline-variant/15 my-1.5" />
-                <div className="flex items-center gap-3 px-4 py-2.5">
-                  {user.photoURL && (
-                    <img src={user.photoURL} alt="" className="w-7 h-7 rounded-full shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-on-surface text-xs font-medium truncate">{user.displayName}</p>
-                    <p className="text-on-surface-variant text-[11px] truncate">{user.email}</p>
-                  </div>
-                </div>
-              </>
-            )}
           </div>
-        </>
-      )}
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 overflow-y-auto py-2 px-3">
+          {navItems.map(({ to, label, icon, divider }) => (
+            <div key={to}>
+              <NavLink
+                to={to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  `flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors duration-150 ${
+                    isActive
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-on-surface hover:bg-surface-container-low'
+                  }`
+                }
+              >
+                <span className="text-on-surface-variant" dangerouslySetInnerHTML={{ __html: icon }} />
+                {label}
+              </NavLink>
+              {divider && <div className="border-t border-outline-variant/10 my-1.5 mx-3" />}
+            </div>
+          ))}
+        </nav>
+
+        {/* Account */}
+        {user && (
+          <div className="border-t border-outline-variant/15 px-3 py-2">
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              {user.photoURL && (
+                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full shrink-0" />
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-on-surface text-xs font-medium truncate">{user.displayName}</p>
+                <p className="text-on-surface-variant text-[11px] truncate">{user.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => { onClose(); signOut() }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out
+            </button>
+          </div>
+        )}
+      </div>
 
       {newTodo && (
         <TodoDetailDrawer
@@ -152,6 +214,6 @@ export function MobileMenu() {
           onDefer={deferTodo}
         />
       )}
-    </div>
+    </>
   )
 }

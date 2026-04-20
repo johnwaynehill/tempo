@@ -1,5 +1,4 @@
 import { useState, useMemo, useEffect } from 'react'
-import { MobileMenu } from '@/components/ui/MobileMenu'
 import { useEvents } from '@/hooks/useEvents'
 import { useTodos } from '@/hooks/useTodos'
 import {
@@ -13,6 +12,7 @@ import {
 } from '@/lib/dateUtils'
 import { describeRecurrence } from '@/lib/recurrence'
 import type { CalendarEvent, Todo } from '@/types'
+import { MenuButton } from '@/components/ui/MenuButton'
 import type { AddEventInput } from '@/hooks/useEvents'
 
 const WEEKDAY_HEADERS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
@@ -102,7 +102,7 @@ export function CalendarPage() {
             {monthName(viewDate)} {year}
           </p>
         </div>
-        <MobileMenu />
+        <MenuButton />
       </div>
 
       {/* Month navigation */}
