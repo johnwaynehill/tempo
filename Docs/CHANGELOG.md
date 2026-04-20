@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-04-20
+- Add design system showcase page at `/design-system.html` with live light/dark and adaptive-energy toggles, linked from Settings → App (#78)
+
 ## 2026-04-19
 - Convert mobile hamburger menu from dropdown to slide-out panel — full-height panel from right with backdrop, body scroll lock, quick-create buttons, active-state nav links, sign-out action, and grouped navigation sections (#74)
 - Move Notes from bottom tab bar to menu panel, replace with "More" button — bottom nav is now Today, Inbox, Backlog, Habits, More (#74)
