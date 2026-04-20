@@ -82,7 +82,7 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ open, onClose }: MobileMenuProps) {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const { addNote } = useNotes()
   const { completeTodo, deferTodo } = useTodos()
@@ -182,11 +182,7 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
         {/* Account */}
         {user && (
           <div className="border-t border-outline-variant/15 px-3 py-2">
-            <NavLink
-              to="/settings"
-              onClick={onClose}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-container-low transition-colors"
-            >
+            <div className="flex items-center gap-3 px-3 py-2.5">
               {user.photoURL && (
                 <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full shrink-0" />
               )}
@@ -194,7 +190,18 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
                 <p className="text-on-surface text-xs font-medium truncate">{user.displayName}</p>
                 <p className="text-on-surface-variant text-[11px] truncate">{user.email}</p>
               </div>
-            </NavLink>
+            </div>
+            <button
+              onClick={() => { onClose(); signOut() }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out
+            </button>
           </div>
         )}
       </div>

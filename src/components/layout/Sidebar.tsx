@@ -50,7 +50,7 @@ function NavGroup({ items }: { items: ReadonlyArray<{ to: string; label: string;
 }
 
 export function Sidebar() {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
 
   return (
     <aside className="hidden md:flex flex-col w-52 bg-surface-container-low h-screen sticky top-0 px-4 py-6 justify-between">
@@ -90,9 +90,9 @@ export function Sidebar() {
         </NavLink>
 
         {user && (
-          <NavLink
-            to="/settings"
-            className="flex items-center gap-3 px-3 py-2 text-xs text-on-surface-variant hover:text-on-surface transition-colors duration-200 rounded-xl"
+          <button
+            onClick={signOut}
+            className="flex items-center gap-3 px-3 py-2 text-xs text-on-surface-variant hover:text-on-surface transition-colors duration-200 cursor-pointer rounded-xl"
           >
             <img
               src={user.photoURL ?? ''}
@@ -100,7 +100,7 @@ export function Sidebar() {
               className="w-5 h-5 rounded-full"
             />
             <span className="truncate">{user.displayName}</span>
-          </NavLink>
+          </button>
         )}
       </div>
     </aside>
