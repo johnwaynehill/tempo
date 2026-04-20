@@ -11,6 +11,7 @@ const navItems = [
     to: '/today',
     label: 'Today',
     icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+    divider: true,
   },
   {
     to: '/inbox',
@@ -21,11 +22,6 @@ const navItems = [
     to: '/backlog',
     label: 'Backlog',
     icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>',
-  },
-  {
-    to: '/notes',
-    label: 'Notes',
-    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
     divider: true,
   },
   {
@@ -35,15 +31,21 @@ const navItems = [
     divider: true,
   },
   {
-    to: '/habits',
-    label: 'Habits',
-    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>',
-  },
-  {
     to: '/braindump',
     label: 'Brain Dump',
     icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
     divider: true,
+  },
+  {
+    to: '/habits',
+    label: 'Habits',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="M12 18v4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/><path d="M4.93 19.07l2.83-2.83"/><path d="M16.24 7.76l2.83-2.83"/></svg>',
+    divider: true,
+  },
+  {
+    to: '/notes',
+    label: 'Notes',
+    icon: '<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>',
   },
   {
     to: '/projects',
@@ -80,7 +82,7 @@ interface MobileMenuProps {
 }
 
 export function MobileMenu({ open, onClose }: MobileMenuProps) {
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const navigate = useNavigate()
   const { addNote } = useNotes()
   const { completeTodo, deferTodo } = useTodos()
@@ -112,11 +114,10 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
         style={{ paddingTop: 'env(safe-area-inset-top)', paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-outline-variant/15">
-          <span className="font-display text-sm font-semibold text-on-surface">Menu</span>
+        <div className="flex items-center justify-end px-3 py-3">
           <button
             onClick={onClose}
-            className="p-2 -mr-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            className="p-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
             aria-label="Close menu"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -178,10 +179,10 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
           ))}
         </nav>
 
-        {/* User info */}
+        {/* Account */}
         {user && (
-          <div className="border-t border-outline-variant/15 px-5 py-4">
-            <div className="flex items-center gap-3">
+          <div className="border-t border-outline-variant/15 px-3 py-2">
+            <div className="flex items-center gap-3 px-3 py-2.5">
               {user.photoURL && (
                 <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full shrink-0" />
               )}
@@ -190,6 +191,17 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
                 <p className="text-on-surface-variant text-[11px] truncate">{user.email}</p>
               </div>
             </div>
+            <button
+              onClick={() => { onClose(); signOut() }}
+              className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-on-surface-variant hover:text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+                <polyline points="16 17 21 12 16 7" />
+                <line x1="21" y1="12" x2="9" y2="12" />
+              </svg>
+              Sign out
+            </button>
           </div>
         )}
       </div>
