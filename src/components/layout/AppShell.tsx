@@ -65,7 +65,7 @@ export function AppShell() {
         </div>
       </main>
 
-      <BottomNav onMenuOpen={() => setMenuOpen(true)} />
+      <BottomNav />
       <MobileMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
 
       {newTodo && (
