@@ -4,7 +4,6 @@ import type { Todo } from '@/types'
 import { ENERGY_LABELS, ENERGY_CHIP_STYLE, SIZE_CHIP_STYLE, projectChipStyle, impactChipStyle } from '@/types'
 import { describeRecurrence } from '@/lib/recurrence'
 import { useNotes } from '@/hooks/useNotes'
-import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { CompletionSparkle } from '@/components/ui/CompletionSparkle'
 import { formatMinutes } from '@/hooks/useTimer'
 
@@ -17,9 +16,8 @@ interface TodoItemProps {
   showEnergy?: boolean
 }
 
-export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoItemProps) {
+export function TodoItem({ todo, onComplete, onDefer: _onDefer, showEnergy = true }: TodoItemProps) {
   const [completing, setCompleting] = useState(false)
-  const [drawerOpen, setDrawerOpen] = useState(false)
   const [sparklePos, setSparklePos] = useState<{ x: number; y: number } | null>(null)
   const { notes } = useNotes()
   const navigate = useNavigate()
@@ -45,10 +43,10 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
       >
         {/* Card container */}
         <div
-          onClick={() => setDrawerOpen(true)}
+          onClick={() => navigate(`/todos/${todo.id}`)}
           role="button"
           tabIndex={0}
-          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDrawerOpen(true) } }}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); navigate(`/todos/${todo.id}`) } }}
           className="group w-full text-left rounded-2xl bg-surface-container-lowest px-4 py-3.5 cursor-pointer transition-colors hover:bg-surface-container-low"
         >
           <div className="flex items-start gap-2.5">
@@ -163,15 +161,6 @@ export function TodoItem({ todo, onComplete, onDefer, showEnergy = true }: TodoI
         />
       )}
 
-      {/* Detail drawer */}
-      {drawerOpen && !completing && (
-        <TodoDetailDrawer
-          todo={todo}
-          onClose={() => setDrawerOpen(false)}
-          onComplete={onComplete}
-          onDefer={onDefer}
-        />
-      )}
     </>
   )
 }
