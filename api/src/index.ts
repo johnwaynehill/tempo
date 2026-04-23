@@ -3,6 +3,7 @@ import express from 'express'
 import cors from 'cors'
 import admin from 'firebase-admin'
 import { authenticate } from './middleware/auth.js'
+import { ipRateLimit, userRateLimit, anthropicRateLimit } from './middleware/rate-limit.js'
 import todosRouter from './routes/todos.js'
 import notesRouter from './routes/notes.js'
 import habitsRouter from './routes/habits.js'
@@ -40,6 +41,10 @@ admin.initializeApp(
 const app = express()
 const port = parseInt(process.env.PORT || '3001', 10)
 
+// Trust Railway's proxy so req.ip reflects the real client, not the edge proxy.
+// Required for IP-based rate limiting to work correctly behind a reverse proxy.
+app.set('trust proxy', 1)
+
 app.use(cors({
   origin: [
     'http://localhost:5173',
@@ -69,8 +74,9 @@ app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
-// All API routes require auth
-app.use('/api', authenticate)
+// IP-based limit runs before auth to blunt brute-force attempts on API keys.
+// User-based limit runs after auth for higher-signal per-account throttling.
+app.use('/api', ipRateLimit, authenticate, userRateLimit)
 
 app.use('/api/todos', todosRouter)
 app.use('/api/notes', notesRouter)
@@ -80,7 +86,7 @@ app.use('/api/preferences', preferencesRouter)
 app.use('/api/today-set', todaySetRouter)
 app.use('/api/reviews', reviewsRouter)
 app.use('/api/api-keys', apiKeysRouter)
-app.use('/api/anthropic', anthropicRouter)
+app.use('/api/anthropic', anthropicRateLimit, anthropicRouter)
 app.use('/api/conversations', conversationsRouter)
 app.use('/api/projects', projectsRouter)
 app.use('/api/playlists', playlistsRouter)
