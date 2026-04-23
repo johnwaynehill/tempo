@@ -5,7 +5,6 @@ import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { useProjects } from '@/hooks/useProjects'
-import { MenuButton } from '@/components/ui/MenuButton'
 import { LinkPicker } from '@/components/ui/LinkPicker'
 import { ReminderPicker } from '@/components/ui/ReminderPicker'
 import { RecurrencePicker } from '@/components/ui/RecurrencePicker'
@@ -33,6 +32,8 @@ export function TodoDetailPage() {
   const [showReminderPicker, setShowReminderPicker] = useState(false)
   const [showRecurrencePicker, setShowRecurrencePicker] = useState(false)
   const [showBreakdownPicker, setShowBreakdownPicker] = useState(false)
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false)
+  const [showDeferMenu, setShowDeferMenu] = useState(false)
   const [granularity, setGranularity] = useState(3)
   const [liveDescription, setLiveDescription] = useState(todo?.description ?? '')
   const [showDescription, setShowDescription] = useState(!!todo?.description)
@@ -60,9 +61,7 @@ export function TodoDetailPage() {
   }, [todo?.id])
 
   const handleBack = () => {
-    // Blur title to trigger save first
     titleRef.current?.blur()
-    // Use history if available, else fall back to a sensible list
     if (window.history.length > 1) navigate(-1)
     else navigate('/backlog')
   }
@@ -91,7 +90,6 @@ export function TodoDetailPage() {
           <Link to="/backlog" className="text-on-surface-variant text-sm hover:text-on-surface transition-colors">
             &larr; Backlog
           </Link>
-          <MenuButton />
         </div>
         <div className="text-center py-20">
           <p className="text-on-surface font-display font-semibold text-base mb-1">Todo not found</p>
@@ -110,8 +108,8 @@ export function TodoDetailPage() {
   }
 
   return (
-    <div>
-      {/* Page header */}
+    <div className="pb-24 md:pb-20">
+      {/* Page header — back + overflow */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <button
           onClick={handleBack}
@@ -122,11 +120,109 @@ export function TodoDetailPage() {
             <polyline points="15 18 9 12 15 6" />
           </svg>
         </button>
-        <MenuButton />
+
+        {/* Overflow menu */}
+        <div className="relative">
+          <button
+            onClick={() => setShowOverflowMenu(!showOverflowMenu)}
+            className="p-2.5 -mr-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+            aria-label="More actions"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="5" r="1" />
+              <circle cx="12" cy="12" r="1" />
+              <circle cx="12" cy="19" r="1" />
+            </svg>
+          </button>
+
+          {showOverflowMenu && (
+            <>
+              <div className="fixed inset-0 z-40" onClick={() => setShowOverflowMenu(false)} />
+              <div className="absolute right-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[220px]">
+                {todo.status !== 'today_pinned' && (
+                  <button
+                    onClick={() => { setShowOverflowMenu(false); handleAction(() => pinToToday(todo.id)) }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4 text-on-surface-variant" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10" />
+                      <polyline points="12 6 12 12 16 14" />
+                    </svg>
+                    Pin to Today
+                  </button>
+                )}
+                {todo.status !== 'backlog' && (
+                  <button
+                    onClick={() => { setShowOverflowMenu(false); handleAction(() => moveToBacklog(todo.id)) }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                  >
+                    <svg className="w-4 h-4 text-on-surface-variant" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="8" y1="6" x2="21" y2="6" />
+                      <line x1="8" y1="12" x2="21" y2="12" />
+                      <line x1="8" y1="18" x2="21" y2="18" />
+                      <line x1="3" y1="6" x2="3.01" y2="6" />
+                      <line x1="3" y1="12" x2="3.01" y2="12" />
+                      <line x1="3" y1="18" x2="3.01" y2="18" />
+                    </svg>
+                    Move to Backlog
+                  </button>
+                )}
+
+                <div className="border-t border-outline-variant/15 my-1.5" />
+
+                <button
+                  onClick={() => { setShowOverflowMenu(false); setShowReminderPicker(true) }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-on-surface-variant" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                  </svg>
+                  {todo.reminder_at ? 'Edit reminder…' : 'Set reminder…'}
+                </button>
+                <button
+                  onClick={() => { setShowOverflowMenu(false); setShowRecurrencePicker(true) }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-on-surface-variant" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="17 1 21 5 17 9" />
+                    <path d="M3 11V9a4 4 0 0 1 4-4h14" />
+                    <polyline points="7 23 3 19 7 15" />
+                    <path d="M21 13v2a4 4 0 0 1-4 4H3" />
+                  </svg>
+                  {todo.recurrence ? 'Edit repeat…' : 'Repeat…'}
+                </button>
+                <button
+                  onClick={() => { setShowOverflowMenu(false); setShowNotePicker(true) }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4 text-on-surface-variant" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                  </svg>
+                  {linkedNote ? `Linked: ${linkedNote.title}` : 'Link to note…'}
+                </button>
+
+                <div className="border-t border-outline-variant/15 my-1.5" />
+
+                <button
+                  onClick={() => { setShowOverflowMenu(false); handleAction(() => removeTodo(todo.id)) }}
+                  className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-error hover:bg-error/5 transition-colors cursor-pointer"
+                >
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+                  </svg>
+                  Delete
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="space-y-7">
-        {/* Title */}
+        {/* Title + description */}
         <div>
           <textarea
             ref={titleRef}
@@ -173,30 +269,6 @@ export function TodoDetailPage() {
               className="text-on-surface-variant/50 text-xs mt-3 hover:text-on-surface-variant transition-colors cursor-pointer"
             >
               + Add description
-            </button>
-          )}
-        </div>
-
-        {/* Quick actions row */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {todo.status !== 'today_pinned' && (
-            <button
-              onClick={() => handleAction(() => pinToToday(todo.id))}
-              className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
-            >
-              Pin to Today
-            </button>
-          )}
-          {todo.status !== 'backlog' && (
-            <button
-              onClick={() => handleAction(() => moveToBacklog(todo.id))}
-              className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer min-h-[44px] ${
-                todo.status === 'inbox'
-                  ? 'bg-gradient-to-br from-primary to-primary-dim text-on-primary hover:shadow-md'
-                  : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-              }`}
-            >
-              Move to Backlog
             </button>
           )}
         </div>
@@ -305,95 +377,87 @@ export function TodoDetailPage() {
           </div>
         </div>
 
-        {/* Defer, Remind, Note, Unstick row */}
-        <div className="border-t border-outline-variant/15 pt-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Defer */}
-            <div className="relative">
-              <details className="group/defer">
-                <summary className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer list-none min-h-[44px] flex items-center">
-                  Defer
-                </summary>
-                <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[140px]">
+        {/* Active secondary state summary — reminder / repeat / linked note shown inline for scannability */}
+        {(todo.reminder_at || todo.recurrence || linkedNote) && (
+          <div className="flex flex-wrap gap-2 pt-2">
+            {todo.reminder_at && (
+              <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium inline-flex items-center gap-1.5">
+                🔔 {todo.reminder_at.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              </span>
+            )}
+            {todo.recurrence && (
+              <span className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium">
+                {describeRecurrence(todo.recurrence)}
+              </span>
+            )}
+            {linkedNote && (
+              <button
+                onClick={() => navigate(`/notes/${linkedNote.id}`)}
+                className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer"
+              >
+                ¶ {linkedNote.title}
+              </button>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Sticky bottom action bar — sits above the mobile tab bar */}
+      <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 md:left-52 z-30 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/15 md:pb-[env(safe-area-inset-bottom)]">
+        <div className="max-w-2xl mx-auto px-5 md:px-10 py-3 flex items-center gap-2">
+          {/* Defer */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDeferMenu(!showDeferMenu)}
+              className="flex items-center gap-1 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+            >
+              Defer
+              <svg className="w-3 h-3 opacity-60" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <path d="M3 4.5L6 7.5L9 4.5" />
+              </svg>
+            </button>
+            {showDeferMenu && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowDeferMenu(false)} />
+                <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[160px]">
                   <button
-                    onClick={() => { deferTodo(todo.id, tomorrow()); handleBack() }}
-                    className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, tomorrow()); handleBack() }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
                   >
                     Tomorrow
                   </button>
                   <button
-                    onClick={() => { deferTodo(todo.id, nextWeek()); handleBack() }}
-                    className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextWeek()); handleBack() }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
                   >
                     Next week
                   </button>
                   <button
-                    onClick={() => { deferTodo(todo.id, nextMonth()); handleBack() }}
-                    className="w-full text-left px-4 py-2 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
+                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextMonth()); handleBack() }}
+                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
                   >
                     Next month
                   </button>
                 </div>
-              </details>
-            </div>
+              </>
+            )}
+          </div>
 
-            {/* Reminder */}
-            <div className="relative">
-              <button
-                onClick={() => setShowReminderPicker(!showReminderPicker)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
-                  todo.reminder_at
-                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {todo.reminder_at ? '🔔 Reminder set' : 'Remind'}
-              </button>
-              {showReminderPicker && (
-                <ReminderPicker
-                  currentReminder={todo.reminder_at}
-                  onSet={(date) => updateTodo(todo.id, { reminder_at: date })}
-                  onClear={() => updateTodo(todo.id, { reminder_at: undefined })}
-                  onClose={() => setShowReminderPicker(false)}
-                />
-              )}
-            </div>
-
-            {/* Recurrence */}
-            <div className="relative">
-              <button
-                onClick={() => setShowRecurrencePicker(!showRecurrencePicker)}
-                className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors duration-200 cursor-pointer min-h-[44px] ${
-                  todo.recurrence
-                    ? 'bg-primary/10 text-primary hover:bg-primary/20'
-                    : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
-                }`}
-              >
-                {todo.recurrence ? describeRecurrence(todo.recurrence) : 'Repeat'}
-              </button>
-              {showRecurrencePicker && (
-                <RecurrencePicker
-                  value={todo.recurrence}
-                  onChange={(rule) => updateTodo(todo.id, { recurrence: rule as never })}
-                  onClose={() => setShowRecurrencePicker(false)}
-                />
-              )}
-            </div>
-
-            {/* AI Breakdown */}
-            <div className="relative">
-              <button
-                onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
-                className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
-              >
-                <svg className="w-3 h-3" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
-                </svg>
-                Unstick Me
-              </button>
-              {showBreakdownPicker && (
-                <div className="absolute left-0 top-full mt-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[260px]">
-                  {/* Granularity slider */}
+          {/* Unstick Me */}
+          <div className="relative">
+            <button
+              onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
+              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+            >
+              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+              </svg>
+              Unstick
+            </button>
+            {showBreakdownPicker && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setShowBreakdownPicker(false)} />
+                <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[260px]">
                   <div className="px-4 pt-2 pb-3 border-b border-outline-variant/15">
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs text-on-surface-variant font-medium">Detail level</label>
@@ -415,8 +479,6 @@ export function TodoDetailPage() {
                       <span className="text-[10px] text-on-surface-variant/50">5</span>
                     </div>
                   </div>
-
-                  {/* Style buttons */}
                   <button
                     onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps&granularity=${granularity}`)}
                     className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
@@ -439,39 +501,14 @@ export function TodoDetailPage() {
                     <p className="text-xs text-on-surface-variant mt-0.5">Gently shift out of freeze mode</p>
                   </button>
                 </div>
-              )}
-            </div>
-
-            {/* Note link */}
-            {linkedNote ? (
-              <button
-                onClick={() => navigate(`/notes/${linkedNote.id}`)}
-                className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-medium hover:bg-primary/20 transition-colors cursor-pointer min-h-[44px]"
-              >
-                ¶ {linkedNote.title}
-              </button>
-            ) : (
-              <button
-                onClick={() => setShowNotePicker(true)}
-                className="px-3 py-2 rounded-lg bg-surface-container text-on-surface-variant text-xs font-medium hover:text-on-surface transition-colors cursor-pointer min-h-[44px]"
-              >
-                Link Note
-              </button>
+              </>
             )}
           </div>
-        </div>
 
-        {/* Bottom actions: Delete + Complete */}
-        <div className="border-t border-outline-variant/15 pt-4 flex items-center gap-3">
-          <button
-            onClick={() => handleAction(() => removeTodo(todo.id))}
-            className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-error/70 hover:text-error hover:bg-error/5 text-sm font-medium transition-colors cursor-pointer"
-          >
-            Delete
-          </button>
+          {/* Complete (primary) */}
           <button
             onClick={handleComplete}
-            className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
           >
             <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M2.5 6L5 8.5L9.5 3.5" />
@@ -481,7 +518,26 @@ export function TodoDetailPage() {
         </div>
       </div>
 
-      {/* Note picker modal */}
+      {/* Reminder picker (opened from overflow menu) */}
+      {showReminderPicker && (
+        <ReminderPicker
+          currentReminder={todo.reminder_at}
+          onSet={(date) => updateTodo(todo.id, { reminder_at: date })}
+          onClear={() => updateTodo(todo.id, { reminder_at: undefined })}
+          onClose={() => setShowReminderPicker(false)}
+        />
+      )}
+
+      {/* Recurrence picker */}
+      {showRecurrencePicker && (
+        <RecurrencePicker
+          value={todo.recurrence}
+          onChange={(rule) => updateTodo(todo.id, { recurrence: rule as never })}
+          onClose={() => setShowRecurrencePicker(false)}
+        />
+      )}
+
+      {/* Note picker */}
       {showNotePicker && (
         <LinkPicker
           items={notes.filter((n) => !n.linked_todo_id).map((n) => ({ id: n.id, title: n.title }))}
