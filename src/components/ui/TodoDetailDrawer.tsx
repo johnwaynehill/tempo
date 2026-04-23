@@ -96,22 +96,13 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle + close */}
-        <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <div className="w-8" />
-          <div
-            className="w-10 h-1.5 rounded-full bg-outline-variant/40 cursor-pointer"
-            onClick={handleClose}
-          />
+        {/* Drag handle — tap or drag-down to dismiss; tap outside also closes */}
+        <div className="flex justify-center pt-3 pb-1">
           <button
             onClick={handleClose}
-            className="w-8 h-8 flex items-center justify-center rounded-full text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-            aria-label="Close"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M4 4l8 8M12 4l-8 8" />
-            </svg>
-          </button>
+            aria-label="Close drawer"
+            className="w-10 h-1.5 rounded-full bg-outline-variant/40 hover:bg-outline-variant/60 transition-colors cursor-pointer"
+          />
         </div>
 
         <div className="p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))] md:pb-6 space-y-5">
