@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
-import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { toISODateString } from '@/lib/dateUtils'
 import { MenuButton } from '@/components/ui/MenuButton'
 import type { Todo } from '@/types'
@@ -50,9 +50,9 @@ function formatCompletedDate(date: Date): string {
 }
 
 export function CompletedPage() {
-  const { done, completeTodo, deferTodo, uncompleteTodo } = useTodos()
+  const { done, uncompleteTodo } = useTodos()
+  const navigate = useNavigate()
   const [period, setPeriod] = useState<TimePeriod>('today')
-  const [drawerTodo, setDrawerTodo] = useState<Todo | null>(null)
 
   const filtered = useMemo(() => {
     const startDate = getStartDate(period)
@@ -128,7 +128,7 @@ export function CompletedPage() {
               {todos.map((todo) => (
                 <button
                   key={todo.id}
-                  onClick={() => setDrawerTodo(todo)}
+                  onClick={() => navigate(`/todos/${todo.id}`)}
                   className="w-full flex items-start gap-3 py-3 px-3 rounded-xl hover:bg-surface-container transition-colors duration-200 group text-left cursor-pointer"
                 >
                   {/* Filled checkmark */}
@@ -170,14 +170,6 @@ export function CompletedPage() {
         </div>
       )}
 
-      {drawerTodo && (
-        <TodoDetailDrawer
-          todo={drawerTodo}
-          onClose={() => setDrawerTodo(null)}
-          onComplete={completeTodo}
-          onDefer={deferTodo}
-        />
-      )}
     </div>
   )
 }

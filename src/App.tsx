@@ -25,6 +25,7 @@ import { PlanMyDayPage } from '@/pages/PlanMyDay'
 import { PlaylistsPage } from '@/pages/Playlists'
 import { PlaylistDetailPage } from '@/pages/PlaylistDetail'
 import { MoodPage } from '@/pages/Mood'
+import { TodoDetailPage } from '@/pages/TodoDetailPage'
 
 function AuthenticatedApp() {
   return (
@@ -37,6 +38,7 @@ function AuthenticatedApp() {
         <Route path="/today" element={<TodayPage />} />
         <Route path="/inbox" element={<InboxPage />} />
         <Route path="/backlog" element={<BacklogPage />} />
+        <Route path="/todos/:id" element={<TodoDetailPage />} />
         <Route path="/notes" element={<NotesPage />} />
         <Route path="/notes/:id" element={<NoteEditorPage />} />
         <Route path="/projects" element={<ProjectsPage />} />
