@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-04-22
+- Add API documentation (`Docs/API.md`) and agent integration quickstart (`Docs/AgentQuickstart.md`)
+- Add rate limiting to the API — IP-based pre-auth (100 req/min), user-based post-auth (300 req/min), and stricter per-user limit on the Anthropic proxy (30 req/min); standard RFC `RateLimit-*` headers on all responses
+
 ## 2026-04-20
 - Add design system showcase page at `/design-system.html` with live light/dark and adaptive-energy toggles, linked from Settings → App (#78)
 
