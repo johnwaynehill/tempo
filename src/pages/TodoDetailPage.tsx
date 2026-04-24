@@ -60,10 +60,23 @@ export function TodoDetailPage() {
     setShowDescription(!!todo?.description)
   }, [todo?.id])
 
+  // Map a todo's status to the list page it lives on
+  const statusListInfo = (status: string | undefined): { label: string; path: string } => {
+    switch (status) {
+      case 'inbox': return { label: 'Inbox', path: '/inbox' }
+      case 'today_pinned': return { label: 'Today', path: '/today' }
+      case 'done': return { label: 'Completed', path: '/completed' }
+      case 'deferred': return { label: 'Backlog', path: '/backlog' }
+      case 'backlog':
+      default: return { label: 'Backlog', path: '/backlog' }
+    }
+  }
+  const backInfo = statusListInfo(todo?.status)
+
   const handleBack = () => {
     titleRef.current?.blur()
     if (window.history.length > 1) navigate(-1)
-    else navigate('/backlog')
+    else navigate(backInfo.path)
   }
 
   const handleComplete = () => {
@@ -107,18 +120,102 @@ export function TodoDetailPage() {
     )
   }
 
+  // Reusable bottom-bar action buttons. Defined inline to share state.
+  const DeferButton = () => (
+    <div className="relative">
+      <button
+        onClick={() => setShowDeferMenu(!showDeferMenu)}
+        className="flex items-center gap-1 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+      >
+        Defer
+        <svg className="w-3 h-3 opacity-60" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+          <path d="M3 4.5L6 7.5L9 4.5" />
+        </svg>
+      </button>
+      {showDeferMenu && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowDeferMenu(false)} />
+          <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[160px]">
+            <button onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, tomorrow()); handleBack() }} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">Tomorrow</button>
+            <button onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextWeek()); handleBack() }} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">Next week</button>
+            <button onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextMonth()); handleBack() }} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">Next month</button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+
+  const UnstickButton = () => (
+    <div className="relative">
+      <button
+        onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
+        className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+      >
+        <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
+        </svg>
+        Unstick
+      </button>
+      {showBreakdownPicker && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowBreakdownPicker(false)} />
+          <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[260px]">
+            <div className="px-4 pt-2 pb-3 border-b border-outline-variant/15">
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-xs text-on-surface-variant font-medium">Detail level</label>
+                <span className="text-xs text-on-surface-variant">
+                  {granularity === 1 ? 'Broad strokes' : granularity === 2 ? 'Overview' : granularity === 3 ? 'Concrete' : granularity === 4 ? 'Detailed' : 'Baby steps'}
+                </span>
+              </div>
+              <input type="range" min={1} max={5} step={1} value={granularity} onChange={(e) => setGranularity(Number(e.target.value))} className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-primary bg-surface-container-high" />
+              <div className="flex justify-between mt-1">
+                <span className="text-[10px] text-on-surface-variant/50">1</span>
+                <span className="text-[10px] text-on-surface-variant/50">5</span>
+              </div>
+            </div>
+            <button onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps&granularity=${granularity}`)} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">
+              <span className="font-medium">Micro-steps</span>
+              <p className="text-xs text-on-surface-variant mt-0.5">Break it into tiny, easy steps</p>
+            </button>
+            <button onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=gamify&granularity=${granularity}`)} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">
+              <span className="font-medium">Gamify it</span>
+              <p className="text-xs text-on-surface-variant mt-0.5">Make it fun and stimulating</p>
+            </button>
+            <button onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=transition-protocol&granularity=${granularity}`)} className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer">
+              <span className="font-medium">Transition protocol</span>
+              <p className="text-xs text-on-surface-variant mt-0.5">Gently shift out of freeze mode</p>
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+
+  const CompleteButton = () => (
+    <button
+      onClick={handleComplete}
+      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
+    >
+      <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M2.5 6L5 8.5L9.5 3.5" />
+      </svg>
+      Complete
+    </button>
+  )
+
   return (
     <div className="pb-24 md:pb-20">
       {/* Page header — back + overflow */}
       <div className="mb-6 flex items-center justify-between gap-4">
         <button
           onClick={handleBack}
-          className="p-2.5 -ml-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
-          aria-label="Back"
+          className="flex items-center gap-1.5 pl-1.5 pr-3 py-2 -ml-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+          aria-label={`Back to ${backInfo.label}`}
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
+          <span className="text-sm font-medium">{backInfo.label}</span>
         </button>
 
         {/* Overflow menu */}
@@ -402,119 +499,63 @@ export function TodoDetailPage() {
         )}
       </div>
 
-      {/* Sticky bottom action bar — sits above the mobile tab bar */}
+      {/* Sticky bottom action bar — sits above the mobile tab bar.
+          Action buttons are status-aware so the most useful next-step
+          decisions are always one tap away. */}
       <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 md:left-52 z-30 bg-surface/90 backdrop-blur-xl border-t border-outline-variant/15 md:pb-[env(safe-area-inset-bottom)]">
         <div className="max-w-2xl mx-auto px-5 md:px-10 py-3 flex items-center gap-2">
-          {/* Defer */}
-          <div className="relative">
-            <button
-              onClick={() => setShowDeferMenu(!showDeferMenu)}
-              className="flex items-center gap-1 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
-            >
-              Defer
-              <svg className="w-3 h-3 opacity-60" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M3 4.5L6 7.5L9 4.5" />
-              </svg>
-            </button>
-            {showDeferMenu && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowDeferMenu(false)} />
-                <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[160px]">
-                  <button
-                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, tomorrow()); handleBack() }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    Tomorrow
-                  </button>
-                  <button
-                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextWeek()); handleBack() }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    Next week
-                  </button>
-                  <button
-                    onClick={() => { setShowDeferMenu(false); deferTodo(todo.id, nextMonth()); handleBack() }}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    Next month
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Unstick Me */}
-          <div className="relative">
-            <button
-              onClick={() => setShowBreakdownPicker(!showBreakdownPicker)}
-              className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
-            >
-              <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M8 0l1.5 5.5L16 8l-6.5 2.5L8 16l-1.5-5.5L0 8l6.5-2.5z" />
-              </svg>
-              Unstick
-            </button>
-            {showBreakdownPicker && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setShowBreakdownPicker(false)} />
-                <div className="absolute left-0 bottom-full mb-1 z-50 bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/20 py-1.5 min-w-[260px]">
-                  <div className="px-4 pt-2 pb-3 border-b border-outline-variant/15">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-xs text-on-surface-variant font-medium">Detail level</label>
-                      <span className="text-xs text-on-surface-variant">
-                        {granularity === 1 ? 'Broad strokes' : granularity === 2 ? 'Overview' : granularity === 3 ? 'Concrete' : granularity === 4 ? 'Detailed' : 'Baby steps'}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={1}
-                      max={5}
-                      step={1}
-                      value={granularity}
-                      onChange={(e) => setGranularity(Number(e.target.value))}
-                      className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-primary bg-surface-container-high"
-                    />
-                    <div className="flex justify-between mt-1">
-                      <span className="text-[10px] text-on-surface-variant/50">1</span>
-                      <span className="text-[10px] text-on-surface-variant/50">5</span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=micro-steps&granularity=${granularity}`)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    <span className="font-medium">Micro-steps</span>
-                    <p className="text-xs text-on-surface-variant mt-0.5">Break it into tiny, easy steps</p>
-                  </button>
-                  <button
-                    onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=gamify&granularity=${granularity}`)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    <span className="font-medium">Gamify it</span>
-                    <p className="text-xs text-on-surface-variant mt-0.5">Make it fun and stimulating</p>
-                  </button>
-                  <button
-                    onClick={() => navigate(`/chat?mode=breakdown&todoId=${todo.id}&style=transition-protocol&granularity=${granularity}`)}
-                    className="w-full text-left px-4 py-2.5 text-sm text-on-surface hover:bg-surface-container-low transition-colors cursor-pointer"
-                  >
-                    <span className="font-medium">Transition protocol</span>
-                    <p className="text-xs text-on-surface-variant mt-0.5">Gently shift out of freeze mode</p>
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Complete (primary) */}
-          <button
-            onClick={handleComplete}
-            className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
-          >
-            <svg className="w-4 h-4" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <path d="M2.5 6L5 8.5L9.5 3.5" />
-            </svg>
-            Complete
-          </button>
+          {todo.status === 'inbox' ? (
+            <>
+              {/* Inbox triage: Pin to Today + Move to Backlog (primary) */}
+              <button
+                onClick={() => handleAction(() => pinToToday(todo.id))}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Today
+              </button>
+              <button
+                onClick={() => handleAction(() => moveToBacklog(todo.id))}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-semibold hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px]"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <line x1="8" y1="6" x2="21" y2="6" />
+                  <line x1="8" y1="12" x2="21" y2="12" />
+                  <line x1="8" y1="18" x2="21" y2="18" />
+                  <line x1="3" y1="6" x2="3.01" y2="6" />
+                  <line x1="3" y1="12" x2="3.01" y2="12" />
+                  <line x1="3" y1="18" x2="3.01" y2="18" />
+                </svg>
+                Move to Backlog
+              </button>
+            </>
+          ) : todo.status === 'backlog' || todo.status === 'deferred' ? (
+            <>
+              {/* Backlog: Pin to Today + Unstick + Complete (primary) */}
+              <button
+                onClick={() => handleAction(() => pinToToday(todo.id))}
+                className="flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-surface-container text-on-surface text-sm font-medium hover:bg-surface-container-high transition-colors cursor-pointer min-h-[44px]"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Today
+              </button>
+              <UnstickButton />
+              <CompleteButton />
+            </>
+          ) : (
+            <>
+              {/* Today (and any other status): Defer + Unstick + Complete */}
+              <DeferButton />
+              <UnstickButton />
+              <CompleteButton />
+            </>
+          )}
         </div>
       </div>
 
