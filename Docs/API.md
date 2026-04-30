@@ -55,6 +55,21 @@ X-API-Key: tempo_<prefix>_<random>
 
 Keys are generated via [`POST /api/api-keys`](#api-keys), hashed with SHA-256 before storage, and their `last_used_at` timestamp is updated on each successful call.
 
+### Scopes
+
+API keys carry a list of scopes that determine what they can do. Firebase ID tokens always have full access — scopes only apply to API keys.
+
+| Scope | Grants |
+|-------|--------|
+| `read` | `GET` on all resource routes |
+| `write` | Full CRUD on all resource routes (implies `read`) |
+| `ai` | `POST /api/anthropic/v1/messages` (gated separately because it spends money) |
+| `legacy` | Pre-scoping keys; treated as full access (`read` + `write` + `ai`) for back-compat. Rotate to a scoped key when convenient. |
+
+If a key lacks the scope required by a route, the API returns **`403 Forbidden`** with `{ "error": "Insufficient scope. ..." }`.
+
+API-key management routes (`/api/api-keys/*`) require **Firebase ID token auth** — an API key cannot mint or delete other API keys, regardless of scope. This prevents privilege escalation.
+
 ### Unauthenticated routes
 
 Only `/health` is public.
@@ -475,6 +490,8 @@ Server-side proxy to `api.anthropic.com`. Injects `ANTHROPIC_API_KEY` so the bro
 
 Manage long-lived keys for MCP / external integrations. Keys are hashed (SHA-256) before storage — the plaintext is **only** returned once, at creation.
 
+> **Auth requirement:** all `/api/api-keys/*` routes require a **Firebase ID token**. API keys cannot mint or delete other API keys.
+
 #### `GET /api/api-keys`
 List the user's keys. The `keyHash` is never returned; `keyPrefix` is a truncated preview for UI display.
 
@@ -484,6 +501,7 @@ List the user's keys. The `keyHash` is never returned; `keyPrefix` is a truncate
     "id": "uuid",
     "keyPrefix": "tempo_abcd1234_xx...",
     "name": "MCP",
+    "scopes": ["read", "write"],
     "createdAt": "2026-04-01T00:00:00Z",
     "lastUsedAt": "2026-04-22T10:00:00Z"
   }
@@ -493,7 +511,13 @@ List the user's keys. The `keyHash` is never returned; `keyPrefix` is a truncate
 #### `POST /api/api-keys`
 Create a key.
 
-**Body:** `{ "name": "MCP" }` (optional; defaults to `"Default"`)
+**Body:**
+```json
+{ "name": "MCP", "scopes": ["read", "write"] }
+```
+
+- `name` — optional; defaults to `"Default"`.
+- `scopes` — array of `"read" | "write" | "ai"`. Defaults to `["read"]` if omitted (least privilege). Invalid entries are silently dropped.
 
 **201 Created**
 ```json
@@ -502,6 +526,7 @@ Create a key.
   "key": "tempo_abcd1234_randomrandomrandom",
   "keyPrefix": "tempo_abcd1234_xx...",
   "name": "MCP",
+  "scopes": ["read", "write"],
   "createdAt": "2026-04-22T10:00:00Z"
 }
 ```
@@ -559,7 +584,9 @@ Errors are returned as JSON with an `error` string.
 |--------|---------|
 | `400` | Validation error (e.g. empty project name, mood out of range) |
 | `401` | Missing, invalid, or expired credentials |
+| `403` | Authenticated but lacking the required scope (or attempting to use an API key on `/api/api-keys/*`) |
 | `404` | Resource not found or not owned by the authenticated user |
+| `429` | Rate limit exceeded (see `RateLimit-*` headers for the policy and reset time) |
 | `500` | Server misconfiguration (e.g. missing `ANTHROPIC_API_KEY`) |
 | `502` | Upstream service unreachable (Anthropic proxy only) |
 

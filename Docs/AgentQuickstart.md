@@ -33,10 +33,22 @@ If your agent speaks MCP, use MCP. The tool schemas do the hard work for you.
 
 1. Sign in to [tempo.designbyjohnwayne.com](https://tempo.designbyjohnwayne.com).
 2. Open **Settings → API Keys**.
-3. Click **Create Key**, give it a name (e.g. "My agent").
+3. Click **Create Key**, give it a name (e.g. "My agent"), and pick scopes.
 4. Copy the `tempo_...` string immediately — it's only shown once.
 
 Keys are SHA-256 hashed server-side. If you lose it, revoke and re-create.
+
+### Choosing scopes
+
+| Scope | What the key can do | When to grant |
+|-------|---------------------|---------------|
+| `read` | `GET` everything | Read-only agents (summarize, plan, report) |
+| `write` | Full CRUD (implies `read`) | Agents that create or modify todos, notes, etc. |
+| `ai` | Use Tempo's Anthropic proxy | Only if the agent needs Tempo to call Claude on its behalf — costs real money |
+
+**Default is `read` only.** Opt into `write` or `ai` when you need them. You cannot create new keys using an existing API key — key management requires browser sign-in.
+
+If a request hits a route your key isn't scoped for, you'll get **`403 Forbidden`** with an explanation in the body.
 
 ---
 
@@ -131,13 +143,14 @@ When in doubt, default to `status: "inbox"`. The user triages from there.
 
 ---
 
-## Rate limits & quotas
+## Rate limits
 
-*(Not yet enforced — coming soon.)* Plan for:
-- Per-key request rate limit
-- Per-user Anthropic proxy quota (if you use `/api/anthropic/v1/messages`)
+Enforced today:
+- **100 req/min per IP** (pre-auth) — blunts brute-force attempts on keys
+- **300 req/min per user** (post-auth) — caps valid-credential abuse
+- **30 req/min per user** on `/api/anthropic/v1/messages` — AI calls are expensive
 
-Design your agent to handle `429 Too Many Requests` with exponential backoff.
+Every `/api/*` response includes RFC-standard `RateLimit-*` headers. Design your agent to handle `429 Too Many Requests` with exponential backoff.
 
 ---
 

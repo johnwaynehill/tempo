@@ -4,6 +4,7 @@ import cors from 'cors'
 import admin from 'firebase-admin'
 import { authenticate } from './middleware/auth.js'
 import { ipRateLimit, userRateLimit, anthropicRateLimit } from './middleware/rate-limit.js'
+import { requireScope, requireMethodScope, requireFirebaseAuth } from './middleware/scopes.js'
 import todosRouter from './routes/todos.js'
 import notesRouter from './routes/notes.js'
 import habitsRouter from './routes/habits.js'
@@ -78,21 +79,27 @@ app.get('/health', (_req, res) => {
 // User-based limit runs after auth for higher-signal per-account throttling.
 app.use('/api', ipRateLimit, authenticate, userRateLimit)
 
-app.use('/api/todos', todosRouter)
-app.use('/api/notes', notesRouter)
-app.use('/api/habits', habitsRouter)
-app.use('/api/events', eventsRouter)
-app.use('/api/preferences', preferencesRouter)
-app.use('/api/today-set', todaySetRouter)
-app.use('/api/reviews', reviewsRouter)
-app.use('/api/api-keys', apiKeysRouter)
-app.use('/api/anthropic', anthropicRateLimit, anthropicRouter)
-app.use('/api/conversations', conversationsRouter)
-app.use('/api/projects', projectsRouter)
-app.use('/api/playlists', playlistsRouter)
-app.use('/api/mood', moodRouter)
-app.use('/api/mcp-oauth', mcpOauthRouter)
-app.use('/api/auth', authRouter)
+// Resource routers — GET requires 'read', writes require 'write'.
+app.use('/api/todos', requireMethodScope, todosRouter)
+app.use('/api/notes', requireMethodScope, notesRouter)
+app.use('/api/habits', requireMethodScope, habitsRouter)
+app.use('/api/events', requireMethodScope, eventsRouter)
+app.use('/api/preferences', requireMethodScope, preferencesRouter)
+app.use('/api/today-set', requireMethodScope, todaySetRouter)
+app.use('/api/reviews', requireMethodScope, reviewsRouter)
+app.use('/api/conversations', requireMethodScope, conversationsRouter)
+app.use('/api/projects', requireMethodScope, projectsRouter)
+app.use('/api/playlists', requireMethodScope, playlistsRouter)
+app.use('/api/mood', requireMethodScope, moodRouter)
+app.use('/api/mcp-oauth', requireMethodScope, mcpOauthRouter)
+app.use('/api/auth', requireMethodScope, authRouter)
+
+// Anthropic proxy is gated on the 'ai' scope (separate from read/write because it spends money).
+app.use('/api/anthropic', requireScope('ai'), anthropicRateLimit, anthropicRouter)
+
+// API-key management is privileged — only the user (via Firebase auth) can mint or revoke keys.
+// This prevents a 'write'-scoped key from minting an 'ai' key for itself.
+app.use('/api/api-keys', requireFirebaseAuth, apiKeysRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Tempo API running on port ${port}`)

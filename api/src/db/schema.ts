@@ -209,12 +209,18 @@ export const mcpOauthState = pgTable('mcp_oauth_state', {
 
 // --- API Keys ---
 
+// Scopes:
+//   'read'   — GET on resource routes
+//   'write'  — full CRUD on resource routes (implies read)
+//   'ai'     — POST /api/anthropic/v1/messages (gated separately because it costs money)
+//   'legacy' — pre-scoping keys; treated as full access for backwards compat
 export const apiKeys = pgTable('api_keys', {
   id: uuid('id').primaryKey().defaultRandom(),
   userId: text('user_id').notNull(),
   keyHash: text('key_hash').notNull().unique(),
   keyPrefix: text('key_prefix').notNull(),
   name: text('name').notNull().default('Default'),
+  scopes: text('scopes').array().notNull().default(['legacy']),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
 })

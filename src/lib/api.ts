@@ -224,8 +224,8 @@ export const api = {
   },
   apiKeys: {
     list: () => apiFetch<Record<string, unknown>[]>('/api/api-keys'),
-    create: (name: string) => apiFetch<Record<string, unknown>>('/api/api-keys', {
-      method: 'POST', body: JSON.stringify({ name }),
+    create: (name: string, scopes: string[]) => apiFetch<Record<string, unknown>>('/api/api-keys', {
+      method: 'POST', body: JSON.stringify({ name, scopes }),
     }),
     delete: (id: string) => apiFetch<void>(`/api/api-keys/${id}`, { method: 'DELETE' }),
   },
