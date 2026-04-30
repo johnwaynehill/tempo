@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-04-23
+- Add scope-based authorization for API keys — `read`, `write`, and `ai` scopes; existing keys default to `legacy` (full access) for migration safety; insufficient scope returns 403; `/api/api-keys/*` routes now require Firebase auth (API keys cannot mint or revoke other API keys). Settings UI shows scope checkboxes on create and badges per existing key. **Deploy step:** run `npm --prefix api run db:push` to add the `scopes` column.
+
 ## 2026-04-22
 - Add API documentation (`Docs/API.md`) and agent integration quickstart (`Docs/AgentQuickstart.md`)
 - Add rate limiting to the API — IP-based pre-auth (100 req/min), user-based post-auth (300 req/min), and stricter per-user limit on the Anthropic proxy (30 req/min); standard RFC `RateLimit-*` headers on all responses

@@ -22,9 +22,11 @@ export function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'updating'>('idle')
-  const [apiKeys, setApiKeys] = useState<{ id: string; keyPrefix: string; name: string; createdAt: string; lastUsedAt: string | null }[]>([])
+  const [apiKeys, setApiKeys] = useState<{ id: string; keyPrefix: string; name: string; scopes: string[]; createdAt: string; lastUsedAt: string | null }[]>([])
   const [apiKeysLoading, setApiKeysLoading] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
+  // Default new keys to read-only — least privilege. Users opt into write/ai.
+  const [newKeyScopes, setNewKeyScopes] = useState<string[]>(['read'])
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [showApiKeys, setShowApiKeys] = useState(false)
@@ -44,11 +46,19 @@ export function SettingsPage() {
 
   const handleCreateApiKey = async () => {
     const name = newKeyName.trim() || 'Default'
-    const result = await api.apiKeys.create(name) as { key: string }
+    const scopes = newKeyScopes.length > 0 ? newKeyScopes : ['read']
+    const result = await api.apiKeys.create(name, scopes) as { key: string }
     setCreatedKey(result.key)
     setNewKeyName('')
+    setNewKeyScopes(['read'])
     setCopiedKey(null)
     await loadApiKeys()
+  }
+
+  const toggleNewKeyScope = (scope: string) => {
+    setNewKeyScopes((prev) =>
+      prev.includes(scope) ? prev.filter((s) => s !== scope) : [...prev, scope],
+    )
   }
 
   const handleDeleteApiKey = async (id: string) => {
@@ -421,21 +431,50 @@ export function SettingsPage() {
           {showApiKeys && (
             <>
               {/* Create new key */}
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  value={newKeyName}
-                  onChange={(e) => setNewKeyName(e.target.value)}
-                  placeholder="Key name (e.g. Work laptop)"
-                  className="flex-1 bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none"
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateApiKey()}
-                />
-                <button
-                  onClick={handleCreateApiKey}
-                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer"
-                >
-                  Create
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newKeyName}
+                    onChange={(e) => setNewKeyName(e.target.value)}
+                    placeholder="Key name (e.g. Work laptop)"
+                    className="flex-1 bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateApiKey()}
+                  />
+                  <button
+                    onClick={handleCreateApiKey}
+                    disabled={newKeyScopes.length === 0}
+                    className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Create
+                  </button>
+                </div>
+                {/* Scope picker */}
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <span className="text-on-surface-variant text-xs mr-1">Scopes:</span>
+                  {([
+                    { id: 'read', label: 'Read', help: 'GET on all resources' },
+                    { id: 'write', label: 'Write', help: 'Create / update / delete (implies read)' },
+                    { id: 'ai', label: 'AI', help: 'Tempo AI proxy — costs money per call' },
+                  ] as const).map((scope) => {
+                    const selected = newKeyScopes.includes(scope.id)
+                    return (
+                      <button
+                        key={scope.id}
+                        type="button"
+                        onClick={() => toggleNewKeyScope(scope.id)}
+                        title={scope.help}
+                        className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors duration-200 cursor-pointer ${
+                          selected
+                            ? 'bg-primary text-on-primary'
+                            : 'bg-surface-container text-on-surface-variant hover:text-on-surface'
+                        }`}
+                      >
+                        {scope.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
               {/* Newly created key (show once) */}
@@ -498,25 +537,47 @@ export function SettingsPage() {
                 <p className="text-on-surface-variant text-xs">No API keys yet</p>
               ) : (
                 <div className="space-y-2">
-                  {apiKeys.map((k) => (
-                    <div key={k.id} className="flex items-center justify-between bg-surface-container rounded-lg px-3 py-2">
-                      <div>
-                        <p className="text-on-surface text-sm font-medium">{k.name}</p>
-                        <p className="text-on-surface-variant text-xs font-mono">{k.keyPrefix}</p>
-                        <p className="text-on-surface-variant text-xs mt-0.5">
-                          {k.lastUsedAt
-                            ? `Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
-                            : 'Never used'}
-                        </p>
+                  {apiKeys.map((k) => {
+                    const isLegacy = k.scopes?.includes('legacy')
+                    return (
+                      <div key={k.id} className="flex items-center justify-between bg-surface-container rounded-lg px-3 py-2 gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <p className="text-on-surface text-sm font-medium">{k.name}</p>
+                            {(k.scopes ?? []).map((s) => (
+                              <span
+                                key={s}
+                                className={`px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide ${
+                                  s === 'legacy'
+                                    ? 'bg-amber-500/20 text-amber-700 dark:text-amber-300'
+                                    : s === 'ai'
+                                      ? 'bg-amber-500/15 text-amber-700 dark:text-amber-300'
+                                      : s === 'write'
+                                        ? 'bg-primary/15 text-primary'
+                                        : 'bg-surface-container-high text-on-surface-variant'
+                                }`}
+                              >
+                                {s}
+                              </span>
+                            ))}
+                          </div>
+                          <p className="text-on-surface-variant text-xs font-mono mt-0.5">{k.keyPrefix}</p>
+                          <p className="text-on-surface-variant text-xs mt-0.5">
+                            {k.lastUsedAt
+                              ? `Last used ${new Date(k.lastUsedAt).toLocaleDateString()}`
+                              : 'Never used'}
+                            {isLegacy && ' · Full access — rotate when convenient'}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteApiKey(k.id)}
+                          className="px-3 py-1 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer shrink-0"
+                        >
+                          Delete
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleDeleteApiKey(k.id)}
-                        className="px-3 py-1 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </>

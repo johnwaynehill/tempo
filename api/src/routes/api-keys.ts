@@ -5,6 +5,19 @@ import { db, schema } from '../db/index.js'
 
 const router = Router()
 
+const VALID_SCOPES = new Set(['read', 'write', 'ai'])
+
+/** Validate and normalize a scope array from a request body. */
+function normalizeScopes(input: unknown): string[] | null {
+  if (!Array.isArray(input)) return null
+  const cleaned = input
+    .filter((s): s is string => typeof s === 'string')
+    .map((s) => s.trim().toLowerCase())
+    .filter((s) => VALID_SCOPES.has(s))
+  if (cleaned.length === 0) return null
+  return Array.from(new Set(cleaned))
+}
+
 // List API keys (without hashes)
 router.get('/', async (req, res) => {
   const rows = await db
@@ -12,6 +25,7 @@ router.get('/', async (req, res) => {
       id: schema.apiKeys.id,
       keyPrefix: schema.apiKeys.keyPrefix,
       name: schema.apiKeys.name,
+      scopes: schema.apiKeys.scopes,
       createdAt: schema.apiKeys.createdAt,
       lastUsedAt: schema.apiKeys.lastUsedAt,
     })
@@ -23,8 +37,11 @@ router.get('/', async (req, res) => {
 
 // Create a new API key — returns the full key ONCE
 router.post('/', async (req, res) => {
-  const { name } = req.body as { name?: string }
+  const { name, scopes: scopesInput } = req.body as { name?: string; scopes?: unknown }
   const uid = req.userId!
+
+  // Default new keys to ['read'] — least-privilege. Caller must opt into write/ai.
+  const scopes = normalizeScopes(scopesInput) ?? ['read']
 
   // Generate key: tempo_{uid-prefix}_{random}
   const random = randomBytes(24).toString('base64url')
@@ -34,7 +51,7 @@ router.post('/', async (req, res) => {
 
   const [row] = await db
     .insert(schema.apiKeys)
-    .values({ userId: uid, keyHash, keyPrefix, name: name || 'Default' })
+    .values({ userId: uid, keyHash, keyPrefix, name: name || 'Default', scopes })
     .returning()
 
   // Return the full key only on creation
@@ -43,6 +60,7 @@ router.post('/', async (req, res) => {
     key,
     keyPrefix,
     name: row.name,
+    scopes: row.scopes,
     createdAt: row.createdAt,
   })
 })
