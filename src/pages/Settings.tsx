@@ -22,7 +22,8 @@ export function SettingsPage() {
   const [exporting, setExporting] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'up-to-date' | 'updating'>('idle')
-  const [apiKeys, setApiKeys] = useState<{ id: string; keyPrefix: string; name: string; scopes: string[]; createdAt: string; lastUsedAt: string | null }[]>([])
+  type ApiKeyRow = { id: string; keyPrefix: string; name: string; scopes: string[]; createdAt: string; lastUsedAt: string | null }
+  const [apiKeys, setApiKeys] = useState<ApiKeyRow[]>([])
   const [apiKeysLoading, setApiKeysLoading] = useState(false)
   const [newKeyName, setNewKeyName] = useState('')
   // Default new keys to read-only — least privilege. Users opt into write/ai.
@@ -30,6 +31,9 @@ export function SettingsPage() {
   const [createdKey, setCreatedKey] = useState<string | null>(null)
   const [copiedKey, setCopiedKey] = useState<string | null>(null)
   const [showApiKeys, setShowApiKeys] = useState(false)
+  const [keyToRevoke, setKeyToRevoke] = useState<ApiKeyRow | null>(null)
+  const [revokingId, setRevokingId] = useState<string | null>(null)
+  const [revokeError, setRevokeError] = useState<string | null>(null)
 
   const loadApiKeys = useCallback(async () => {
     setApiKeysLoading(true)
@@ -61,9 +65,20 @@ export function SettingsPage() {
     )
   }
 
-  const handleDeleteApiKey = async (id: string) => {
-    await api.apiKeys.delete(id)
-    await loadApiKeys()
+  const handleConfirmRevoke = async () => {
+    if (!keyToRevoke) return
+    const id = keyToRevoke.id
+    setRevokingId(id)
+    setRevokeError(null)
+    try {
+      await api.apiKeys.delete(id)
+      setKeyToRevoke(null)
+      await loadApiKeys()
+    } catch (err) {
+      setRevokeError(err instanceof Error ? err.message : 'Failed to revoke key')
+    } finally {
+      setRevokingId(null)
+    }
   }
 
   const handleCopyKey = async (text: string, label: string) => {
@@ -570,10 +585,11 @@ export function SettingsPage() {
                           </p>
                         </div>
                         <button
-                          onClick={() => handleDeleteApiKey(k.id)}
-                          className="px-3 py-1 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer shrink-0"
+                          onClick={() => { setRevokeError(null); setKeyToRevoke(k) }}
+                          disabled={revokingId === k.id}
+                          className="px-3 py-1 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                          Delete
+                          {revokingId === k.id ? 'Revoking…' : 'Revoke'}
                         </button>
                       </div>
                     )
@@ -587,6 +603,55 @@ export function SettingsPage() {
 
       {showImportModal && (
         <CodaImportModal onClose={() => setShowImportModal(false)} />
+      )}
+
+      {/* Revoke API key confirmation */}
+      {keyToRevoke && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          onClick={() => revokingId === null && setKeyToRevoke(null)}
+        >
+          <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm" />
+          <div
+            className="relative bg-surface-container-lowest rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="font-display text-lg font-semibold text-on-surface mb-2">
+              Revoke API key?
+            </h2>
+            <p className="text-on-surface-variant text-sm mb-2">
+              <span className="font-medium text-on-surface">{keyToRevoke.name}</span>{' '}
+              <span className="font-mono text-xs">({keyToRevoke.keyPrefix})</span>
+            </p>
+            <p className="text-on-surface-variant text-sm mb-1">
+              {keyToRevoke.lastUsedAt
+                ? `Last used ${new Date(keyToRevoke.lastUsedAt).toLocaleDateString()}.`
+                : 'Never used.'}
+            </p>
+            <p className="text-on-surface-variant text-sm mb-6">
+              Any agent or script using this key will start getting <code className="font-mono text-xs">401 Unauthorized</code> immediately. This can&rsquo;t be undone — you&rsquo;ll need to issue a new key and update the consumer.
+            </p>
+            {revokeError && (
+              <p className="text-red-500 text-xs mb-4">{revokeError}</p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setKeyToRevoke(null)}
+                disabled={revokingId !== null}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmRevoke}
+                disabled={revokingId !== null}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-error text-on-primary hover:bg-error/90 transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {revokingId !== null ? 'Revoking…' : 'Revoke'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

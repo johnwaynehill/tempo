@@ -157,7 +157,7 @@ Every `/api/*` response includes RFC-standard `RateLimit-*` headers. Design your
 ## Revoking a key
 
 If a key leaks:
-1. **Tempo app → Settings → API Keys → Delete.**
+1. **Tempo app → Settings → API Keys → Revoke** (asks for confirmation).
 2. Create a fresh one.
 
 All active requests using the old key will immediately start failing with `401`.
