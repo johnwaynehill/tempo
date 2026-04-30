@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-04-23
+- Polish API-key revocation UX — confirmation modal with key name, last-used date, and an explicit warning about consumers getting `401` immediately; "Delete" renamed to "Revoke" throughout; in-flight loading state and inline error display
 - Add scope-based authorization for API keys — `read`, `write`, and `ai` scopes; existing keys default to `legacy` (full access) for migration safety; insufficient scope returns 403; `/api/api-keys/*` routes now require Firebase auth (API keys cannot mint or revoke other API keys). Settings UI shows scope checkboxes on create and badges per existing key. **Deploy step:** run `npm --prefix api run db:push` to add the `scopes` column.
 
 ## 2026-04-22
