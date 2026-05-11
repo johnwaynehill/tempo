@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-04-24
+- Fix iOS auto-zoom on form-field focus — global CSS rule forces 16px on all `input`/`textarea`/`select` under the mobile breakpoint (768px). Replaces the per-input `text-base` patch from #31, which kept regressing whenever new inputs were added at `text-sm`. Desktop styling is unchanged.
+
 ## 2026-04-23
 - Polish API-key revocation UX — confirmation modal with key name, last-used date, and an explicit warning about consumers getting `401` immediately; "Delete" renamed to "Revoke" throughout; in-flight loading state and inline error display
 - Add scope-based authorization for API keys — `read`, `write`, and `ai` scopes; existing keys default to `legacy` (full access) for migration safety; insufficient scope returns 403; `/api/api-keys/*` routes now require Firebase auth (API keys cannot mint or revoke other API keys). Settings UI shows scope checkboxes on create and badges per existing key. **Deploy step:** run `npm --prefix api run db:push` to add the `scopes` column.

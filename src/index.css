@@ -515,6 +515,22 @@ html {
   }
 }
 
+/* --- iOS input auto-zoom prevention ---
+   Mobile Safari (and a few other mobile browsers) auto-zoom the page whenever
+   a form field with font-size < 16px gains focus. The previous fix from #31
+   patched specific inputs to `text-base`, but it doesn't survive new code —
+   every input/textarea added since landed at `text-sm` and re-triggered the
+   bug. This rule forces 16px on all form fields under the mobile breakpoint,
+   regardless of what Tailwind class is applied. `!important` overrides the
+   utility classes; on desktop the design stays untouched. */
+@media (max-width: 767px) {
+  input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']):not([type='color']),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+
 /* --- Range slider (granularity) --- */
 
 input[type='range'] {
