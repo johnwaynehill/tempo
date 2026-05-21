@@ -1,5 +1,14 @@
 # Changelog
 
+## 2026-05-21
+- Mobile UX overhaul for Project + Due date inputs on the todo capture/edit flows:
+  - **Quick-capture drawer** now uses `ProjectChips` — flat one-tap chips for existing projects instead of an anchored typeahead. Tap a chip to assign, tap again to clear. No menu, no keyboard fight.
+  - **Todo detail page** now opens a bottom sheet (mobile) / centered modal (desktop) when picking a project — replaces the anchored popover that fought iOS Safari over positioning. Search input inside, "Create new" option when query doesn't match, ↑/↓/Enter/Esc keyboard nav.
+  - **`DateField` component** replaces every `<input type="date">` in the todo forms. Renders a styled button with a transparent native input layered on top, so iOS Safari opens its native picker on tap while we control every visible pixel. Adds an explicit `showPicker()` call on click for Firefox/Chrome desktop, which don't auto-open from a click on the input element.
+  - Global CSS rule forces `font-size: 16px` on `input`/`textarea`/`select` under 768px, replacing the per-input `text-base` patch from #31 that kept regressing. Prevents iOS Safari from auto-zooming on focus.
+  - `color-scheme: light` / `dark` on `:root` / `[data-theme='dark']` so native form controls (date placeholders, calendar icons, scrollbars) render correctly in both themes — previously the date input's iOS-rendered placeholder was invisible in dark mode.
+- Dev workflow: `vite.config.ts` now proxies all `/api/*` calls to `VITE_API_URL` (defaults to `localhost:3001`), and the frontend uses an empty `API_BASE` in dev so requests stay same-origin. Makes phone-on-LAN testing work without adding LAN IPs to the production API's CORS allowlist.
+
 ## 2026-04-23
 - Polish API-key revocation UX — confirmation modal with key name, last-used date, and an explicit warning about consumers getting `401` immediately; "Delete" renamed to "Revoke" throughout; in-flight loading state and inline error display
 - Add scope-based authorization for API keys — `read`, `write`, and `ai` scopes; existing keys default to `legacy` (full access) for migration safety; insufficient scope returns 403; `/api/api-keys/*` routes now require Firebase auth (API keys cannot mint or revoke other API keys). Settings UI shows scope checkboxes on create and badges per existing key. **Deploy step:** run `npm --prefix api run db:push` to add the `scopes` column.
