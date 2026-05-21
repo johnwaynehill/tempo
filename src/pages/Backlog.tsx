@@ -1,4 +1,5 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
 import { MenuButton } from '@/components/ui/MenuButton'
@@ -81,14 +82,42 @@ export function BacklogPage() {
   const { backlog, completeTodo, deferTodo, loading } = useTodos()
   const { projects, projectCounts } = useProjects()
   const { preferences } = usePreferences()
-  const [viewMode, setViewMode] = useState<ViewMode>('list')
-  const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(undefined)
-  const [projectFilter, setProjectFilter] = useState<string | undefined>(undefined)
+
+  // Filter/sort/view state is mirrored to URL search params so that navigating
+  // away (e.g. into a todo detail) and back via `navigate(-1)` restores the
+  // exact filter context. Also makes filtered views URL-shareable.
+  const [searchParams, setSearchParams] = useSearchParams()
+
+  const [viewMode, setViewMode] = useState<ViewMode>(
+    () => (searchParams.get('view') === 'calendar' ? 'calendar' : 'list'),
+  )
+  const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(() => {
+    const v = searchParams.get('energy')
+    return v && (ENERGY_LEVELS as readonly string[]).includes(v) ? (v as EnergyLevel) : undefined
+  })
+  const [projectFilter, setProjectFilter] = useState<string | undefined>(
+    () => searchParams.get('project') ?? undefined,
+  )
+  const [sortMode, setSortMode] = useState<SortMode>(() => {
+    const v = searchParams.get('sort')
+    return v === 'due' || v === 'recent' ? v : 'score'
+  })
+
+  // Sync state back to URL — `replace: true` so toggling a filter doesn't
+  // pollute history. Default values are omitted to keep the URL clean.
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (energyFilter) params.set('energy', energyFilter)
+    if (projectFilter) params.set('project', projectFilter)
+    if (sortMode !== 'score') params.set('sort', sortMode)
+    if (viewMode !== 'list') params.set('view', viewMode)
+    setSearchParams(params, { replace: true })
+  }, [energyFilter, projectFilter, sortMode, viewMode, setSearchParams])
+
   const { newTodo, createTodo, closeNewTodo } = useNewTodo('backlog', {
     project: projectFilter,
     energy_level: energyFilter,
   })
-  const [sortMode, setSortMode] = useState<SortMode>('score')
   const [energyOpen, setEnergyOpen] = useState(false)
   const [sortOpen, setSortOpen] = useState(false)
   const [projectOpen, setProjectOpen] = useState(false)

@@ -80,6 +80,22 @@ export function TodoDetailPage() {
     else navigate(backInfo.path)
   }
 
+  // Esc closes the page (and goes back to the previous view, preserving any
+  // search-param state on the source — e.g. filters on Backlog). Skipped when
+  // a modal/menu is open so the inner Esc handler closes that first.
+  useEffect(() => {
+    const anyOverlayOpen =
+      showDeferMenu || showOverflowMenu || showRecurrencePicker
+      || showReminderPicker || showNotePicker || showBreakdownPicker
+    if (anyOverlayOpen) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleBack()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showDeferMenu, showOverflowMenu, showRecurrencePicker, showReminderPicker, showNotePicker, showBreakdownPicker, navigate, backInfo.path])
+
   const handleComplete = () => {
     if (!todo) return
     completeTodo(todo.id)

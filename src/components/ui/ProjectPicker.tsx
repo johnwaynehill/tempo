@@ -49,12 +49,20 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
     return () => { document.body.style.overflow = prev }
   }, [open])
 
-  // Close on Escape (in addition to the input's own keydown)
+  // Close on Escape. Registered in the capture phase with
+  // `stopImmediatePropagation` so the page-level Esc handler (e.g. on
+  // TodoDetailPage, which navigates back) doesn't also fire — Esc should
+  // close one layer at a time.
   useEffect(() => {
     if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation()
+        setOpen(false)
+      }
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
   }, [open])
 
   const filtered = useMemo(() => {
