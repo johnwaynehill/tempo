@@ -9,6 +9,7 @@ import { LinkPicker } from '@/components/ui/LinkPicker'
 import { ReminderPicker } from '@/components/ui/ReminderPicker'
 import { RecurrencePicker } from '@/components/ui/RecurrencePicker'
 import { ProjectPicker } from '@/components/ui/ProjectPicker'
+import { DateField } from '@/components/ui/DateField'
 import { describeRecurrence } from '@/lib/recurrence'
 
 const SIZE_LABELS: Record<TodoSize, string> = {
@@ -464,11 +465,9 @@ export function TodoDetailPage() {
             </div>
             <div>
               <label className="text-xs text-on-surface-variant mb-2 block font-medium">Due date</label>
-              <input
-                type="date"
-                defaultValue={todo.due_date?.toISOString().split('T')[0] ?? ''}
-                onChange={(e) => setField('due_date', e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
-                className="w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-sm outline-none min-h-[44px] max-w-full"
+              <DateField
+                value={todo.due_date ?? null}
+                onChange={(date) => setField('due_date', date)}
               />
             </div>
           </div>

@@ -1,6 +1,12 @@
 import { auth } from '@/lib/firebase'
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://tempo-api-production.up.railway.app'
+// In dev, always go same-origin so requests route through Vite's proxy
+// (see vite.config.ts). The proxy's target is read from VITE_API_URL there.
+// This means phone-on-LAN testing works without adding LAN IPs to the API's
+// CORS allowlist — the phone only ever talks to the Vite dev server.
+const API_BASE = import.meta.env.DEV
+  ? ''
+  : (import.meta.env.VITE_API_URL ?? 'https://tempo-api-production.up.railway.app')
 const DEV_AUTH_TOKEN = import.meta.env.VITE_DEV_AUTH_TOKEN as string | undefined
 const API_KEY_STORAGE_KEY = 'tempo_api_key'
 

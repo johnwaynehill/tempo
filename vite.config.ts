@@ -1,9 +1,15 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-export default defineConfig({
+export default defineConfig(({ mode }) => {
+  const env = loadEnv(mode, process.cwd(), '')
+  // Proxy target for /api/* in dev. Defaults to the local API server.
+  // Set VITE_API_URL in your .env to point elsewhere (e.g. the production API).
+  const apiTarget = env.VITE_API_URL || 'http://localhost:3001'
+
+  return {
   plugins: [
     react(),
     tailwindcss(),
@@ -77,11 +83,23 @@ export default defineConfig({
   },
   server: {
     proxy: {
+      // Direct passthrough to Anthropic for local dev — bypasses the prod proxy.
+      // (Order matters: this MUST come before the catch-all `/api` rule below
+      // so the more specific path wins.)
       '/api/anthropic': {
         target: 'https://api.anthropic.com',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
       },
+      // Forward all other `/api/*` calls to VITE_API_URL (default: local API
+      // on :3001). The frontend always uses same-origin paths in dev, so this
+      // proxy is the only thing that reaches the upstream API. Keeps phone-on-
+      // LAN testing CORS-free since the phone only ever talks to Vite.
+      '/api': {
+        target: apiTarget,
+        changeOrigin: true,
+      },
     },
   },
+  }
 })

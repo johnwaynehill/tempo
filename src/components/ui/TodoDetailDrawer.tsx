@@ -3,7 +3,8 @@ import type { Todo } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useProjects } from '@/hooks/useProjects'
 import { useSmartCapture } from '@/hooks/useSmartCapture'
-import { ProjectPicker } from '@/components/ui/ProjectPicker'
+import { ProjectChips } from '@/components/ui/ProjectChips'
+import { DateField } from '@/components/ui/DateField'
 import { SmartCaptureSuggestions } from '@/components/ui/SmartCaptureSuggestions'
 
 interface TodoDetailDrawerProps {
@@ -178,25 +179,29 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
             />
           )}
 
-          {/* Project + Due date */}
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            <div>
-              <label className="text-xs text-on-surface-variant mb-1.5 block font-medium">Project</label>
-              <ProjectPicker
-                value={todo.project ?? null}
-                projects={projects}
-                onChange={(project) => setField('project', project)}
-              />
-            </div>
-            <div>
-              <label className="text-xs text-on-surface-variant mb-1.5 block font-medium">Due date</label>
-              <input
-                type="date"
-                defaultValue={todo.due_date?.toISOString().split('T')[0] ?? ''}
-                onChange={(e) => setField('due_date', e.target.value ? new Date(e.target.value + 'T00:00:00') : null)}
-                className="w-full bg-surface-container rounded-lg px-3 py-2.5 text-on-surface text-sm outline-none min-h-[44px] max-w-full"
-              />
-            </div>
+          {/* Project — flat chip selection for one-tap assignment. Quick
+              capture is meant to be fast; a menu/popover would add a tap
+              and (on iOS) wrestle with the keyboard. Stacked single-column
+              on every viewport so chips can wrap freely without unbalancing
+              against a side-by-side Due date. */}
+          <div>
+            <label className="text-xs text-on-surface-variant mb-1.5 block font-medium">Project</label>
+            <ProjectChips
+              value={todo.project ?? null}
+              projects={projects}
+              onChange={(project) => setField('project', project)}
+            />
+          </div>
+
+          {/* Due date — DateField wraps the native picker in our own UI so
+              it respects theme, sizing, and dark mode reliably. See the
+              DateField component for the full rationale. */}
+          <div>
+            <label className="text-xs text-on-surface-variant mb-1.5 block font-medium">Due date</label>
+            <DateField
+              value={todo.due_date ?? null}
+              onChange={(date) => setField('due_date', date)}
+            />
           </div>
 
           {/* Bottom actions */}

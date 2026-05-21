@@ -49,6 +49,10 @@
 
 /* --- Chip Colors (in :root, not @theme — numeric segments break Tailwind v4 @theme) --- */
 :root {
+  /* Default to the light color scheme for native form controls. Overridden
+     to `dark` under [data-theme='dark'] below. */
+  color-scheme: light;
+
   /* Project Palette */
   --color-project-0-bg: #c0d8d0;
   --color-project-0-fg: #3a5248;
@@ -101,6 +105,12 @@
 /* --- Dark Theme --- */
 
 [data-theme='dark'] {
+  /* Tells the browser to render native form controls (date pickers,
+     placeholders, scrollbars, etc.) in their dark-mode variant. Without
+     this, iOS Safari renders the `input[type='date']` placeholder and
+     calendar icon in dark-on-dark and they disappear. */
+  color-scheme: dark;
+
   --color-surface: #1a1c1b;
   --color-surface-container-lowest: #111312;
   --color-surface-container-low: #1f2120;
