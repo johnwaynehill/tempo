@@ -53,13 +53,17 @@ export function ReminderPicker({ currentReminder, onSet, onClear, onClose }: Rem
   const [customDate, setCustomDate] = useState<Date | null>(null)
   const [customTime, setCustomTime] = useState('09:00')
 
-  // Close on Escape
+  // Close on Escape. Capture phase + `stopImmediatePropagation` so a parent
+  // page's Esc handler doesn't also fire (e.g. TodoDetailPage's Esc-to-go-back).
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        e.stopImmediatePropagation()
+        onClose()
+      }
     }
-    window.addEventListener('keydown', handler)
-    return () => window.removeEventListener('keydown', handler)
+    window.addEventListener('keydown', handler, true)
+    return () => window.removeEventListener('keydown', handler, true)
   }, [onClose])
 
   // Lock body scroll while open

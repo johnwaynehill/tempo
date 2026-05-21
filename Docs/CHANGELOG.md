@@ -1,6 +1,9 @@
 # Changelog
 
 ## 2026-05-21
+- Backlog filter persistence + Esc-to-close on Todo detail. The Backlog page now syncs its energy/project/sort/view state to URL search params, so opening a todo and clicking Back restores the exact filtered view (and the URL is now bookmarkable/shareable). Adds an Esc-key shortcut on the Todo detail page that navigates back to the previous view; if a modal/menu is open, Esc closes that first via capture-phase listeners with `stopImmediatePropagation`, so it takes two Esc presses to leave a modal-open detail page. Closes the "Updating a ToDo from a Filtered view should return back" and "Esc shortcut to close ToDo detail" bugs.
+
+## 2026-05-21
 - Fix Repeat schedule and Set reminder on Todo detail — both pickers were anchored via `position: absolute` to a trigger element that no longer existed (they're now invoked from the overflow menu), so they rendered off-screen. Reworked both as bottom-sheet on mobile / centered modal on desktop, matching the new `ProjectPicker` pattern. Reminder's custom date picker now uses `DateField`, inheriting the iOS form-field fixes from the previous PR. Closes the "no way to set Repeat schedule" and "Set reminder no longer works" bugs.
 
 ## 2026-05-21
