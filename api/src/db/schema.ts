@@ -141,6 +141,13 @@ export const userPreferences = pgTable('user_preferences', {
   theme: themePreferenceEnum('theme').notNull().default('system'),
   notificationsEnabled: boolean('notifications_enabled').notNull().default(false),
   adaptiveTheme: boolean('adaptive_theme').notNull().default(false),
+  // Server-side morning auto-plan: when enabled, a cron job pre-pins 3–5 todos
+  // to today_pinned each morning in the user's local timezone.
+  autoplanEnabled: boolean('autoplan_enabled').notNull().default(false),
+  autoplanTimezone: text('autoplan_timezone').notNull().default('America/Los_Angeles'),
+  // Last successful auto-plan run (ISO date in user's tz). Used to make the
+  // /api/internal/autoplan endpoint idempotent within a 24h window.
+  autoplanLastRunDate: text('autoplan_last_run_date'),
 })
 
 // --- Today Sets ---

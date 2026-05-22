@@ -330,6 +330,49 @@ export function SettingsPage() {
               </span>
             )}
           </div>
+          {/* Morning auto-plan */}
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Morning auto-plan</p>
+              <p className="text-on-surface-variant text-xs">
+                Let Tempo AI pre-fill Today with 3–5 tasks each morning. Replaces whatever's in Today.
+              </p>
+            </div>
+            <button
+              onClick={() => updatePreferences({ autoplan_enabled: !preferences.autoplan_enabled })}
+              className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
+                preferences.autoplan_enabled
+                  ? 'bg-primary'
+                  : 'bg-surface-container-high'
+              }`}
+            >
+              <span
+                className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface-container-lowest shadow transition-transform duration-200 ${
+                  preferences.autoplan_enabled
+                    ? 'translate-x-5'
+                    : 'translate-x-0'
+                }`}
+              />
+            </button>
+          </div>
+          {preferences.autoplan_enabled && (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-on-surface text-sm font-medium">Timezone</p>
+                <p className="text-on-surface-variant text-xs">
+                  Used to decide when "today" starts. IANA format (e.g. America/Los_Angeles).
+                </p>
+              </div>
+              <input
+                type="text"
+                value={preferences.autoplan_timezone}
+                onChange={(e) => updatePreferences({ autoplan_timezone: e.target.value })}
+                placeholder="America/Los_Angeles"
+                spellCheck={false}
+                className="bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface placeholder:text-on-surface-variant/50 outline-none w-52 text-right font-mono"
+              />
+            </div>
+          )}
         </div>
       </section>
 
