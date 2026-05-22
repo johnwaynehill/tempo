@@ -30,6 +30,7 @@ REST API for Tempo — a personal productivity app for ADHD. Built on Express 5 
   - [Anthropic Proxy](#anthropic-proxy)
   - [API Keys](#api-keys)
   - [MCP OAuth State](#mcp-oauth-state)
+  - [Internal endpoints](#internal-endpoints)
 - [Enums](#enums)
 - [Error Responses](#error-responses)
 
@@ -304,7 +305,7 @@ Update. Same fields as create.
 Per-user settings. Single row keyed by `user_id` (upsert semantics).
 
 #### `GET /api/preferences`
-Returns the user's preferences, or `{ userId, theme: "system", notificationsEnabled: false }` if none exist yet.
+Returns the user's preferences, or `{ userId, theme: "system", notificationsEnabled: false, autoplanEnabled: false, autoplanTimezone: "America/Los_Angeles" }` if none exist yet.
 
 #### `PUT /api/preferences`
 Upsert.
@@ -315,9 +316,55 @@ Upsert.
   "currentEnergy": "medium",
   "theme": "dark",
   "notificationsEnabled": true,
-  "adaptiveTheme": false
+  "adaptiveTheme": false,
+  "autoplanEnabled": true,
+  "autoplanTimezone": "America/Los_Angeles"
 }
 ```
+
+Fields:
+- `currentEnergy` — `"low" | "medium_low" | "medium" | "high" | null`. Optional.
+- `theme` — `"light" | "dark" | "system"`. Default `"system"`.
+- `notificationsEnabled` — boolean. Default `false`.
+- `adaptiveTheme` — boolean. Default `false`. Tints UI based on `currentEnergy`.
+- `autoplanEnabled` — boolean. Default `false`. Opts the user into the server-side morning auto-plan (see *Internal endpoints* below).
+- `autoplanTimezone` — IANA timezone string. Default `"America/Los_Angeles"`. Determines when "today" rolls over for idempotency.
+
+---
+
+### Internal endpoints
+
+These are not for external API consumers. They live under `/api/internal/*` and are guarded by their own shared-secret headers, not by Firebase / API-key auth. Documented here for ops visibility.
+
+#### `POST /api/internal/autoplan`
+
+Fires the morning auto-plan: for every user with `autoplanEnabled = true`, picks 3–5 todos and replaces their Today view. Triggered daily at 13:30 UTC by the `autoplan-cron` Railway service.
+
+**Auth:** `X-Autoplan-Secret: <secret>` matching the API service's `AUTOPLAN_SECRET` env var. Returns 503 if the env var is unset (never open-by-default).
+
+**Optional body:**
+```json
+{ "userId": "<uid>", "timezone": "America/Los_Angeles", "force": true }
+```
+- `userId` — run for a single user (testing / manual trigger).
+- `timezone` — overrides the user's stored `autoplanTimezone`. Single-user mode only.
+- `force` — bypass the per-day idempotency check. Also accepted as `?force=1` query param.
+
+**200 OK**
+```json
+{
+  "ok": true,
+  "count": 1,
+  "results": [{
+    "userId": "...",
+    "pickedTodoIds": ["...", "...", "..."],
+    "source": "ai",
+    "candidateCount": 12,
+    "todayDate": "2026-05-22"
+  }]
+}
+```
+`source` is `"ai"` when Anthropic ranked the picks, `"heuristic"` when it fell back (Anthropic timeout or `ANTHROPIC_API_KEY` unset), or `"noop"` when idempotency skipped a duplicate run.
 
 ---
 
