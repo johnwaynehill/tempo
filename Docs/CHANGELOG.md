@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-05-22
+- Docs: post-autoplan doc updates. `Docs/API.md` adds the new `autoplanEnabled`/`autoplanTimezone` fields to the Preferences endpoint and documents `POST /api/internal/autoplan` under a new *Internal endpoints* section. `Docs/Future.md` marks server-side morning auto-plan (#92) + nightly Claude Routine (#91) as built under *Tempo AI*. `Docs/ProjectReference.md` adds `autoplan-cron` to the Hosting row, points to `api/cron-autoplan/` in the repo tree, and mentions autoplan fields on `user_preferences`. `Docs/ClaudeRoutines.md` gains a *Known issue* callout for the harness terminating scheduled-task sessions before tool results return — observed twice and documented with a workaround.
 - Fix deferred todos still showing on Today view. The `useTodaySet` hook resolves the morning `today_set` snapshot to live todo objects but only filtered out `done` todos at render time — so a todo deferred via the Todo Detail page (which doesn't call `dismissFromSet`) stayed in `today_set.todo_ids` and re-rendered on Today with its new `deferred` status. The bug was latent before PR #92 (server-side auto-plan) since most days the `today_set` row was empty; now that auto-plan populates it every morning, the gap is reliably hit. Filter now only keeps `today_pinned` and `backlog` statuses — drops `deferred`, `inbox`, and `done`.
 
 ## 2026-05-21

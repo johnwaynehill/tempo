@@ -18,6 +18,16 @@ Routines run while the Claude Code app is open. If the app is closed when a rout
 - **Where to read the output:** the Notes view in Tempo each morning. Title is `Plan for <tomorrow>`.
 - **Side effects:** none on app data. The routine does not modify todos, log mood/energy, or touch habits.
 
+## Known issue: harness terminates scheduled-task sessions early
+
+Observed 2026-05-21 and 2026-05-22: when `nightly-tempo-plan` fired autonomously, the Claude session for the run terminated after ~7 seconds and only 3 turns (one `thinking`, one `Bash` for the date lookup, one `ToolSearch` to load `tempo-mcp` tools) — before any tool results came back, before any Tempo data was read, and before any note was created. The harness records `lastRunAt` so it looks like the run succeeded, but no work was done.
+
+Symptom in Tempo: no `Plan for <tomorrow>` note appears the next morning even though `lastRunAt` is set.
+
+**Workaround until this is understood:** re-fire the routine manually via `update_scheduled_task` with a `fireAt` in the near future, OR run a Claude session interactively and execute the SKILL.md steps yourself. After firing once via `fireAt`, restore the recurring schedule with `update_scheduled_task` + `cronExpression: "0 21 * * *"` and `enabled: true` (a one-time fire auto-disables the task).
+
+This is a routine-runner issue, not a prompt issue — the prompt itself is fine when run by an interactive session with the same tool set.
+
 ## Managing routines
 
 All routine state lives under `~/.claude/scheduled-tasks/<taskId>/SKILL.md`. Use the MCP tools — don't edit files by hand unless you have to.
