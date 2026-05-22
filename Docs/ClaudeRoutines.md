@@ -18,15 +18,29 @@ Routines run while the Claude Code app is open. If the app is closed when a rout
 - **Where to read the output:** the Notes view in Tempo each morning. Title is `Plan for <tomorrow>`.
 - **Side effects:** none on app data. The routine does not modify todos, log mood/energy, or touch habits.
 
-## Known issue: harness terminates scheduled-task sessions early
+## First-run setup: pre-approve tool permissions
 
-Observed 2026-05-21 and 2026-05-22: when `nightly-tempo-plan` fired autonomously, the Claude session for the run terminated after ~7 seconds and only 3 turns (one `thinking`, one `Bash` for the date lookup, one `ToolSearch` to load `tempo-mcp` tools) — before any tool results came back, before any Tempo data was read, and before any note was created. The harness records `lastRunAt` so it looks like the run succeeded, but no work was done.
+Scheduled-task sessions run unattended — there's no human to click "allow" on a permission prompt. The first time a routine tries to call a tool that requires per-use approval (e.g. `mcp__tempo-mcp__list_todos`), the session stalls waiting for the prompt and the harness eventually terminates it without making progress.
 
-Symptom in Tempo: no `Plan for <tomorrow>` note appears the next morning even though `lastRunAt` is set.
+**Symptom:** `lastRunAt` is set so it looks like the run succeeded, but no work was done. Drilling into the session transcript shows the run completed only the few turns that don't trigger permission prompts (typically `thinking`, `Bash`, `ToolSearch`) and then stopped before any tool result came back.
 
-**Workaround until this is understood:** re-fire the routine manually via `update_scheduled_task` with a `fireAt` in the near future, OR run a Claude session interactively and execute the SKILL.md steps yourself. After firing once via `fireAt`, restore the recurring schedule with `update_scheduled_task` + `cronExpression: "0 21 * * *"` and `enabled: true` (a one-time fire auto-disables the task).
+**Fix:** before the first scheduled fire, run the routine manually in an interactive Claude session and accept each tool prompt with **"Always allow"** (or your client's equivalent). After that the autonomous schedule runs without intervention.
 
-This is a routine-runner issue, not a prompt issue — the prompt itself is fine when run by an interactive session with the same tool set.
+Observed 2026-05-21 and 2026-05-22 with `nightly-tempo-plan`: the run terminated after ~7 seconds, completing only the three pre-permission turns. Pre-approving the `tempo-mcp` tools via a manual interactive run on 2026-05-22 resolved it.
+
+**To manually re-fire a routine** (useful for the first-run setup, or to test prompt changes):
+```
+mcp__scheduled-tasks__update_scheduled_task
+  taskId: <id>
+  fireAt: "2026-05-22T21:00:00-07:00"   # near-future ISO timestamp w/ offset
+```
+A `fireAt` update clears the recurring cron and auto-disables after firing, so afterward restore the schedule with:
+```
+mcp__scheduled-tasks__update_scheduled_task
+  taskId: <id>
+  cronExpression: "0 21 * * *"
+  enabled: true
+```
 
 ## Managing routines
 
@@ -40,5 +54,7 @@ All routine state lives under `~/.claude/scheduled-tasks/<taskId>/SKILL.md`. Use
 ## Adding a new routine
 
 Use `mcp__scheduled-tasks__create_scheduled_task`. The prompt must be fully self-contained — list every MCP tool the routine should call, spell out the output format, and include the user's timezone. Each fire is a fresh Claude with no prior context.
+
+**After creating it, do a manual fire first** to pre-approve any per-tool permission prompts (see *First-run setup* above). Routines that try to call an un-approved tool stall silently in unattended mode.
 
 Convention for this project: prefer MCP tool calls (`mcp__tempo-mcp__*`) for any app data operations. Never write SQL from a routine.
