@@ -66,10 +66,21 @@ export function useTodaySet(
     const todoMap = new Map(todos.map((t) => [t.id, t]))
     const pinnedIds = new Set(pinned.map((t) => t.id))
 
+    // Filter out todos whose status has moved them out of Today since the
+    // today_set row was written (e.g. user deferred from the detail page).
+    // `today_set` is a morning snapshot — it doesn't get rewritten on every
+    // status change — so the render layer is the defensive filter.
+    //
+    // We keep `today_pinned` (explicitly pinned) and `backlog` (still active,
+    // surfaced as a suggestion) but drop anything done, deferred, or moved
+    // back to inbox.
     const setTodos = todaySet.todo_ids
       .filter((id) => !pinnedIds.has(id))
       .map((id) => todoMap.get(id))
-      .filter((t): t is Todo => t !== undefined && t.status !== 'done')
+      .filter((t): t is Todo => {
+        if (!t) return false
+        return t.status === 'today_pinned' || t.status === 'backlog'
+      })
 
     return [...pinned, ...setTodos]
   }, [todaySet, todayStr, todos, pinned])
