@@ -453,7 +453,7 @@ export function SettingsPage() {
 
           {/* Design system */}
           <a
-            href="/design-system.html"
+            href="/design-system"
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center justify-between cursor-pointer"

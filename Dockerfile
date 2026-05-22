@@ -29,4 +29,8 @@ RUN npm install -g serve
 COPY --from=build /app/dist ./dist
 
 EXPOSE 3000
-CMD ["serve", "dist", "-s", "-l", "tcp://0.0.0.0:3000"]
+# Note: no -s flag. The SPA catch-all rewrite is configured in dist/serve.json
+# (copied from public/serve.json at build) alongside the static-file rewrites
+# for /design-system. `serve -s` REPLACES the rewrites array, which would
+# overwrite our static-file routes.
+CMD ["serve", "dist", "-l", "tcp://0.0.0.0:3000"]

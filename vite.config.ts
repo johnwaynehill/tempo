@@ -13,6 +13,30 @@ export default defineConfig(({ mode }) => {
   plugins: [
     react(),
     tailwindcss(),
+    // Make folder-with-index static pages reachable at the bare path in dev,
+    // matching `serve-handler`'s directory-index behavior in production. Vite
+    // dev's static middleware doesn't auto-serve `public/foo/index.html` for
+    // a request to `/foo`, so the SPA catch-all swallows it. Add specific
+    // pages here when they're moved to subdirectories.
+    {
+      name: 'static-folder-index',
+      configureServer(server) {
+        const staticPaths = ['/design-system']
+        server.middlewares.use((req, _res, next) => {
+          if (!req.url) return next()
+          const path = req.url.split('?')[0]
+          for (const p of staticPaths) {
+            if (path === p || path === p + '/') {
+              req.url = p + '/index.html' + (req.url.slice(path.length).startsWith('?')
+                ? req.url.slice(path.length)
+                : '')
+              break
+            }
+          }
+          next()
+        })
+      },
+    },
     VitePWA({
       registerType: 'prompt',
       includeAssets: [
