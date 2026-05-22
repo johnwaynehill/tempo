@@ -20,6 +20,7 @@ import playlistsRouter from './routes/playlists.js'
 import moodRouter from './routes/mood.js'
 import mcpOauthRouter from './routes/mcp-oauth.js'
 import authRouter from './routes/auth.js'
+import autoplanRouter from './routes/autoplan.js'
 
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -74,6 +75,12 @@ app.use((req, _res, next) => {
 app.get('/health', (_req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// Internal cron endpoint — runs BEFORE the global `/api` auth chain because
+// cron triggers can't sign in as a Firebase user or hold an API key. Auth is
+// handled inside the router via a shared-secret header (AUTOPLAN_SECRET).
+// IP rate-limit still applies to blunt brute-forcing the secret.
+app.use('/api/internal/autoplan', ipRateLimit, autoplanRouter)
 
 // IP-based limit runs before auth to blunt brute-force attempts on API keys.
 // User-based limit runs after auth for higher-signal per-account throttling.

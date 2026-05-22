@@ -201,4 +201,8 @@ export interface UserPreferences {
   theme: 'light' | 'dark' | 'system'
   notifications_enabled: boolean
   adaptive_theme: boolean
+  /** Opt in to the server-side morning auto-plan cron. */
+  autoplan_enabled: boolean
+  /** IANA timezone used to compute "today" for the auto-plan run. */
+  autoplan_timezone: string
 }

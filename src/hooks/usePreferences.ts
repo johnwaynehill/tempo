@@ -9,6 +9,8 @@ const DEFAULT_PREFS: UserPreferences = {
   theme: 'system',
   notifications_enabled: false,
   adaptive_theme: false,
+  autoplan_enabled: false,
+  autoplan_timezone: 'America/Los_Angeles',
 }
 
 export function usePreferences() {
@@ -24,6 +26,8 @@ export function usePreferences() {
         theme: (result.theme as string) ?? 'system',
         notifications_enabled: (result.notifications_enabled as boolean) ?? false,
         adaptive_theme: (result.adaptive_theme as boolean) ?? false,
+        autoplan_enabled: (result.autoplan_enabled as boolean) ?? false,
+        autoplan_timezone: (result.autoplan_timezone as string) ?? 'America/Los_Angeles',
       } as UserPreferences
     },
     enabled: !!user,

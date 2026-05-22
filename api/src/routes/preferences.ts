@@ -10,14 +10,24 @@ router.get('/', async (req, res) => {
 
   if (!row) {
     // Return defaults if no preferences exist
-    res.json({ userId: req.userId, theme: 'system', notificationsEnabled: false })
+    res.json({
+      userId: req.userId,
+      theme: 'system',
+      notificationsEnabled: false,
+      adaptiveTheme: false,
+      autoplanEnabled: false,
+      autoplanTimezone: 'America/Los_Angeles',
+    })
     return
   }
   res.json(row)
 })
 
 router.put('/', async (req, res) => {
-  const { userId, ...updates } = req.body
+  // Strip server-managed fields so a stale client payload can't clobber state
+  // the cron just wrote (e.g. autoplanLastRunDate).
+  const { userId, autoplanLastRunDate, ...updates } = req.body
+  void autoplanLastRunDate
   const [row] = await db
     .insert(schema.userPreferences)
     .values({ ...updates, userId: req.userId! })
