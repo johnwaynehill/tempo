@@ -21,7 +21,7 @@ export function CompletionToast({ message, onDismiss }: CompletionToastProps) {
 
   return (
     <div
-      className={`fixed top-[max(1.5rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 transition-all duration-300 ease-out ${
+      className={`fixed top-[max(1.5rem,env(safe-area-inset-top))] left-4 right-4 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 z-50 transition-all duration-300 ease-out ${
         visible
           ? 'opacity-100 translate-y-0'
           : 'opacity-0 -translate-y-4'
@@ -29,7 +29,7 @@ export function CompletionToast({ message, onDismiss }: CompletionToastProps) {
     >
       <button
         onClick={handleDismiss}
-        className="flex items-center gap-3 px-5 py-3.5 rounded-2xl bg-surface-container-lowest shadow-lg border border-outline-variant/15 cursor-pointer max-w-[90vw]"
+        className="flex items-center justify-center gap-3 px-5 py-3.5 rounded-2xl bg-surface-container-lowest shadow-lg border border-outline-variant/15 cursor-pointer w-full sm:w-auto sm:max-w-[90vw]"
       >
         {/* Sparkle icon */}
         <svg className="w-4 h-4 text-primary shrink-0" viewBox="0 0 16 16" fill="currentColor">

@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-06-09
+- Fix mobile Toast (`CompletionToast`) layout. The toast button hugged its text content capped at `max-w-[90vw]`, so on narrow phones a medium-length message hit the cap and wrapped to two lines while the toast never used the full width. The wrapper now spans edge-to-edge with even 1rem side margins on mobile (`left-4 right-4`) and reverts to centered (`sm:left-1/2 -translate-x-1/2`) on ≥640px; the button is `w-full` with centered content on mobile and a content-hugging `sm:w-auto sm:max-w-[90vw]` pill on desktop.
+
 ## 2026-05-22
 - Fix design system page rendering blank in production; switch its URL to the cleaner `/design-system` (was `/design-system.html`). The static server's `cleanUrls` redirect + SPA catch-all combo was stripping `.html` and then serving the React app's `index.html` for a path React Router doesn't have. Folder-with-index layout + explicit rewrites in `public/serve.json` (replacing the Dockerfile's `-s` flag) fixes it. Legacy `/design-system.html` bookmarks still redirect to the clean URL.
 - Docs: correct root cause for the `nightly-tempo-plan` autonomous-run failure in `Docs/ClaudeRoutines.md`. The 7-second early termination wasn't a harness session-kill bug — it was an un-approved tool permission prompt that scheduled-task sessions can't service unattended. Section renamed to *First-run setup: pre-approve tool permissions* with the actual fix (run the routine once interactively and click "Always allow"). The *Adding a new routine* section now also reminds operators to do a manual first-fire after creating any new routine.
