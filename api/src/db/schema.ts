@@ -214,6 +214,33 @@ export const mcpOauthState = pgTable('mcp_oauth_state', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 })
 
+// --- Google Calendar Connections ---
+//
+// One row per user, holding the OAuth tokens for a one-way Google → Tempo
+// calendar sync. Google stays the source of truth; synced events are mirrored
+// into `calendar_events` as read-only rows (added in a later phase).
+//
+// Access/refresh tokens are AES-256-GCM encrypted at rest (see
+// `api/src/lib/crypto.ts`) — they are never stored in plaintext. Requires the
+// `TOKEN_ENCRYPTION_KEY` env var on the API service.
+export const googleCalendarConnections = pgTable('google_calendar_connections', {
+  userId: text('user_id').primaryKey(),
+  googleEmail: text('google_email'),
+  accessTokenEnc: text('access_token_enc').notNull(),
+  refreshTokenEnc: text('refresh_token_enc').notNull(),
+  tokenExpiresAt: timestamp('token_expires_at', { withTimezone: true }).notNull(),
+  scope: text('scope'),
+  // Opt-in flag; lets the user pause syncing without fully disconnecting.
+  syncEnabled: boolean('sync_enabled').notNull().default(true),
+  // Incremental-sync cursor from the Google Calendar API (used once sync lands).
+  // Null means a full resync is needed.
+  syncToken: text('sync_token'),
+  lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
+  lastSyncError: text('last_sync_error'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})
+
 // --- API Keys ---
 
 // Scopes:
