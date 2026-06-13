@@ -10,6 +10,7 @@ import {
   jsonb,
   primaryKey,
   unique,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core'
 
 // --- Enums ---
@@ -113,9 +114,19 @@ export const calendarEvents = pgTable('calendar_events', {
   description: text('description'),
   location: text('location'),
   color: eventColorEnum('color'),
+  // Origin of the event: 'tempo' (native, editable) or 'google' (mirrored from
+  // Google Calendar, read-only). Google rows carry the source event id + etag
+  // so syncs can upsert by (user_id, external_id).
+  source: text('source').notNull().default('tempo'),
+  externalId: text('external_id'),
+  etag: text('etag'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (table) => [
+  // Upsert key for synced events. Native (tempo) rows have NULL external_id;
+  // Postgres treats NULLs as distinct, so they never collide here.
+  uniqueIndex('calendar_events_user_external_unique').on(table.userId, table.externalId),
+])
 
 // --- Conversations ---
 

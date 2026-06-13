@@ -4,10 +4,10 @@ One-way sync: a user's Google Calendar events are mirrored **into** Tempo's
 calendar as read-only entries. Google stays the source of truth — Tempo never
 writes back. A cron service re-syncs a couple of times a day.
 
-This is being built in phases. **Phase 1 (this doc's current scope) is the
-OAuth account link only** — connecting an account stores tokens but does not yet
-import events. Later phases add the sync engine, read-only rendering in the
-calendar UI, and the scheduled cron.
+This is being built in phases. **Phases 1–2 are done:** the OAuth account link
+and the sync engine. Remaining: read-only rendering in the calendar UI
+(Phase 3) and the scheduled cron (Phase 4) — until Phase 4, syncing is
+triggered manually via `POST /api/google-calendar/sync`.
 
 ## Architecture
 
@@ -16,6 +16,7 @@ calendar UI, and the scheduled cron.
 | Token storage | `google_calendar_connections` table (`api/src/db/schema.ts`) |
 | Token encryption | `api/src/lib/crypto.ts` (AES-256-GCM) |
 | OAuth client | `api/src/lib/google-oauth.ts` (plain `fetch`, no `googleapis` dep) |
+| Sync engine | `api/src/lib/google-calendar.ts` |
 | Endpoints | `api/src/routes/google-calendar.ts` |
 
 ### Endpoints
@@ -25,7 +26,8 @@ calendar UI, and the scheduled cron.
 | `GET` | `/api/google-calendar/status` | user | Connection state for the Settings UI |
 | `GET` | `/api/google-calendar/connect` | user | Returns the Google consent URL (`{ url }`) |
 | `GET` | `/api/google-calendar/callback` | **public** | Google redirects here post-consent; stores tokens, redirects to `${APP_URL}/settings?google=<status>` |
-| `DELETE` | `/api/google-calendar` | user | Revoke at Google + drop the connection |
+| `POST` | `/api/google-calendar/sync` | user | Sync the primary calendar now; returns `{ status, upserted, pruned }` |
+| `DELETE` | `/api/google-calendar` | user | Revoke at Google, purge mirrored events, drop the connection |
 
 The callback is mounted **before** the `/api` auth chain in `index.ts` because
 Google redirects the browser to it with no Authorization header. A one-time,
@@ -34,6 +36,20 @@ callback back to the user who started the flow.
 
 `?google=<status>` values the Settings UI may receive: `connected`, `denied`,
 `expired`, `no_refresh_token`, `error`.
+
+### Sync engine
+
+`syncGoogleCalendarForUser(userId)` mirrors the user's **primary** Google
+calendar into `calendar_events` as read-only `source='google'` rows, over a
+rolling **−7 to +90 day** window. Each run re-lists the whole window (recurring
+events expanded via `singleEvents=true`) and reconciles: upsert everything
+returned by `(user_id, external_id)`, then prune any `source='google'` rows not
+in the result (handles deletions, cancellations, and events that aged out of the
+window). It's idempotent. Access tokens are auto-refreshed from the stored
+refresh token when expired.
+
+Native Tempo events are `source='tempo'`; the events routes reject edits/deletes
+to `source='google'` rows (403) and never let a client set `source`/`external_id`.
 
 ## One-time setup
 
