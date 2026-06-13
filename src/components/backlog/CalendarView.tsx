@@ -311,42 +311,59 @@ function DayDetailPanel({
             Events
           </p>
           <div className="space-y-1.5">
-            {sortedEvents.map((event) => (
-              <div
-                key={event.id}
-                className="group flex items-start gap-3 py-2.5 px-3 rounded-xl hover:bg-surface-container transition-colors duration-200 cursor-pointer"
-                onClick={() => onEditEvent(event)}
-              >
-                <span
-                  className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
-                    EVENT_COLORS[event.color ?? 'primary']
+            {sortedEvents.map((event) => {
+              const isGoogle = event.source === 'google'
+              return (
+                <div
+                  key={event.id}
+                  className={`group flex items-start gap-3 py-2.5 px-3 rounded-xl transition-colors duration-200 ${
+                    isGoogle ? 'cursor-default' : 'hover:bg-surface-container cursor-pointer'
                   }`}
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="text-[15px] text-on-surface leading-snug">
-                    {event.title}
-                  </p>
-                  <p className="text-xs text-on-surface-variant mt-0.5">
-                    {event.all_day
-                      ? 'All day'
-                      : `${formatTime(event.start_time)} - ${formatTime(event.end_time)}`}
-                    {event.location && ` \u00B7 ${event.location}`}
-                  </p>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    onDeleteEvent(event.id)
-                  }}
-                  className="opacity-0 group-hover:opacity-100 text-xs text-error/60 hover:text-error p-1 rounded-lg hover:bg-error/5 transition-all duration-200 cursor-pointer flex-shrink-0"
-                  aria-label="Delete event"
+                  onClick={isGoogle ? undefined : () => onEditEvent(event)}
                 >
-                  <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M3 3l8 8M11 3l-8 8" />
-                  </svg>
-                </button>
-              </div>
-            ))}
+                  <span
+                    className={`w-2.5 h-2.5 rounded-full mt-1.5 flex-shrink-0 ${
+                      isGoogle ? 'bg-primary-dim' : EVENT_COLORS[event.color ?? 'primary']
+                    }`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-[15px] text-on-surface leading-snug truncate">
+                        {event.title}
+                      </p>
+                      {isGoogle && (
+                        <span
+                          className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-container-high text-[10px] font-medium text-on-surface-variant"
+                          title="From Google Calendar \u2014 read-only"
+                        >
+                          Google
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-on-surface-variant mt-0.5">
+                      {event.all_day
+                        ? 'All day'
+                        : `${formatTime(event.start_time)} - ${formatTime(event.end_time)}`}
+                      {event.location && ` \u00B7 ${event.location}`}
+                    </p>
+                  </div>
+                  {!isGoogle && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onDeleteEvent(event.id)
+                      }}
+                      className="opacity-0 group-hover:opacity-100 text-xs text-error/60 hover:text-error p-1 rounded-lg hover:bg-error/5 transition-all duration-200 cursor-pointer flex-shrink-0"
+                      aria-label="Delete event"
+                    >
+                      <svg className="w-3.5 h-3.5" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                        <path d="M3 3l8 8M11 3l-8 8" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              )
+            })}
           </div>
         </div>
       )}

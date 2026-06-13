@@ -4,10 +4,23 @@ One-way sync: a user's Google Calendar events are mirrored **into** Tempo's
 calendar as read-only entries. Google stays the source of truth — Tempo never
 writes back. A cron service re-syncs a couple of times a day.
 
-This is being built in phases. **Phases 1–2 are done:** the OAuth account link
-and the sync engine. Remaining: read-only rendering in the calendar UI
-(Phase 3) and the scheduled cron (Phase 4) — until Phase 4, syncing is
-triggered manually via `POST /api/google-calendar/sync`.
+This is being built in phases. **Phases 1–3 are done:** the OAuth account link,
+the sync engine, and the front-end UI (Settings connect/disconnect/"Sync now" +
+read-only rendering of Google events). Remaining: the scheduled cron (Phase 4)
+— until then, syncing is triggered manually via the **Sync now** button (or
+`POST /api/google-calendar/sync`).
+
+### Front-end (Phase 3)
+
+- **Settings → Google Calendar**: Connect button (→ `connect`, redirects the
+  browser to Google); once linked, shows the connected email + last-synced time,
+  a **Sync now** button, and **Disconnect**. Reads the `?google=<status>`
+  callback param to show a toast, then strips it from the URL.
+- **Calendar**: `source='google'` events render read-only — a "Google" badge, a
+  distinct dot color, no edit-on-click and no delete button (the API also 403s).
+  Applies to both `src/pages/Calendar.tsx` and `src/components/backlog/CalendarView.tsx`.
+- API client: `api.googleCalendar.{status,connect,sync,disconnect}` in `src/lib/api.ts`.
+  `CalendarEvent` gains `source` / `external_id` in `src/types/index.ts`.
 
 ## Architecture
 
