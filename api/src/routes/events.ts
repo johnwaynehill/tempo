@@ -18,25 +18,39 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
+  // `source`/`externalId`/`etag` are owned by the Google sync — never let a
+  // client forge a mirrored event. New events are always native ('tempo').
+  const { source, externalId, etag, ...rest } = req.body
   const [row] = await db.insert(schema.calendarEvents)
-    .values({ ...req.body, userId: req.userId! }).returning()
+    .values({ ...rest, userId: req.userId!, source: 'tempo' }).returning()
   res.status(201).json(row)
 })
 
 router.put('/:id', async (req, res) => {
-  const { id, userId, createdAt, firestoreId, ...updates } = req.body
+  const [existing] = await db.select({ source: schema.calendarEvents.source })
+    .from(schema.calendarEvents)
+    .where(and(eq(schema.calendarEvents.id, req.params.id), eq(schema.calendarEvents.userId, req.userId!)))
+  if (!existing) { res.status(404).json({ error: 'Not found' }); return }
+  if (existing.source === 'google') {
+    res.status(403).json({ error: 'Google Calendar events are read-only in Tempo' }); return
+  }
+  const { id, userId, createdAt, firestoreId, source, externalId, etag, ...updates } = req.body
   const [row] = await db.update(schema.calendarEvents).set(updates)
     .where(and(eq(schema.calendarEvents.id, req.params.id), eq(schema.calendarEvents.userId, req.userId!)))
     .returning()
-  if (!row) { res.status(404).json({ error: 'Not found' }); return }
   res.json(row)
 })
 
 router.delete('/:id', async (req, res) => {
-  const [row] = await db.delete(schema.calendarEvents)
+  const [existing] = await db.select({ source: schema.calendarEvents.source })
+    .from(schema.calendarEvents)
     .where(and(eq(schema.calendarEvents.id, req.params.id), eq(schema.calendarEvents.userId, req.userId!)))
-    .returning({ id: schema.calendarEvents.id })
-  if (!row) { res.status(404).json({ error: 'Not found' }); return }
+  if (!existing) { res.status(404).json({ error: 'Not found' }); return }
+  if (existing.source === 'google') {
+    res.status(403).json({ error: 'Google Calendar events are read-only in Tempo; disconnect to remove them' }); return
+  }
+  await db.delete(schema.calendarEvents)
+    .where(and(eq(schema.calendarEvents.id, req.params.id), eq(schema.calendarEvents.userId, req.userId!)))
   res.status(204).send()
 })
 

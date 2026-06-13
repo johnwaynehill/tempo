@@ -13,7 +13,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { randomBytes } from 'crypto'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { encrypt, decrypt, isEncryptionConfigured } from '../lib/crypto.js'
 import {
@@ -23,6 +23,7 @@ import {
   revokeToken,
   isGoogleOAuthConfigured,
 } from '../lib/google-oauth.js'
+import { syncGoogleCalendarForUser } from '../lib/google-calendar.js'
 
 const STATE_TYPE = 'google_oauth_state'
 const STATE_TTL_MS = 10 * 60 * 1000 // 10 minutes
@@ -76,14 +77,37 @@ router.get('/connect', async (req: Request, res: Response) => {
 })
 
 /**
- * DELETE /api/google-calendar — disconnect: revoke the grant at Google and drop
- * the stored connection. (Mirrored events get purged once sync exists.)
+ * POST /api/google-calendar/sync — sync the user's primary Google calendar now.
+ * Returns a summary { status, upserted, pruned }.
+ */
+router.post('/sync', async (req: Request, res: Response) => {
+  if (!integrationReady(res)) return
+  try {
+    const result = await syncGoogleCalendarForUser(req.userId!)
+    res.json(result)
+  } catch (err) {
+    console.error('[google-calendar] manual sync failed:', err)
+    res.status(502).json({
+      error: 'Sync failed',
+      message: err instanceof Error ? err.message : String(err),
+    })
+  }
+})
+
+/**
+ * DELETE /api/google-calendar — disconnect: revoke the grant at Google, purge
+ * the user's mirrored (source='google') events, and drop the stored connection.
  */
 router.delete('/', async (req: Request, res: Response) => {
   const [conn] = await db.select().from(schema.googleCalendarConnections)
     .where(eq(schema.googleCalendarConnections.userId, req.userId!))
   if (conn) {
     try { await revokeToken(decrypt(conn.refreshTokenEnc)) } catch { /* best effort */ }
+    await db.delete(schema.calendarEvents)
+      .where(and(
+        eq(schema.calendarEvents.userId, req.userId!),
+        eq(schema.calendarEvents.source, 'google'),
+      ))
     await db.delete(schema.googleCalendarConnections)
       .where(eq(schema.googleCalendarConnections.userId, req.userId!))
   }
