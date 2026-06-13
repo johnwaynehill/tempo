@@ -4,11 +4,10 @@ One-way sync: a user's Google Calendar events are mirrored **into** Tempo's
 calendar as read-only entries. Google stays the source of truth — Tempo never
 writes back. A cron service re-syncs a couple of times a day.
 
-This is being built in phases. **Phases 1–3 are done:** the OAuth account link,
-the sync engine, and the front-end UI (Settings connect/disconnect/"Sync now" +
-read-only rendering of Google events). Remaining: the scheduled cron (Phase 4)
-— until then, syncing is triggered manually via the **Sync now** button (or
-`POST /api/google-calendar/sync`).
+**All four phases are done:** the OAuth account link, the sync engine, the
+front-end UI (Settings connect/disconnect/"Sync now" + read-only rendering of
+Google events), and the scheduled cron (`gcal-sync-cron`, twice daily). Syncing
+also happens on demand via the **Sync now** button (`POST /api/google-calendar/sync`).
 
 ### Front-end (Phase 3)
 
@@ -64,6 +63,15 @@ refresh token when expired.
 Native Tempo events are `source='tempo'`; the events routes reject edits/deletes
 to `source='google'` rows (403) and never let a client set `source`/`external_id`.
 
+### Scheduled sync (Phase 4)
+
+A separate Railway cron service, **`gcal-sync-cron`** (`api/cron-gcal-sync/`),
+POSTs to `POST /api/internal/google-sync` **twice a day** (~06:00 and ~18:00
+Pacific). That endpoint runs `syncAllEnabledUsers()` for every connection with
+`sync_enabled = true`. Auth is a shared secret (`X-Google-Sync-Secret` /
+`GOOGLE_SYNC_SECRET`), same pattern as autoplan — disabled (503) when unset.
+Setup steps are in `api/cron-gcal-sync/README.md`.
+
 ## One-time setup
 
 ### 1. Google Cloud Console
@@ -107,7 +115,10 @@ GOOGLE_CLIENT_SECRET=...
 GOOGLE_OAUTH_REDIRECT_URI=https://<api-host>/api/google-calendar/callback
 TOKEN_ENCRYPTION_KEY=<64 hex chars>      # openssl rand -hex 32
 APP_URL=https://tempo.designbyjohnwayne.com   # where the callback redirects back to
+GOOGLE_SYNC_SECRET=<64 hex chars>        # shared secret for the sync cron; openssl rand -hex 32
 ```
+
+`GOOGLE_SYNC_SECRET` also goes on the `gcal-sync-cron` service (same value).
 
 If `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_OAUTH_REDIRECT_URI` or
 `TOKEN_ENCRYPTION_KEY` are unset, the integration is disabled: `connect` returns
