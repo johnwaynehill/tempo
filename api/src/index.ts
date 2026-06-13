@@ -21,6 +21,7 @@ import moodRouter from './routes/mood.js'
 import mcpOauthRouter from './routes/mcp-oauth.js'
 import authRouter from './routes/auth.js'
 import autoplanRouter from './routes/autoplan.js'
+import googleCalendarRouter, { googleCalendarCallbackRouter } from './routes/google-calendar.js'
 
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -82,6 +83,12 @@ app.get('/health', (_req, res) => {
 // IP rate-limit still applies to blunt brute-forcing the secret.
 app.use('/api/internal/autoplan', ipRateLimit, autoplanRouter)
 
+// Google OAuth callback — Google redirects the browser here with no auth
+// header, so it must sit OUTSIDE the `/api` auth chain. The one-time `state`
+// param ties the callback back to the user who initiated the connect flow.
+// IP rate-limit still applies to blunt brute-forcing the state value.
+app.use('/api/google-calendar/callback', ipRateLimit, googleCalendarCallbackRouter)
+
 // IP-based limit runs before auth to blunt brute-force attempts on API keys.
 // User-based limit runs after auth for higher-signal per-account throttling.
 app.use('/api', ipRateLimit, authenticate, userRateLimit)
@@ -98,6 +105,7 @@ app.use('/api/conversations', requireMethodScope, conversationsRouter)
 app.use('/api/projects', requireMethodScope, projectsRouter)
 app.use('/api/playlists', requireMethodScope, playlistsRouter)
 app.use('/api/mood', requireMethodScope, moodRouter)
+app.use('/api/google-calendar', requireMethodScope, googleCalendarRouter)
 app.use('/api/mcp-oauth', requireMethodScope, mcpOauthRouter)
 app.use('/api/auth', requireMethodScope, authRouter)
 
