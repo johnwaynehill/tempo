@@ -1,4 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
+import { useSearchParams } from 'react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { useTodos } from '@/hooks/useTodos'
@@ -8,6 +10,7 @@ import { useInstallPrompt } from '@/hooks/useInstallPrompt'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { useNotifications } from '@/hooks/useNotifications'
 import { CodaImportModal } from '@/components/ui/CodaImportModal'
+import { CompletionToast } from '@/components/ui/CompletionToast'
 import { MenuButton } from '@/components/ui/MenuButton'
 import type { UserPreferences } from '@/types'
 
@@ -34,6 +37,83 @@ export function SettingsPage() {
   const [keyToRevoke, setKeyToRevoke] = useState<ApiKeyRow | null>(null)
   const [revokingId, setRevokingId] = useState<string | null>(null)
   const [revokeError, setRevokeError] = useState<string | null>(null)
+
+  // --- Lightweight toast (reuses CompletionToast; auto-dismisses after 4s) ---
+  const [toast, setToast] = useState<string | null>(null)
+  useEffect(() => {
+    if (!toast) return
+    const t = setTimeout(() => setToast(null), 4000)
+    return () => clearTimeout(t)
+  }, [toast])
+
+  // --- Google Calendar integration ---
+  const queryClient = useQueryClient()
+  const [searchParams, setSearchParams] = useSearchParams()
+  type GCalStatus = Awaited<ReturnType<typeof api.googleCalendar.status>>
+  const [gcal, setGcal] = useState<GCalStatus | null>(null)
+  const [gcalBusy, setGcalBusy] = useState<'idle' | 'connecting' | 'syncing' | 'disconnecting'>('idle')
+
+  const loadGcalStatus = useCallback(async () => {
+    try { setGcal(await api.googleCalendar.status()) } catch { /* integration may be unconfigured */ }
+  }, [])
+
+  useEffect(() => { loadGcalStatus() }, [loadGcalStatus])
+
+  // Surface the OAuth callback result (?google=<status>), then strip the param.
+  useEffect(() => {
+    const g = searchParams.get('google')
+    if (!g) return
+    const messages: Record<string, string> = {
+      connected: 'Google Calendar connected.',
+      denied: 'Google Calendar connection was cancelled.',
+      expired: 'That connection link expired — please try again.',
+      no_refresh_token: 'Connection incomplete — please try connecting again.',
+      error: 'Something went wrong connecting Google Calendar.',
+    }
+    setToast(messages[g] ?? null)
+    if (g === 'connected') loadGcalStatus()
+    searchParams.delete('google')
+    setSearchParams(searchParams, { replace: true })
+  }, [searchParams, setSearchParams, loadGcalStatus])
+
+  const handleConnectGoogle = async () => {
+    setGcalBusy('connecting')
+    try {
+      const { url } = await api.googleCalendar.connect()
+      window.location.href = url
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Failed to start Google connection')
+      setGcalBusy('idle')
+    }
+  }
+
+  const handleSyncGoogle = async () => {
+    setGcalBusy('syncing')
+    try {
+      const r = await api.googleCalendar.sync()
+      await queryClient.invalidateQueries({ queryKey: ['events'] })
+      await loadGcalStatus()
+      setToast(`Synced — ${r.upserted} event${r.upserted === 1 ? '' : 's'} from Google.`)
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Sync failed')
+    } finally {
+      setGcalBusy('idle')
+    }
+  }
+
+  const handleDisconnectGoogle = async () => {
+    setGcalBusy('disconnecting')
+    try {
+      await api.googleCalendar.disconnect()
+      await queryClient.invalidateQueries({ queryKey: ['events'] })
+      await loadGcalStatus()
+      setToast('Google Calendar disconnected.')
+    } catch (err) {
+      setToast(err instanceof Error ? err.message : 'Failed to disconnect')
+    } finally {
+      setGcalBusy('idle')
+    }
+  }
 
   const loadApiKeys = useCallback(async () => {
     setApiKeysLoading(true)
@@ -376,6 +456,62 @@ export function SettingsPage() {
         </div>
       </section>
 
+      {/* Google Calendar */}
+      <section className="mb-10">
+        <h2 className="font-display text-lg font-semibold text-on-surface mb-4">Google Calendar</h2>
+        <div className="bg-surface-container-lowest rounded-xl p-5">
+          {gcal?.connected ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-on-surface text-sm font-medium">Connected</p>
+                  <p className="text-on-surface-variant text-xs truncate">
+                    {gcal.email ?? 'Google account'}
+                    {gcal.lastSyncedAt && ` · Last synced ${new Date(gcal.lastSyncedAt).toLocaleString()}`}
+                  </p>
+                  {gcal.lastSyncError && (
+                    <p className="text-error text-xs mt-0.5">Last sync error: {gcal.lastSyncError}</p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={handleSyncGoogle}
+                    disabled={gcalBusy !== 'idle'}
+                    className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {gcalBusy === 'syncing' ? 'Syncing…' : 'Sync now'}
+                  </button>
+                  <button
+                    onClick={handleDisconnectGoogle}
+                    disabled={gcalBusy !== 'idle'}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                  >
+                    {gcalBusy === 'disconnecting' ? 'Disconnecting…' : 'Disconnect'}
+                  </button>
+                </div>
+              </div>
+              <p className="text-on-surface-variant text-xs">
+                Your primary Google calendar is mirrored into Tempo (read-only), from 7 days ago through 90 days ahead.
+              </p>
+            </div>
+          ) : (
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-on-surface text-sm font-medium">Connect Google Calendar</p>
+                <p className="text-on-surface-variant text-xs">Mirror your Google events into Tempo, read-only.</p>
+              </div>
+              <button
+                onClick={handleConnectGoogle}
+                disabled={gcalBusy !== 'idle'}
+                className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50 shrink-0"
+              >
+                {gcalBusy === 'connecting' ? 'Connecting…' : 'Connect'}
+              </button>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* App */}
       <section className="mb-10">
         <h2 className="font-display text-lg font-semibold text-on-surface mb-4">App</h2>
@@ -647,6 +783,8 @@ export function SettingsPage() {
       {showImportModal && (
         <CodaImportModal onClose={() => setShowImportModal(false)} />
       )}
+
+      {toast && <CompletionToast message={toast} onDismiss={() => setToast(null)} />}
 
       {/* Revoke API key confirmation */}
       {keyToRevoke && (

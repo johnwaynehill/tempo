@@ -151,6 +151,9 @@ export interface CalendarEvent {
   description?: string
   location?: string
   color?: 'primary' | 'tertiary' | 'error' | 'neutral'
+  /** 'tempo' = native (editable), 'google' = mirrored from Google Calendar (read-only) */
+  source?: 'tempo' | 'google'
+  external_id?: string
   created_at: Date
   updated_at: Date
 }

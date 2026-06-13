@@ -238,4 +238,18 @@ export const api = {
   auth: {
     me: () => apiFetch<{ uid: string; email: string | null; displayName: string | null; photoURL: string | null }>('/api/auth/me'),
   },
+  googleCalendar: {
+    status: () => apiFetch<{
+      connected: boolean
+      email?: string | null
+      syncEnabled?: boolean
+      lastSyncedAt?: string | null
+      lastSyncError?: string | null
+    }>('/api/google-calendar/status'),
+    connect: () => apiFetch<{ url: string }>('/api/google-calendar/connect'),
+    sync: () => apiFetch<{ status: string; upserted: number; pruned: number }>('/api/google-calendar/sync', {
+      method: 'POST',
+    }),
+    disconnect: () => apiFetch<void>('/api/google-calendar', { method: 'DELETE' }),
+  },
 }
