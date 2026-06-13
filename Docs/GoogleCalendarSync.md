@@ -39,18 +39,36 @@ callback back to the user who started the flow.
 
 ### 1. Google Cloud Console
 
+> Google replaced the old "OAuth consent screen → Configure" page with the
+> **Google Auth Platform** (left-nav tabs: Overview / Branding / Audience /
+> Clients / Data Access). The steps below match that current UI.
+
 1. Create / pick a project at <https://console.cloud.google.com>.
 2. **APIs & Services → Library** → enable the **Google Calendar API**.
-3. **APIs & Services → OAuth consent screen** → configure (External; add your
-   own Google account as a test user while unverified). Add the scope
-   `https://www.googleapis.com/auth/calendar.readonly`.
-4. **APIs & Services → Credentials → Create credentials → OAuth client ID**:
+3. **APIs & Services → OAuth consent screen**. If the project isn't configured
+   yet you'll see a **"Google Auth Platform not configured yet"** page — click
+   **Get started** and complete the wizard:
+   - **App Information**: app name (e.g. `Tempo`) + your support email.
+   - **Audience**: **External**.
+   - **Contact Information**: your email. Agree → **Create**.
+4. **Data Access** tab → **Add or remove scopes** → add
+   `https://www.googleapis.com/auth/calendar.readonly` → **Update** → **Save**.
+5. **Audience** tab → **Test users** → **+ Add users** → add your own Google
+   account.
+6. **Audience** tab → **Publishing status** → **Publish app** (Production).
+   ⚠️ **Do this, or background sync breaks weekly.** In *Testing* status Google
+   expires refresh tokens after 7 days. Production drops that expiry. The app
+   stays unverified, so the first consent shows an "unverified app" warning —
+   click **Advanced → Go to Tempo (unsafe)** to proceed (fine for a single-user
+   personal app).
+7. **Clients** tab → **Create client** (this is where "Credentials → OAuth
+   client ID" now lives):
    - Application type: **Web application**
-   - Authorized redirect URI:
+   - Authorized redirect URIs:
      `https://<api-host>/api/google-calendar/callback`
      (e.g. `https://tempo-api-production.up.railway.app/api/google-calendar/callback`)
      — and `http://localhost:3001/api/google-calendar/callback` for local dev.
-5. Copy the **Client ID** and **Client secret**.
+8. Copy the **Client ID** and **Client secret**.
 
 ### 2. Environment variables (API service)
 
