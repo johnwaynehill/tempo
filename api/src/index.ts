@@ -22,6 +22,7 @@ import mcpOauthRouter from './routes/mcp-oauth.js'
 import authRouter from './routes/auth.js'
 import autoplanRouter from './routes/autoplan.js'
 import googleCalendarRouter, { googleCalendarCallbackRouter } from './routes/google-calendar.js'
+import googleSyncRouter from './routes/google-sync.js'
 
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -82,6 +83,11 @@ app.get('/health', (_req, res) => {
 // handled inside the router via a shared-secret header (AUTOPLAN_SECRET).
 // IP rate-limit still applies to blunt brute-forcing the secret.
 app.use('/api/internal/autoplan', ipRateLimit, autoplanRouter)
+
+// Internal Google Calendar sync endpoint — same shared-secret pattern as
+// autoplan (X-Google-Sync-Secret / GOOGLE_SYNC_SECRET), driven by the
+// cron-gcal-sync Railway service. Outside the `/api` auth chain.
+app.use('/api/internal/google-sync', ipRateLimit, googleSyncRouter)
 
 // Google OAuth callback — Google redirects the browser here with no auth
 // header, so it must sit OUTSIDE the `/api` auth chain. The one-time `state`
