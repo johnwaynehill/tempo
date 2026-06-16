@@ -15,10 +15,19 @@ The container is single-purpose — it `curl`s, prints the response, exits.
 
 1. In the Railway dashboard, **create a new service in the existing Tempo project**:
    - Source: the same GitHub repo
+   - **Root directory: `/`** (the repo root — Railway reads
+     `api/cron-gcal-sync/railway.json`, whose `dockerfilePath` is resolved from
+     the root). Do **not** point the root directory at the `railway.json` file.
    - Service name: `gcal-sync-cron`
 
-2. Override the root config path so Railway picks this service's `railway.json`:
-   - **Settings → Config-as-Code** → set to `api/cron-gcal-sync/railway.json`
+2. Point Railway at this service's config file so it picks up the cron schedule
+   and Dockerfile:
+   - **Settings → Config-as-Code** (a.k.a. "Railway Config File") → set to
+     `api/cron-gcal-sync/railway.json`
+
+   > **Build fails with `stat .../railway.json: not a directory`?** The Root
+   > Directory was set to the `railway.json` *file* instead of `/`. Fix step 1's
+   > Root directory to `/` and put the config path in step 2's field instead.
 
 3. **Set environment variables** on this service:
    - `API_URL` = `https://tempo-api-production.up.railway.app`
