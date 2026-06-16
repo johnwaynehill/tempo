@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-16
+- Fix the `gcal-sync-cron` Dockerfile so it builds with Railway's default Root Directory (`/`). Its `COPY run.sh …` resolved against the repo-root build context and failed (`"/run.sh": not found`) because `run.sh` lives in the `api/cron-gcal-sync/` subfolder. Changed it to the full repo path `COPY api/cron-gcal-sync/run.sh …`. With Root Directory `/` and the Config-as-Code path set to `api/cron-gcal-sync/railway.json`, the build resolves both the Dockerfile and the script.
 - Docs: fix the `gcal-sync-cron` setup README. It omitted the **Root directory: `/`** step, so following it could land the railway.json path in Railway's Root Directory field, failing the build with `stat .../api/cron-gcal-sync/railway.json: not a directory`. Clarified that the repo root is the build root (the `railway.json` path goes in the Config-as-Code field), matching `cron-autoplan`, and added a troubleshooting note for that exact error.
 
 ## 2026-06-13
