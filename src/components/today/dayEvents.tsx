@@ -4,13 +4,6 @@ import { useEvents } from '@/hooks/useEvents'
 import { formatTime, dayAbbrev, startOfDay, toISODateString } from '@/lib/dateUtils'
 import type { CalendarEvent } from '@/types'
 
-const DOT_COLORS: Record<NonNullable<CalendarEvent['color']>, string> = {
-  primary: 'bg-primary',
-  tertiary: 'bg-primary-dim',
-  error: 'bg-error',
-  neutral: 'bg-on-surface-variant',
-}
-
 const UPCOMING_DAYS = 3
 
 const byStartTime = (a: CalendarEvent, b: CalendarEvent) =>
@@ -57,6 +50,29 @@ function useDayEvents() {
 
 const SECTION_LABEL = 'text-xs font-semibold uppercase tracking-wider text-on-surface-variant mb-2 flex items-center'
 
+function CalendarIcon() {
+  return (
+    <svg
+      className="w-4 h-4 text-on-surface-variant shrink-0"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="3" y="4.5" width="18" height="16" rx="2" />
+      <path d="M3 9.5h18M8 3v3M16 3v3" />
+    </svg>
+  )
+}
+
+/**
+ * A single event row. Events render flat (no card) so they read as calendar
+ * reference, visually distinct from the white todo cards. A calendar icon
+ * (today) or day chip (upcoming) signals "event, not task".
+ */
 function EventRow({
   event,
   mode,
@@ -69,10 +85,10 @@ function EventRow({
   return (
     <button
       onClick={() => onOpenDay(event.start_time)}
-      className="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-container transition-colors duration-200 cursor-pointer text-left min-h-[44px]"
+      className="group w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors duration-200 cursor-pointer text-left min-h-[40px]"
     >
       {mode === 'today' ? (
-        <span className={`w-2 h-2 rounded-full shrink-0 ${DOT_COLORS[event.color ?? 'primary']}`} />
+        <CalendarIcon />
       ) : (
         <span className="shrink-0 w-10 text-center text-[11px] font-medium text-on-surface-variant bg-surface-container rounded-md px-1.5 py-0.5">
           {dayAbbrev(event.start_time)}
@@ -94,7 +110,7 @@ function useOpenDay() {
   return (date: Date) => navigate(`/backlog?view=calendar&date=${toISODateString(date)}`)
 }
 
-/** "Today's events" — sits above the task list; always renders (quiet placeholder when empty). */
+/** "Today's events" — flat list above the task list; quiet placeholder when empty. */
 export function TodaysEvents() {
   const { todayEvents } = useDayEvents()
   const openDay = useOpenDay()
@@ -109,18 +125,18 @@ export function TodaysEvents() {
           </span>
         )}
       </p>
-      <div className="bg-surface-container-lowest rounded-2xl p-1.5">
-        {todayEvents.length === 0 ? (
-          <p className="px-3 py-3 text-sm text-on-surface-variant/70">No events today</p>
-        ) : (
-          todayEvents.map((e) => <EventRow key={e.id} event={e} mode="today" onOpenDay={openDay} />)
-        )}
-      </div>
+      {todayEvents.length === 0 ? (
+        <p className="px-2 text-sm text-on-surface-variant/70">No events today</p>
+      ) : (
+        <div>
+          {todayEvents.map((e) => <EventRow key={e.id} event={e} mode="today" onOpenDay={openDay} />)}
+        </div>
+      )}
     </section>
   )
 }
 
-/** "Next 3 days" — sits below the task list; hidden entirely when there's nothing upcoming. */
+/** "Next 3 days" — flat list below the task list; hidden entirely when empty. */
 export function UpcomingEvents() {
   const { upcomingEvents } = useDayEvents()
   const openDay = useOpenDay()
@@ -130,7 +146,7 @@ export function UpcomingEvents() {
   return (
     <section className="mt-8">
       <p className={SECTION_LABEL}>Next 3 days</p>
-      <div className="bg-surface-container-lowest rounded-2xl p-1.5">
+      <div>
         {upcomingEvents.map((e) => <EventRow key={e.id} event={e} mode="upcoming" onOpenDay={openDay} />)}
       </div>
     </section>

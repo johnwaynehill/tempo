@@ -1,6 +1,7 @@
 # Changelog
 
 ## 2026-06-17
+- Make the Today view's event sections visually distinct from todos. Events were white rounded cards just like todo items, so they read as tasks. They now render **flat** (no card) on the page: today's events lead with a calendar icon, "Next 3 days" keeps its day chip, and rows still tap through to the calendar. Todos remain the only card-shaped, white elements — restoring a clear "cards = do, flat = reference" hierarchy. The count badge, sorting, inline location, and empty placeholder are unchanged.
 - Remove the "Google" tag from calendar events in the Backlog/calendar day-detail panel. The source badge added in the Phase 3 read-only treatment is gone everywhere; Google-mirrored events still render read-only (no click-to-edit, no delete) — just without the label.
 
 ## 2026-06-16
