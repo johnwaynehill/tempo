@@ -82,19 +82,9 @@ export function DayDetailPanel({
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-[15px] text-on-surface leading-snug truncate">
-                        {event.title}
-                      </p>
-                      {isGoogle && (
-                        <span
-                          className="shrink-0 px-1.5 py-0.5 rounded-md bg-surface-container-high text-[10px] font-medium text-on-surface-variant"
-                          title="From Google Calendar — read-only"
-                        >
-                          Google
-                        </span>
-                      )}
-                    </div>
+                    <p className="text-[15px] text-on-surface leading-snug truncate">
+                      {event.title}
+                    </p>
                     <p className="text-xs text-on-surface-variant mt-0.5">
                       {event.all_day
                         ? 'All day'
