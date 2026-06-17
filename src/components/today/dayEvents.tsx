@@ -85,7 +85,7 @@ function EventRow({
   return (
     <button
       onClick={() => onOpenDay(event.start_time)}
-      className="group w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors duration-200 cursor-pointer text-left min-h-[40px]"
+      className="group w-full flex items-center gap-3 -mx-2 px-2 py-2 rounded-lg hover:bg-surface-container transition-colors duration-200 cursor-pointer text-left min-h-[40px]"
     >
       {mode === 'today' ? (
         <CalendarIcon />
@@ -126,7 +126,7 @@ export function TodaysEvents() {
         )}
       </p>
       {todayEvents.length === 0 ? (
-        <p className="px-2 text-sm text-on-surface-variant/70">No events today</p>
+        <p className="text-sm text-on-surface-variant/70">No events today</p>
       ) : (
         <div>
           {todayEvents.map((e) => <EventRow key={e.id} event={e} mode="today" onOpenDay={openDay} />)}
