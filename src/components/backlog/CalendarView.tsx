@@ -19,13 +19,15 @@ interface CalendarViewProps {
   todos: Todo[]
   onCompleteTodo: (id: string) => void
   onDeferTodo: (id: string, until?: Date) => void
+  /** Optional day to open on (e.g. deep-linked from the Today view). */
+  initialDate?: Date
 }
 
-export function CalendarView({ todos, onCompleteTodo, onDeferTodo }: CalendarViewProps) {
+export function CalendarView({ todos, onCompleteTodo, onDeferTodo, initialDate }: CalendarViewProps) {
   const { events, addEvent, updateEvent, removeEvent } = useEvents()
 
-  const [viewDate, setViewDate] = useState(() => new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [viewDate, setViewDate] = useState(() => initialDate ?? new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => initialDate ?? null)
   const [showEventForm, setShowEventForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
@@ -84,6 +86,14 @@ export function CalendarView({ todos, onCompleteTodo, onDeferTodo }: CalendarVie
   useEffect(() => {
     if (!selectedDate) setSelectedDate(new Date())
   }, [])
+
+  // Re-focus when deep-linked to a new day while already mounted.
+  useEffect(() => {
+    if (initialDate) {
+      setViewDate(initialDate)
+      setSelectedDate(initialDate)
+    }
+  }, [initialDate])
 
   return (
     <div>
