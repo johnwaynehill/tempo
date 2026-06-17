@@ -12,7 +12,9 @@ FROM curlimages/curl:8.10.1
 # on non-2xx, but we don't want to retry forever — Railway will rerun on the
 # next scheduled tick anyway.
 USER root
-COPY run.sh /usr/local/bin/run.sh
+# Path is relative to the build context = repo root (Railway Root Directory "/"),
+# so reference the script by its full repo path rather than a bare name.
+COPY api/cron-autoplan/run.sh /usr/local/bin/run.sh
 RUN chmod +x /usr/local/bin/run.sh
 USER curl_user
 CMD ["/usr/local/bin/run.sh"]
