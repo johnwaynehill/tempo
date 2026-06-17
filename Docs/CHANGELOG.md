@@ -1,5 +1,8 @@
 # Changelog
 
+## 2026-06-17
+- Remove the "Google" tag from calendar events in the Backlog/calendar day-detail panel. The source badge added in the Phase 3 read-only treatment is gone everywhere; Google-mirrored events still render read-only (no click-to-edit, no delete) — just without the label.
+
 ## 2026-06-16
 - Add calendar event sections to the Today view. A compact **Today's events** strip sits above the task list (sorted all-day-first then by time, with a count badge and inline location), and a **Next 3 days** feed (day-chip rows) sits below — keeping tasks the visual focus. Events are source-agnostic (native Tempo + mirrored Google events alike, no source chip). Tapping any event opens that day on the calendar (`/backlog?view=calendar&date=…`); `CalendarView` gained an `initialDate` prop and Backlog reads a `date` param to focus the day. Empty today shows a quiet "No events today" placeholder; the upcoming section hides entirely when there's nothing in the next 3 days. New `src/components/today/dayEvents.tsx`.
 - Preventatively fix the `autoplan-cron` Dockerfile the same way as `gcal-sync-cron` — `COPY run.sh …` → `COPY api/cron-autoplan/run.sh …`. The bare path only builds when the context is the subfolder; with Railway Root Directory `/` (as its committed `railway.json` implies) a rebuild would fail with `"/run.sh": not found`. The running service is unaffected until its next rebuild; this just makes that rebuild safe. No behaviour change.
