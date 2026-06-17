@@ -11,6 +11,7 @@ import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useStreak } from '@/hooks/useStreak'
 import { useMood } from '@/hooks/useMood'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
+import { TodaysEvents, UpcomingEvents } from '@/components/today/dayEvents'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -40,7 +41,7 @@ export function TodayPage() {
       : `All done. You knocked out ${todayCompletedCount} tasks today.`
 
   return (
-    <div className="pb-16">
+    <div className="pb-24">
       {/* Page header */}
       <div className="mb-6 md:mb-8 flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -118,6 +119,9 @@ export function TodayPage() {
         )}
       </button>
 
+      {/* Today's events — calendar glance above tasks; tasks stay the focus */}
+      <TodaysEvents />
+
       {/* Today's tasks */}
       {loading ? (
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
@@ -170,6 +174,9 @@ export function TodayPage() {
           )}
         </>
       )}
+
+      {/* Upcoming events — next 3 days, below tasks as reference */}
+      <UpcomingEvents />
 
       {/* AI Chat Bar — sticky above bottom nav */}
       {AI_ENABLED && (

@@ -88,8 +88,17 @@ export function BacklogPage() {
   // exact filter context. Also makes filtered views URL-shareable.
   const [searchParams, setSearchParams] = useSearchParams()
 
+  // A `date` param (e.g. deep-linked from the Today view's event sections) opens
+  // the calendar view focused on that day. Derived live so re-tapping a
+  // different day while already here re-focuses the calendar.
+  const dateParam = searchParams.get('date')
+  const initialCalendarDate = useMemo(
+    () => (dateParam ? new Date(`${dateParam}T00:00:00`) : undefined),
+    [dateParam],
+  )
+
   const [viewMode, setViewMode] = useState<ViewMode>(
-    () => (searchParams.get('view') === 'calendar' ? 'calendar' : 'list'),
+    () => (searchParams.get('view') === 'calendar' || searchParams.get('date') ? 'calendar' : 'list'),
   )
   const [energyFilter, setEnergyFilter] = useState<EnergyLevel | undefined>(() => {
     const v = searchParams.get('energy')
@@ -293,6 +302,7 @@ export function BacklogPage() {
           todos={filtered}
           onCompleteTodo={completeTodo}
           onDeferTodo={deferTodo}
+          initialDate={initialCalendarDate}
         />
       ) : (
         <>
