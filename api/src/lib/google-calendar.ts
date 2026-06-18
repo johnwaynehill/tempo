@@ -121,11 +121,16 @@ interface MappedEvent {
 }
 
 function mapEvent(e: GoogleEvent): MappedEvent {
-  // All-day events use `date` (no time); timed events use `dateTime`. For
-  // all-day we anchor at local midnight to avoid a timezone day-shift on display.
+  // All-day events use `date` (no time); timed events use `dateTime`.
+  //
+  // For all-day events we anchor at **noon UTC**. Google sends a bare date with
+  // no timezone; parsing it as midnight lands on 00:00 UTC on this (UTC) server,
+  // which the frontend — bucketing/displaying by the viewer's LOCAL date — then
+  // renders a day early for any negative-offset (Americas) timezone. Noon UTC
+  // keeps the local calendar date correct from UTC-12 through UTC+11.
   const allDay = Boolean(e.start?.date)
-  const start = allDay ? new Date(`${e.start!.date}T00:00:00`) : new Date(e.start!.dateTime!)
-  const end = allDay ? new Date(`${e.end!.date}T00:00:00`) : new Date(e.end!.dateTime!)
+  const start = allDay ? new Date(`${e.start!.date}T12:00:00Z`) : new Date(e.start!.dateTime!)
+  const end = allDay ? new Date(`${e.end!.date}T12:00:00Z`) : new Date(e.end!.dateTime!)
   return {
     externalId: e.id,
     title: e.summary?.trim() || '(no title)',
