@@ -340,6 +340,15 @@ These are not for external API consumers. They live under `/api/internal/*` and 
 
 Fires the morning auto-plan: for every user with `autoplanEnabled = true`, picks 3–5 todos and replaces their Today view. Triggered daily at 13:30 UTC by the `autoplan-cron` Railway service.
 
+Candidate selection (`selectCandidates` in `api/src/lib/autoplan.ts`) scores every
+eligible todo on due-date urgency, impact, energy match, and staleness, then
+feeds the top 12 to Anthropic for a coherent 3–5 pick. One hard exception:
+todos in a `DUE_DATE_ONLY_PROJECTS` project (currently just `Chore`, matched
+case-insensitively) are only candidates on their literal due date — no due
+date, or a due date before/after today, excludes them entirely rather than
+merely scoring them lower. Mirrored client-side in `src/lib/scoring.ts` for
+the fallback path when the server hasn't populated `today_sets` yet.
+
 **Auth:** `X-Autoplan-Secret: <secret>` matching the API service's `AUTOPLAN_SECRET` env var. Returns 503 if the env var is unset (never open-by-default).
 
 **Optional body:**

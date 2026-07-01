@@ -1,6 +1,20 @@
 import type { Todo, EnergyLevel } from '@/types'
 import { ENERGY_ORDINAL } from '@/types'
 
+// Projects whose todos should only ever be suggested for Today on their
+// literal due date — never before (not urgent yet) and never after (once the
+// date passes without being done, autoplan stops resurfacing it; reschedule
+// by editing the due date instead). Case-insensitive, trimmed compare.
+// Mirrors the same constant in api/src/lib/autoplan.ts — extend both if more
+// projects need this rule. Applied in `suggestTodayTodos` only (not
+// `scoreTodo`, which also powers plain sort-by-score views like Backlog and
+// Project Detail — those should keep showing every todo, just reordered).
+const DUE_DATE_ONLY_PROJECTS = new Set(['chore'])
+
+function isDueDateOnlyProject(project?: string | null): boolean {
+  return !!project && DUE_DATE_ONLY_PROJECTS.has(project.trim().toLowerCase())
+}
+
 /**
  * Today View Auto-Suggest Scoring Algorithm
  *
@@ -58,6 +72,7 @@ export function scoreTodo(todo: Todo, currentEnergy?: EnergyLevel): number {
 /**
  * Returns up to `limit` auto-suggested todos, sorted by score descending.
  * Excludes: done, deferred (not yet due), today_pinned, dismissed today, inbox.
+ * Also excludes DUE_DATE_ONLY_PROJECTS todos whose due date isn't today.
  */
 export function suggestTodayTodos(
   todos: Todo[],
@@ -76,6 +91,13 @@ export function suggestTodayTodos(
       t.dismissed_from_today &&
       t.dismissed_from_today >= today
     ) return false
+
+    if (isDueDateOnlyProject(t.project)) {
+      if (!t.due_date) return false
+      const due = new Date(t.due_date.getFullYear(), t.due_date.getMonth(), t.due_date.getDate())
+      if (due.getTime() !== today.getTime()) return false
+    }
+
     return true
   })
 

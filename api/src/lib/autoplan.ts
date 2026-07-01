@@ -21,6 +21,18 @@ const CANDIDATE_POOL_SIZE = 12          // top-N heuristic candidates fed to the
 const ANTHROPIC_MODEL = 'claude-sonnet-4-5'
 const ANTHROPIC_TIMEOUT_MS = 20_000
 
+// Projects whose todos should only ever be suggested for Today on their
+// literal due date — never before (not urgent yet) and never after (once the
+// date passes without being done, autoplan should stop resurfacing it; the
+// user reschedules by editing the due date, not by it camping at the top of
+// Today indefinitely). Case-insensitive, trimmed compare. Mirrors the same
+// constant in src/lib/scoring.ts — extend both if more projects need this.
+const DUE_DATE_ONLY_PROJECTS = new Set(['chore'])
+
+function isDueDateOnlyProject(project: string | null): boolean {
+  return project != null && DUE_DATE_ONLY_PROJECTS.has(project.trim().toLowerCase())
+}
+
 // --- Types ---
 
 type EnergyLevel = 'low' | 'medium_low' | 'medium' | 'high'
@@ -34,14 +46,38 @@ const ENERGY_ORDINAL: Record<EnergyLevel, number> = {
 
 type TodoRow = typeof schema.todos.$inferSelect
 
+// --- Timezone-safe date helpers ---
+//
+// `runAutoplanForUser` computes "today" in the user's configured IANA
+// timezone (see below), but day-granularity comparisons here previously used
+// dueDate.getFullYear()/.getMonth()/.getDate(), which resolve in the
+// *server's* local timezone (UTC on Railway) — not the user's. That can shift
+// which calendar day a due date "counts as" for several hours around each
+// timezone's day boundary (e.g. a chore due "today" in Pacific time could
+// still read as tomorrow on the UTC server). All day comparisons now go
+// through these helpers so they're anchored to the user's timezone.
+
+function localDateString(date: Date, timezone: string): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: timezone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date)
+}
+
+/** Whole days between two YYYY-MM-DD strings (b minus a). */
+function daysBetween(a: string, b: string): number {
+  const [ay, am, ad] = a.split('-').map(Number)
+  const [by, bm, bd] = b.split('-').map(Number)
+  return Math.round((Date.UTC(by, bm - 1, bd) - Date.UTC(ay, am - 1, ad)) / (1000 * 60 * 60 * 24))
+}
+
 // --- Heuristic scoring (mirror of src/lib/scoring.ts) ---
 
-function dueDateUrgency(dueDate: Date | null): number {
-  if (!dueDate) return 0.2
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const due = new Date(dueDate.getFullYear(), dueDate.getMonth(), dueDate.getDate())
-  const daysUntil = Math.floor((due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+function dueDateUrgency(dueDateStr: string | null, todayDateStr: string): number {
+  if (!dueDateStr) return 0.2
+  const daysUntil = daysBetween(todayDateStr, dueDateStr)
   if (daysUntil < 0) return 1.0
   if (daysUntil === 0) return 1.0
   if (daysUntil === 1) return 0.7
@@ -65,9 +101,15 @@ function staleness(createdAt: Date): number {
   return Math.min(days / 30, 1.0)
 }
 
-function scoreTodo(todo: TodoRow, currentEnergy: EnergyLevel | null | undefined): number {
+function scoreTodo(
+  todo: TodoRow,
+  currentEnergy: EnergyLevel | null | undefined,
+  todayDateStr: string,
+  timezone: string,
+): number {
+  const dueDateStr = todo.dueDate ? localDateString(todo.dueDate, timezone) : null
   return (
-    dueDateUrgency(todo.dueDate) * 40 +
+    dueDateUrgency(dueDateStr, todayDateStr) * 40 +
     (todo.impact ?? 3) * 8 +
     energyMatch(todo.energyLevel as EnergyLevel | null, currentEnergy) * 25 +
     staleness(todo.createdAt) * 10
@@ -81,10 +123,19 @@ function scoreTodo(todo: TodoRow, currentEnergy: EnergyLevel | null | undefined)
  * `suggestTodayTodos` on the frontend: skip done, today_pinned, inbox, and
  * deferred-not-yet-due. We INCLUDE backlog (which the frontend hook treats
  * as the same eligible set) — auto-plan is meant to fill an empty Today.
+ *
+ * Todos in a `DUE_DATE_ONLY_PROJECTS` project (e.g. Chore) get an additional
+ * hard gate: only eligible when their due date is exactly today, in the
+ * user's timezone. No due date, or a due date before/after today, excludes
+ * them from candidacy entirely — they don't just score lower, they're never
+ * considered, so they can't crowd out real priorities in the days leading up
+ * to (or after) their due date.
  */
 function selectCandidates(
   todos: TodoRow[],
   currentEnergy: EnergyLevel | null | undefined,
+  todayDateStr: string,
+  timezone: string,
 ): TodoRow[] {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -94,11 +145,17 @@ function selectCandidates(
     if (t.status === 'inbox') return false
     if (t.status === 'deferred' && t.deferUntil && t.deferUntil > now) return false
     if (t.dismissedFromToday && t.dismissedFromToday >= today) return false
+
+    if (isDueDateOnlyProject(t.project)) {
+      if (!t.dueDate) return false
+      if (localDateString(t.dueDate, timezone) !== todayDateStr) return false
+    }
+
     return true
   })
 
   return eligible
-    .map((todo) => ({ todo, score: scoreTodo(todo, currentEnergy) }))
+    .map((todo) => ({ todo, score: scoreTodo(todo, currentEnergy, todayDateStr, timezone) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, CANDIDATE_POOL_SIZE)
     .map((s) => s.todo)
@@ -243,7 +300,7 @@ export async function runAutoplanForUser(
     .where(eq(schema.todos.userId, userId))
 
   const currentEnergy = (prefs?.currentEnergy ?? null) as EnergyLevel | null
-  const candidates = selectCandidates(todos, currentEnergy)
+  const candidates = selectCandidates(todos, currentEnergy, todayDate, timezone)
 
   let pickedIds: string[]
   let source: 'ai' | 'heuristic'
