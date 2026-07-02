@@ -118,6 +118,19 @@ function scoreTodo(
 
 // --- Candidate selection ---
 
+interface CandidateSelection {
+  /** Top-N scored candidates fed to the AI/heuristic picker. */
+  candidates: TodoRow[]
+  /**
+   * DUE_DATE_ONLY_PROJECTS todos due exactly today. Always a subset of
+   * `eligible` (computed before the top-N truncation, so it can never be
+   * dropped by the pool-size cap) — the caller adds these to the final picks
+   * unconditionally, not just as candidates the AI/heuristic may or may not
+   * choose. "Due today" is a commitment, not a suggestion.
+   */
+  mandatory: TodoRow[]
+}
+
 /**
  * Pull eligible candidates from the user's todos. Mirrors the filter in
  * `suggestTodayTodos` on the frontend: skip done, today_pinned, inbox, and
@@ -129,14 +142,15 @@ function scoreTodo(
  * user's timezone. No due date, or a due date before/after today, excludes
  * them from candidacy entirely — they don't just score lower, they're never
  * considered, so they can't crowd out real priorities in the days leading up
- * to (or after) their due date.
+ * to (or after) their due date. Every one that survives the gate is due
+ * exactly today, so they're also returned as `mandatory` — see there.
  */
 function selectCandidates(
   todos: TodoRow[],
   currentEnergy: EnergyLevel | null | undefined,
   todayDateStr: string,
   timezone: string,
-): TodoRow[] {
+): CandidateSelection {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
 
@@ -154,11 +168,15 @@ function selectCandidates(
     return true
   })
 
-  return eligible
+  const candidates = eligible
     .map((todo) => ({ todo, score: scoreTodo(todo, currentEnergy, todayDateStr, timezone) }))
     .sort((a, b) => b.score - a.score)
     .slice(0, CANDIDATE_POOL_SIZE)
     .map((s) => s.todo)
+
+  const mandatory = eligible.filter((t) => isDueDateOnlyProject(t.project))
+
+  return { candidates, mandatory }
 }
 
 // --- AI ranking ---
@@ -300,7 +318,7 @@ export async function runAutoplanForUser(
     .where(eq(schema.todos.userId, userId))
 
   const currentEnergy = (prefs?.currentEnergy ?? null) as EnergyLevel | null
-  const candidates = selectCandidates(todos, currentEnergy, todayDate, timezone)
+  const { candidates, mandatory } = selectCandidates(todos, currentEnergy, todayDate, timezone)
 
   let pickedIds: string[]
   let source: 'ai' | 'heuristic'
@@ -323,6 +341,18 @@ export async function runAutoplanForUser(
       pickedIds = candidates.slice(0, targetCount).map((c) => c.id)
       source = 'heuristic'
     }
+  }
+
+  // Mandatory due-today items (e.g. Chores) are never left out just because
+  // the AI/heuristic pass didn't happen to choose them — "due today" is a
+  // commitment, not a suggestion it's free to skip. Added on top of the
+  // 3–5 target, not counted against it, so Today can occasionally run over
+  // 5 items on a day with more than one thing due. Order: mandatory first,
+  // so they read as the non-negotiable part of the day.
+  if (mandatory.length > 0) {
+    const alreadyPicked = new Set(pickedIds)
+    const additions = mandatory.map((t) => t.id).filter((id) => !alreadyPicked.has(id))
+    pickedIds = [...additions, ...pickedIds]
   }
 
   // --- Replace Today ---
