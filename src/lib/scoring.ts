@@ -72,7 +72,14 @@ export function scoreTodo(todo: Todo, currentEnergy?: EnergyLevel): number {
 /**
  * Returns up to `limit` auto-suggested todos, sorted by score descending.
  * Excludes: done, deferred (not yet due), today_pinned, dismissed today, inbox.
- * Also excludes DUE_DATE_ONLY_PROJECTS todos whose due date isn't today.
+ *
+ * DUE_DATE_ONLY_PROJECTS todos (e.g. Chore) get two rules, not one: excluded
+ * entirely unless due exactly today (they're never merely deprioritized), and
+ * when due today they're **mandatory** — guaranteed in the result rather than
+ * left to compete for a slot on score alone. "Due today" is a commitment, not
+ * a suggestion the ranking is free to drop. Mandatory items are additive on
+ * top of `limit`, so the result can occasionally exceed it. Mirrors
+ * `selectCandidates` in api/src/lib/autoplan.ts.
  */
 export function suggestTodayTodos(
   todos: Todo[],
@@ -101,13 +108,19 @@ export function suggestTodayTodos(
     return true
   })
 
-  const scored = candidates.map((todo) => ({
+  // Every DUE_DATE_ONLY_PROJECTS todo that survived the filter above is, by
+  // construction, due exactly today — split those out as mandatory before
+  // scoring/slicing the rest.
+  const mandatory = candidates.filter((t) => isDueDateOnlyProject(t.project))
+  const discretionary = candidates.filter((t) => !isDueDateOnlyProject(t.project))
+
+  const scored = discretionary.map((todo) => ({
     todo,
     score: scoreTodo(todo, currentEnergy),
   }))
 
   scored.sort((a, b) => b.score - a.score)
 
-  const slotsAvailable = Math.max(0, limit - pinnedCount)
-  return scored.slice(0, slotsAvailable).map((s) => s.todo)
+  const slotsAvailable = Math.max(0, limit - pinnedCount - mandatory.length)
+  return [...mandatory, ...scored.slice(0, slotsAvailable).map((s) => s.todo)]
 }

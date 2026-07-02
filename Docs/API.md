@@ -346,7 +346,11 @@ feeds the top 12 to Anthropic for a coherent 3–5 pick. One hard exception:
 todos in a `DUE_DATE_ONLY_PROJECTS` project (currently just `Chore`, matched
 case-insensitively) are only candidates on their literal due date — no due
 date, or a due date before/after today, excludes them entirely rather than
-merely scoring them lower. Mirrored client-side in `src/lib/scoring.ts` for
+merely scoring them lower. **Due-today items in these projects are also
+mandatory** — added to the final picks unconditionally (additive on top of
+the 3–5 target, so the result can occasionally exceed 5), because the AI or
+heuristic pass is otherwise free to leave a merely-*eligible* item out in
+favor of other candidates. Mirrored client-side in `src/lib/scoring.ts` for
 the fallback path when the server hasn't populated `today_sets` yet.
 
 **Auth:** `X-Autoplan-Secret: <secret>` matching the API service's `AUTOPLAN_SECRET` env var. Returns 503 if the env var is unset (never open-by-default).
