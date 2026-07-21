@@ -76,6 +76,15 @@ export default defineConfig(({ mode }) => {
       workbox: {
         // App shell: pre-cache built assets
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // generateSW registers a catch-all NavigationRoute that serves the
+        // cached index.html for EVERY navigation once the service worker is
+        // active — that's correct for SPA routes, but it hijacks the
+        // standalone /design-system static page too: the browser never hits
+        // the network (where serve.json's rewrite correctly serves
+        // design-system/index.html), so React Router boots instead and its
+        // catch-all route bounces to /today. Exclude it from the fallback so
+        // the SW lets the request through to the network like normal.
+        navigateFallbackDenylist: [/^\/design-system/],
         // Runtime cache: Google Fonts so the app looks right offline
         runtimeCaching: [
           {
