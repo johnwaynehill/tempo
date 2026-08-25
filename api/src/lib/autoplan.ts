@@ -21,16 +21,18 @@ const CANDIDATE_POOL_SIZE = 12          // top-N heuristic candidates fed to the
 const ANTHROPIC_MODEL = 'claude-sonnet-4-5'
 const ANTHROPIC_TIMEOUT_MS = 20_000
 
-// Projects whose todos should only ever be suggested for Today on their
-// literal due date — never before (not urgent yet) and never after (once the
-// date passes without being done, autoplan should stop resurfacing it; the
-// user reschedules by editing the due date, not by it camping at the top of
-// Today indefinitely). Case-insensitive, trimmed compare. Mirrors the same
-// constant in src/lib/scoring.ts — extend both if more projects need this.
-const DUE_DATE_ONLY_PROJECTS = new Set(['chore'])
+// Projects whose todos should never be suggested for Today *before* their due
+// date (not urgent yet), but are guaranteed on it — and every day after, until
+// they're done. Overdue is the case that matters most: a chore that slipped
+// past its date is exactly the thing that must not quietly stop appearing on
+// Today, or it never gets done. (Reschedule by editing the due date; anything
+// still outstanding keeps showing up.) Case-insensitive, trimmed compare.
+// Mirrors the same constant in src/lib/scoring.ts — extend both if more
+// projects need this.
+const DUE_DATE_GATED_PROJECTS = new Set(['chore'])
 
-function isDueDateOnlyProject(project: string | null): boolean {
-  return project != null && DUE_DATE_ONLY_PROJECTS.has(project.trim().toLowerCase())
+function isDueDateGatedProject(project: string | null): boolean {
+  return project != null && DUE_DATE_GATED_PROJECTS.has(project.trim().toLowerCase())
 }
 
 // --- Types ---
@@ -122,11 +124,11 @@ interface CandidateSelection {
   /** Top-N scored candidates fed to the AI/heuristic picker. */
   candidates: TodoRow[]
   /**
-   * DUE_DATE_ONLY_PROJECTS todos due exactly today. Always a subset of
-   * `eligible` (computed before the top-N truncation, so it can never be
-   * dropped by the pool-size cap) — the caller adds these to the final picks
-   * unconditionally, not just as candidates the AI/heuristic may or may not
-   * choose. "Due today" is a commitment, not a suggestion.
+   * DUE_DATE_GATED_PROJECTS todos that are due today or already overdue.
+   * Always a subset of `eligible` (computed before the top-N truncation, so it
+   * can never be dropped by the pool-size cap) — the caller adds these to the
+   * final picks unconditionally, not just as candidates the AI/heuristic may
+   * or may not choose. Due (or late) is a commitment, not a suggestion.
    */
   mandatory: TodoRow[]
 }
@@ -137,13 +139,14 @@ interface CandidateSelection {
  * deferred-not-yet-due. We INCLUDE backlog (which the frontend hook treats
  * as the same eligible set) — auto-plan is meant to fill an empty Today.
  *
- * Todos in a `DUE_DATE_ONLY_PROJECTS` project (e.g. Chore) get an additional
- * hard gate: only eligible when their due date is exactly today, in the
- * user's timezone. No due date, or a due date before/after today, excludes
- * them from candidacy entirely — they don't just score lower, they're never
- * considered, so they can't crowd out real priorities in the days leading up
- * to (or after) their due date. Every one that survives the gate is due
- * exactly today, so they're also returned as `mandatory` — see there.
+ * Todos in a `DUE_DATE_GATED_PROJECTS` project (e.g. Chore) get an additional
+ * hard gate: eligible only once their due date has arrived, in the user's
+ * timezone. No due date, or a due date still in the future, excludes them from
+ * candidacy entirely — they don't just score lower, they're never considered,
+ * so they can't crowd out real priorities in the days leading up to their due
+ * date. Once the date arrives they stay eligible while overdue, until they're
+ * done. Every one that survives the gate is due or late, so they're also
+ * returned as `mandatory` — see there.
  */
 function selectCandidates(
   todos: TodoRow[],
@@ -160,9 +163,10 @@ function selectCandidates(
     if (t.status === 'deferred' && t.deferUntil && t.deferUntil > now) return false
     if (t.dismissedFromToday && t.dismissedFromToday >= today) return false
 
-    if (isDueDateOnlyProject(t.project)) {
+    if (isDueDateGatedProject(t.project)) {
       if (!t.dueDate) return false
-      if (localDateString(t.dueDate, timezone) !== todayDateStr) return false
+      // Due today (0) or overdue (negative) passes; still upcoming does not.
+      if (daysBetween(todayDateStr, localDateString(t.dueDate, timezone)) > 0) return false
     }
 
     return true
@@ -174,7 +178,10 @@ function selectCandidates(
     .slice(0, CANDIDATE_POOL_SIZE)
     .map((s) => s.todo)
 
-  const mandatory = eligible.filter((t) => isDueDateOnlyProject(t.project))
+  // Oldest due date first, so the most overdue chore leads.
+  const mandatory = eligible
+    .filter((t) => isDueDateGatedProject(t.project))
+    .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0))
 
   return { candidates, mandatory }
 }
@@ -343,11 +350,11 @@ export async function runAutoplanForUser(
     }
   }
 
-  // Mandatory due-today items (e.g. Chores) are never left out just because
-  // the AI/heuristic pass didn't happen to choose them — "due today" is a
-  // commitment, not a suggestion it's free to skip. Added on top of the
-  // 3–5 target, not counted against it, so Today can occasionally run over
-  // 5 items on a day with more than one thing due. Order: mandatory first,
+  // Mandatory due-or-overdue items (e.g. Chores) are never left out just
+  // because the AI/heuristic pass didn't happen to choose them — a chore
+  // that's due, or late, is a commitment, not a suggestion it's free to skip.
+  // Added on top of the 3–5 target, not counted against it, so Today runs
+  // over 5 items rather than dropping any of them. Order: mandatory first,
   // so they read as the non-negotiable part of the day.
   if (mandatory.length > 0) {
     const alreadyPicked = new Set(pickedIds)
