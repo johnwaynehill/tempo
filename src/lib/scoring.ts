@@ -1,18 +1,18 @@
 import type { Todo, EnergyLevel } from '@/types'
 import { ENERGY_ORDINAL } from '@/types'
 
-// Projects whose todos should only ever be suggested for Today on their
-// literal due date — never before (not urgent yet) and never after (once the
-// date passes without being done, autoplan stops resurfacing it; reschedule
-// by editing the due date instead). Case-insensitive, trimmed compare.
-// Mirrors the same constant in api/src/lib/autoplan.ts — extend both if more
-// projects need this rule. Applied in `suggestTodayTodos` only (not
+// Projects whose todos should never be suggested for Today *before* their due
+// date (not urgent yet), but are guaranteed on it — and every day after, until
+// they're done. An overdue chore is the one thing that must not quietly fall
+// off Today: that's exactly how it stays undone. Case-insensitive, trimmed
+// compare. Mirrors the same constant in api/src/lib/autoplan.ts — extend both
+// if more projects need this rule. Applied in `suggestTodayTodos` only (not
 // `scoreTodo`, which also powers plain sort-by-score views like Backlog and
 // Project Detail — those should keep showing every todo, just reordered).
-const DUE_DATE_ONLY_PROJECTS = new Set(['chore'])
+const DUE_DATE_GATED_PROJECTS = new Set(['chore'])
 
-function isDueDateOnlyProject(project?: string | null): boolean {
-  return !!project && DUE_DATE_ONLY_PROJECTS.has(project.trim().toLowerCase())
+function isDueDateGatedProject(project?: string | null): boolean {
+  return !!project && DUE_DATE_GATED_PROJECTS.has(project.trim().toLowerCase())
 }
 
 /**
@@ -73,12 +73,14 @@ export function scoreTodo(todo: Todo, currentEnergy?: EnergyLevel): number {
  * Returns up to `limit` auto-suggested todos, sorted by score descending.
  * Excludes: done, deferred (not yet due), today_pinned, dismissed today, inbox.
  *
- * DUE_DATE_ONLY_PROJECTS todos (e.g. Chore) get two rules, not one: excluded
- * entirely unless due exactly today (they're never merely deprioritized), and
- * when due today they're **mandatory** — guaranteed in the result rather than
- * left to compete for a slot on score alone. "Due today" is a commitment, not
- * a suggestion the ranking is free to drop. Mandatory items are additive on
- * top of `limit`, so the result can occasionally exceed it. Mirrors
+ * DUE_DATE_GATED_PROJECTS todos (e.g. Chore) get two rules, not one: excluded
+ * entirely until their due date arrives (they're never merely deprioritized
+ * beforehand), and from that date onward — including once overdue — they're
+ * **mandatory**: guaranteed in the result rather than left to compete for a
+ * slot on score alone. A chore that's due, or late, is a commitment the
+ * ranking isn't free to drop; going overdue makes it more important to
+ * surface, not less. Mandatory items are additive on top of `limit`, so the
+ * result can exceed it when several chores are outstanding. Mirrors
  * `selectCandidates` in api/src/lib/autoplan.ts.
  */
 export function suggestTodayTodos(
@@ -99,20 +101,23 @@ export function suggestTodayTodos(
       t.dismissed_from_today >= today
     ) return false
 
-    if (isDueDateOnlyProject(t.project)) {
+    if (isDueDateGatedProject(t.project)) {
       if (!t.due_date) return false
       const due = new Date(t.due_date.getFullYear(), t.due_date.getMonth(), t.due_date.getDate())
-      if (due.getTime() !== today.getTime()) return false
+      if (due.getTime() > today.getTime()) return false
     }
 
     return true
   })
 
-  // Every DUE_DATE_ONLY_PROJECTS todo that survived the filter above is, by
-  // construction, due exactly today — split those out as mandatory before
-  // scoring/slicing the rest.
-  const mandatory = candidates.filter((t) => isDueDateOnlyProject(t.project))
-  const discretionary = candidates.filter((t) => !isDueDateOnlyProject(t.project))
+  // Every DUE_DATE_GATED_PROJECTS todo that survived the filter above is, by
+  // construction, due today or overdue — split those out as mandatory before
+  // scoring/slicing the rest. Oldest due date first, so the most overdue chore
+  // leads.
+  const mandatory = candidates
+    .filter((t) => isDueDateGatedProject(t.project))
+    .sort((a, b) => (a.due_date?.getTime() ?? 0) - (b.due_date?.getTime() ?? 0))
+  const discretionary = candidates.filter((t) => !isDueDateGatedProject(t.project))
 
   const scored = discretionary.map((todo) => ({
     todo,
