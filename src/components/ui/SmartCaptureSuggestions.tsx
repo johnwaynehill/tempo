@@ -1,5 +1,5 @@
 import { ENERGY_LABELS, type EnergyLevel, type TodoSize } from '@/types'
-import { formatMinutes } from '@/hooks/useTimer'
+import { formatMinutes } from '@/lib/time'
 import type { SmartSuggestions } from '@/hooks/useSmartCapture'
 
 const SIZE_LABELS: Record<TodoSize, string> = {

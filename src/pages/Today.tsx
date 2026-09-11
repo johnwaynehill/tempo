@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 import { MenuButton } from '@/components/ui/MenuButton'
 import { TodoItem } from '@/components/ui/TodoItem'
@@ -10,8 +10,10 @@ import { useTodaySet } from '@/hooks/useTodaySet'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useStreak } from '@/hooks/useStreak'
 import { useMood } from '@/hooks/useMood'
+import { useTimer } from '@/hooks/useTimer'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
 import { TodaysEvents, UpcomingEvents } from '@/components/today/dayEvents'
+import { DaySummary, NowCard } from '@/components/today/NowCard'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -22,9 +24,20 @@ export function TodayPage() {
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { latestMood } = useMood()
+  const timer = useTimer()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
+
+  // The running task is lifted out of the list into the Now card.
+  const activeTodo = timer.activeTaskId ? todayTodos.find((t) => t.id === timer.activeTaskId) : undefined
+  const listTodos = activeTodo ? todayTodos.filter((t) => t.id !== activeTodo.id) : todayTodos
+
+  // If the running task left Today (completed in Focus Mode, deferred, unpinned), drop the timer.
+  const { activeTaskId, stop: stopTimer } = timer
+  useEffect(() => {
+    if (!loading && activeTaskId && !activeTodo) stopTimer()
+  }, [loading, activeTaskId, activeTodo, stopTimer])
 
   // Count items completed today
   const todayCompletedCount = useMemo(() => {
@@ -127,11 +140,26 @@ export function TodayPage() {
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
       ) : (
         <>
+          <DaySummary todos={todayTodos} timer={timer} onStart={timer.start} />
+
+          {activeTodo && (
+            <NowCard
+              todo={activeTodo}
+              timer={timer}
+              onComplete={(id) => {
+                timer.stop()
+                completeTodo(id)
+                triggerToast(activeTodo.title)
+              }}
+            />
+          )}
+
           <div className="space-y-3">
-            {todayTodos.map((todo) => (
+            {listTodos.map((todo) => (
               <TodoItem
                 key={todo.id}
                 todo={todo}
+                onStart={timer.start}
                 onComplete={(id) => {
                   completeTodo(id)
                   triggerToast(todo.title)

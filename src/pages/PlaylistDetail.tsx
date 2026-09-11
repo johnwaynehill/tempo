@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { formatMinutes } from '@/hooks/useTimer'
+import { formatMinutes } from '@/lib/time'
 import type { PlaylistItem } from '@/types'
 
 type ItemDraft = Omit<PlaylistItem, 'id' | 'playlist_id'>

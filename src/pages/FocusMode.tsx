@@ -3,14 +3,11 @@ import { useNavigate } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { usePreferences } from '@/hooks/usePreferences'
-import { useTimer, formatElapsed, formatMinutes, defaultEstimate } from '@/hooks/useTimer'
+import { useTimer } from '@/hooks/useTimer'
+import { getEstimate, formatElapsed, formatMinutes } from '@/lib/time'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 
-
-function getEstimate(todo: { estimated_minutes?: number; size?: string }): number {
-  return todo.estimated_minutes ?? defaultEstimate(todo.size)
-}
 
 export function FocusModePage() {
   const navigate = useNavigate()
@@ -28,8 +25,11 @@ export function FocusModePage() {
   const captureRef = useRef<HTMLInputElement>(null)
 
   const loading = todosLoading || setLoading
-  const currentTodo = todayTodos[currentIndex]
-  const nextTodo = todayTodos[currentIndex + 1]
+  // A timer started elsewhere (the Now card on Today) decides which task is current.
+  const activeIndex = timer.activeTaskId ? todayTodos.findIndex((t) => t.id === timer.activeTaskId) : -1
+  const effectiveIndex = activeIndex >= 0 ? activeIndex : currentIndex
+  const currentTodo = todayTodos[effectiveIndex]
+  const nextTodo = todayTodos[effectiveIndex + 1]
   const estimateMin = currentTodo ? getEstimate(currentTodo) : 0
   const estimateSec = estimateMin * 60
   const progress = estimateSec > 0 ? Math.min((timer.elapsedSeconds / estimateSec) * 100, 100) : 0
@@ -53,7 +53,7 @@ export function FocusModePage() {
 
   const advanceToNext = useCallback(() => {
     if (nextTodo) {
-      setCurrentIndex((i) => i + 1)
+      setCurrentIndex(effectiveIndex + 1)
       setPhase('focus')
       setShowNext(false)
       timer.start(nextTodo.id)
@@ -61,7 +61,7 @@ export function FocusModePage() {
       timer.stop()
       navigate('/today')
     }
-  }, [nextTodo, timer, navigate])
+  }, [nextTodo, effectiveIndex, timer, navigate])
 
   const handleComplete = useCallback(() => {
     if (!currentTodo) return
@@ -153,13 +153,13 @@ export function FocusModePage() {
       {/* Top bar: exit + task count */}
       <div className="flex items-center justify-between px-6 py-4">
         <button
-          onClick={() => { timer.stop(); navigate('/today') }}
+          onClick={() => navigate('/today')}
           className="text-on-surface-variant text-sm hover:text-on-surface transition-colors cursor-pointer"
         >
           ← Today
         </button>
         <span className="text-on-surface-variant text-xs">
-          {currentIndex + 1} of {todayTodos.length}
+          {effectiveIndex + 1} of {todayTodos.length}
         </span>
       </div>
 

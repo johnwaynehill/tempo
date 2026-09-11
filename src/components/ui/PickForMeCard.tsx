@@ -1,5 +1,5 @@
 import type { Todo } from '@/types'
-import { formatMinutes, defaultEstimate } from '@/hooks/useTimer'
+import { formatMinutes, getEstimate } from '@/lib/time'
 
 interface PickForMeCardProps {
   todo: Todo
@@ -9,7 +9,7 @@ interface PickForMeCardProps {
 }
 
 export function PickForMeCard({ todo, reason, onStart, onDismiss }: PickForMeCardProps) {
-  const estimate = todo.estimated_minutes ?? defaultEstimate(todo.size)
+  const estimate = getEstimate(todo)
 
   return (
     <div className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[380px] z-50 animate-gentle-appear">
