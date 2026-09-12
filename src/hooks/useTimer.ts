@@ -1,36 +1,54 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 
+/**
+ * Persisted shape. Elapsed time is derived from wall-clock timestamps rather
+ * than counted by an interval, so a backgrounded or throttled tab can't lose
+ * seconds, and a closed tab picks up where it left off.
+ */
 interface TimerState {
   activeTaskId: string | null
-  elapsedSeconds: number
-  isRunning: boolean
-  isPaused: boolean
-  startedAt: number | null // timestamp ms
+  /** Seconds banked before the current run (i.e. across pauses). */
+  accumulatedSeconds: number
+  /** Wall-clock ms when the current run started; null while paused or stopped. */
+  runningSince: number | null
 }
 
 const STORAGE_KEY = 'tempo-timer-state'
+const IDLE: TimerState = { activeTaskId: null, accumulatedSeconds: 0, runningSince: null }
 
 function loadState(): TimerState {
+  let parsed: Partial<TimerState> | null = null
   try {
-    const raw = sessionStorage.getItem(STORAGE_KEY)
-    if (raw) {
-      const parsed = JSON.parse(raw) as TimerState
-      // If timer was running, calculate elapsed time since page was open
-      if (parsed.isRunning && parsed.startedAt) {
-        const additionalSeconds = Math.floor((Date.now() - parsed.startedAt) / 1000)
-        parsed.elapsedSeconds += additionalSeconds
-        parsed.startedAt = Date.now()
-      }
-      return parsed
-    }
-  } catch {}
-  return { activeTaskId: null, elapsedSeconds: 0, isRunning: false, isPaused: false, startedAt: null }
+    const raw = localStorage.getItem(STORAGE_KEY)
+    parsed = raw ? (JSON.parse(raw) as Partial<TimerState>) : null
+  } catch {
+    return IDLE
+  }
+  if (!parsed || typeof parsed.activeTaskId !== 'string' || typeof parsed.accumulatedSeconds !== 'number') {
+    return IDLE
+  }
+  return {
+    activeTaskId: parsed.activeTaskId,
+    accumulatedSeconds: parsed.accumulatedSeconds,
+    runningSince: typeof parsed.runningSince === 'number' ? parsed.runningSince : null,
+  }
 }
 
 function saveState(state: TimerState) {
   try {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state))
-  } catch {}
+    if (state.activeTaskId) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+    } else {
+      localStorage.removeItem(STORAGE_KEY)
+    }
+  } catch {
+    // Storage blocked (private mode, quota): the timer still works, it just won't survive a reload.
+  }
+}
+
+function elapsedAt(state: TimerState, now: number): number {
+  const running = state.runningSince ? Math.floor((now - state.runningSince) / 1000) : 0
+  return state.accumulatedSeconds + Math.max(0, running)
 }
 
 export interface UseTimerResult {
@@ -41,104 +59,76 @@ export interface UseTimerResult {
   start: (taskId: string) => void
   pause: () => void
   resume: () => void
-  stop: () => void
+  /** Stops the timer and returns the final elapsed seconds. */
+  stop: () => number
   reset: (taskId: string) => void
 }
 
 export function useTimer(): UseTimerResult {
   const [state, setState] = useState<TimerState>(loadState)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const [now, setNow] = useState(() => Date.now())
+  const stateRef = useRef(state)
 
-  // Persist state changes
   useEffect(() => {
+    stateRef.current = state
     saveState(state)
   }, [state])
 
-  // Tick interval
+  // Re-render once a second while running. The interval carries no state, so
+  // throttling only delays the display; it never loses time.
   useEffect(() => {
-    if (state.isRunning && !state.isPaused) {
-      intervalRef.current = setInterval(() => {
-        setState((prev) => ({
-          ...prev,
-          elapsedSeconds: prev.elapsedSeconds + 1,
-        }))
-      }, 1000)
-    }
+    if (!state.runningSince) return
+    const id = setInterval(() => setNow(Date.now()), 1000)
+    const onVisible = () => { if (document.visibilityState === 'visible') setNow(Date.now()) }
+    document.addEventListener('visibilitychange', onVisible)
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current)
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', onVisible)
     }
-  }, [state.isRunning, state.isPaused])
+  }, [state.runningSince])
+
+  // Keep two open tabs (Today + Focus Mode) in agreement.
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY) setState(loadState())
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
 
   const start = useCallback((taskId: string) => {
-    setState({
-      activeTaskId: taskId,
-      elapsedSeconds: 0,
-      isRunning: true,
-      isPaused: false,
-      startedAt: Date.now(),
-    })
+    setState({ activeTaskId: taskId, accumulatedSeconds: 0, runningSince: Date.now() })
   }, [])
 
   const pause = useCallback(() => {
-    setState((prev) => ({ ...prev, isPaused: true, startedAt: null }))
+    setState((prev) => {
+      if (!prev.runningSince) return prev
+      return { ...prev, accumulatedSeconds: elapsedAt(prev, Date.now()), runningSince: null }
+    })
   }, [])
 
   const resume = useCallback(() => {
-    setState((prev) => ({ ...prev, isPaused: false, startedAt: Date.now() }))
+    setState((prev) => {
+      if (!prev.activeTaskId || prev.runningSince) return prev
+      return { ...prev, runningSince: Date.now() }
+    })
   }, [])
 
   const stop = useCallback(() => {
-    setState({ activeTaskId: null, elapsedSeconds: 0, isRunning: false, isPaused: false, startedAt: null })
-  }, [])
-
-  const reset = useCallback((taskId: string) => {
-    setState({
-      activeTaskId: taskId,
-      elapsedSeconds: 0,
-      isRunning: true,
-      isPaused: false,
-      startedAt: Date.now(),
-    })
+    const elapsed = elapsedAt(stateRef.current, Date.now())
+    setState(IDLE)
+    return elapsed
   }, [])
 
   return {
     activeTaskId: state.activeTaskId,
-    elapsedSeconds: state.elapsedSeconds,
-    isRunning: state.isRunning,
-    isPaused: state.isPaused,
+    elapsedSeconds: elapsedAt(state, now),
+    isRunning: state.activeTaskId !== null,
+    isPaused: state.activeTaskId !== null && state.runningSince === null,
     start,
     pause,
     resume,
     stop,
-    reset,
-  }
-}
-
-/** Format seconds as "12:45" or "1:02:30" */
-export function formatElapsed(seconds: number): string {
-  const h = Math.floor(seconds / 3600)
-  const m = Math.floor((seconds % 3600) / 60)
-  const s = seconds % 60
-  if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  return `${m}:${String(s).padStart(2, '0')}`
-}
-
-/** Format minutes as "1h 30m" or "25m" */
-export function formatMinutes(mins: number): string {
-  if (mins >= 60) {
-    const h = Math.floor(mins / 60)
-    const m = mins % 60
-    return m > 0 ? `${h}h ${m}m` : `${h}h`
-  }
-  return `${mins}m`
-}
-
-/** Get default estimate based on todo size */
-export function defaultEstimate(size?: string): number {
-  switch (size) {
-    case 'small': return 15
-    case 'medium': return 30
-    case 'large': return 60
-    default: return 25
+    reset: start,
   }
 }

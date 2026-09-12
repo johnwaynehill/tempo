@@ -5,7 +5,7 @@ import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useMood } from '@/hooks/useMood'
 import { suggestTodayTodos } from '@/lib/scoring'
-import { defaultEstimate, formatMinutes } from '@/hooks/useTimer'
+import { getEstimate, formatMinutes, totalEstimatedMinutes, projectedEndTime, formatClock } from '@/lib/time'
 import { api } from '@/lib/api'
 import type { Todo } from '@/types'
 
@@ -16,10 +16,6 @@ const STEPS: Step[] = ['checkin', 'yesterday', 'pick', 'estimates', 'ready']
 function todayDateString(): string {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-
-function getEstimate(todo: Todo): number {
-  return todo.estimated_minutes ?? defaultEstimate(todo.size)
 }
 
 export function PlanMyDayPage() {
@@ -93,14 +89,8 @@ export function PlanMyDayPage() {
   }, [suggestions, backlog, selectedIds])
 
   // Total time estimate
-  const totalMinutes = useMemo(() => {
-    return selectedTodos.reduce((sum, t) => sum + getEstimate(t), 0)
-  }, [selectedTodos])
-
-  const endTime = useMemo(() => {
-    const end = new Date(Date.now() + totalMinutes * 60 * 1000)
-    return end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })
-  }, [totalMinutes])
+  const totalMinutes = useMemo(() => totalEstimatedMinutes(selectedTodos), [selectedTodos])
+  const endTime = useMemo(() => formatClock(projectedEndTime(selectedTodos, null)), [selectedTodos])
 
   const toggleTodo = useCallback((id: string) => {
     setSelectedIds((prev) => {

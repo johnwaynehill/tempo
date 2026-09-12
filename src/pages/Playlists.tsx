@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { formatMinutes } from '@/hooks/useTimer'
+import { formatMinutes } from '@/lib/time'
 import { MenuButton } from '@/components/ui/MenuButton'
 
 export function PlaylistsPage() {

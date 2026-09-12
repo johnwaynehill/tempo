@@ -5,7 +5,7 @@ import { ENERGY_LABELS, ENERGY_CHIP_STYLE, SIZE_CHIP_STYLE, projectChipStyle, im
 import { describeRecurrence } from '@/lib/recurrence'
 import { useNotes } from '@/hooks/useNotes'
 import { CompletionSparkle } from '@/components/ui/CompletionSparkle'
-import { formatMinutes } from '@/hooks/useTimer'
+import { formatMinutes } from '@/lib/time'
 
 const SIZE_LABELS = { small: 'Small', medium: 'Medium', large: 'Large' } as const
 
@@ -13,10 +13,12 @@ interface TodoItemProps {
   todo: Todo
   onComplete: (id: string) => void
   onDefer: (id: string, until?: Date) => void
+  /** When provided, the row offers a play button that starts the timer on this todo. */
+  onStart?: (id: string) => void
   showEnergy?: boolean
 }
 
-export function TodoItem({ todo, onComplete, onDefer: _onDefer, showEnergy = true }: TodoItemProps) {
+export function TodoItem({ todo, onComplete, onDefer: _onDefer, onStart, showEnergy = true }: TodoItemProps) {
   const [completing, setCompleting] = useState(false)
   const [sparklePos, setSparklePos] = useState<{ x: number; y: number } | null>(null)
   const { notes } = useNotes()
@@ -128,6 +130,19 @@ export function TodoItem({ todo, onComplete, onDefer: _onDefer, showEnergy = tru
                 )}
               </div>
             </div>
+
+            {onStart && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onStart(todo.id) }}
+                className="mt-1 w-8 h-8 md:w-10 md:h-10 rounded-full flex-shrink-0 flex items-center justify-center text-on-surface-variant/50 hover:text-primary hover:bg-primary/10 transition-all duration-300 cursor-pointer md:opacity-0 md:group-hover:opacity-100 focus-visible:opacity-100"
+                aria-label={`Start timer on "${todo.title}"`}
+                title="Start timer"
+              >
+                <svg className="w-3.5 h-3.5" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+                  <path d="M4 2l10 6-10 6z" />
+                </svg>
+              </button>
+            )}
 
             {/* Complete button — right side */}
             <button
