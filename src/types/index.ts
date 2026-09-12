@@ -78,6 +78,8 @@ export interface Todo {
   impact?: number // 1–5
   energy_level?: EnergyLevel
   estimated_minutes?: number
+  started_at?: Date
+  actual_minutes?: number
   due_date?: Date
   supports?: string
   note_id?: string

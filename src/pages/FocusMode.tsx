@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { usePreferences } from '@/hooks/usePreferences'
-import { useTimer } from '@/hooks/useTimer'
+import { useTaskTimer } from '@/hooks/useTaskTimer'
 import { getEstimate, formatElapsed, formatMinutes } from '@/lib/time'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { CompletionToast } from '@/components/ui/CompletionToast'
@@ -14,7 +14,7 @@ export function FocusModePage() {
   const { todos, pinned, completeTodo, deferTodo, dismissFromToday, addTodo, loading: todosLoading } = useTodos()
   const { preferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
-  const timer = useTimer()
+  const timer = useTaskTimer()
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
 
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -65,8 +65,8 @@ export function FocusModePage() {
 
   const handleComplete = useCallback(() => {
     if (!currentTodo) return
-    timer.stop()
-    completeTodo(currentTodo.id)
+    const { actualMinutes } = timer.stop({ persist: false })
+    completeTodo(currentTodo.id, actualMinutes > 0 ? { actual_minutes: actualMinutes } : undefined)
     triggerToast(currentTodo.title)
     setPhase('transition')
     // Auto-advance after breathing space

@@ -40,6 +40,8 @@ export interface Todo {
   supports?: string
   noteId?: string
   estimatedMinutes?: number
+  startedAt?: string
+  actualMinutes?: number
   deferUntil?: string
   reminderAt?: string
   recurrence?: unknown

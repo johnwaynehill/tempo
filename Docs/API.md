@@ -152,12 +152,16 @@ Create a todo.
   "deferUntil": "2026-04-23T00:00:00Z",
   "reminderAt": "2026-04-22T14:00:00Z",
   "estimatedMinutes": 30,
+  "startedAt": "2026-09-12T15:00:00Z",
+  "actualMinutes": 42,
   "recurrence": { "frequency": "weekly", "interval": 1 },
   "recurrenceParentId": "uuid"
 }
 ```
 
 **201 Created** — returns the full row.
+
+`startedAt` is set the first time a timer runs on the todo; `actualMinutes` is the total timed minutes across runs, written when the timer stops or the todo completes. Both are null for untimed todos and are excluded from calibration.
 
 #### `PUT /api/todos/:id`
 Update a todo. Any subset of the create fields. `id`, `userId`, `createdAt`, `firestoreId` in the body are ignored.

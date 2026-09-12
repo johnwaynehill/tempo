@@ -73,9 +73,9 @@ export function useTodos() {
     await invalidate()
   }, [])
 
-  const completeTodo = useCallback(async (id: string) => {
+  const completeTodo = useCallback(async (id: string, extra?: Partial<Todo>) => {
     const todo = todos.find((t) => t.id === id)
-    await updateTodo(id, { status: 'done', completed_at: new Date() })
+    await updateTodo(id, { ...extra, status: 'done', completed_at: new Date() })
 
     // If recurring, create next occurrence
     if (todo?.recurrence) {

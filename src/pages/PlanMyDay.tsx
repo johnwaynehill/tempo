@@ -1,6 +1,7 @@
 import { useState, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { MoodSlider } from '@/components/ui/MoodSlider'
+import { EstimateHint } from '@/components/ui/EstimateHint'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useMood } from '@/hooks/useMood'
@@ -329,6 +330,7 @@ export function PlanMyDayPage() {
                       </button>
                     ))}
                   </div>
+                  <EstimateHint done={done} size={todo.size} className="mt-2" />
                 </div>
               ))}
             </div>

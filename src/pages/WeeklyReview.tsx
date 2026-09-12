@@ -5,6 +5,9 @@ import { useWeeklyReview } from '@/hooks/useWeeklyReview'
 import { StatCard } from '@/components/charts/StatCard'
 import { HorizontalBarChart } from '@/components/charts/HorizontalBarChart'
 import { VerticalBarSeries } from '@/components/charts/VerticalBarSeries'
+import { PairedBarChart } from '@/components/charts/PairedBarChart'
+import { calibrationHeadline, calibrationPattern, SIZE_LABEL } from '@/lib/calibration'
+import { formatMinutes } from '@/lib/time'
 import {
   getStartOfWeek,
   getEndOfWeek,
@@ -51,6 +54,9 @@ export function WeeklyReviewPage() {
 
   // On-time stats
   const hasDueDateTodos = data.completedOnTime + data.completedLate > 0
+
+  const { calibration } = data
+  const pattern = calibrationPattern(calibration)
 
   return (
     <div>
@@ -177,6 +183,49 @@ export function WeeklyReviewPage() {
                     {data.completedOnTime} of {data.completedOnTime + data.completedLate} on time
                   </span>
                 </div>
+              </div>
+            </section>
+          )}
+
+          {/* Time sense — estimate vs actual, only once there's enough timed work to say anything */}
+          {calibration.ratio !== null && (
+            <section>
+              <h2 className="font-display text-base font-semibold text-on-surface mb-4">
+                Time sense
+              </h2>
+              <div className="bg-surface-container-lowest rounded-xl p-5 space-y-5">
+                <div>
+                  <p className="text-sm text-on-surface">{calibrationHeadline(calibration)}</p>
+                  <p className="text-xs text-on-surface-variant mt-1 tabular-nums">
+                    {calibration.timedCount} timed task{calibration.timedCount !== 1 ? 's' : ''}
+                    <span className="mx-1.5 opacity-50">·</span>
+                    estimated {formatMinutes(calibration.estimatedMinutes)}
+                    <span className="mx-1.5 opacity-50">·</span>
+                    actual {formatMinutes(calibration.actualMinutes)}
+                  </p>
+                </div>
+                <PairedBarChart
+                  rows={calibration.bySize.map((g) => ({
+                    label: SIZE_LABEL[g.key] ?? g.key,
+                    estimated: g.estimatedMinutes,
+                    actual: g.actualMinutes,
+                  }))}
+                />
+                {calibration.byProject.length > 1 && (
+                  <PairedBarChart
+                    rows={calibration.byProject.slice(0, 3).map((g) => ({
+                      label: g.key,
+                      estimated: g.estimatedMinutes,
+                      actual: g.actualMinutes,
+                    }))}
+                  />
+                )}
+                {pattern && (
+                  <p className="text-xs text-on-surface-variant">{pattern}</p>
+                )}
+                <p className="text-[11px] text-on-surface-variant/60">
+                  Muted bar is the estimate, sage is the time you logged.
+                </p>
               </div>
             </section>
           )}
