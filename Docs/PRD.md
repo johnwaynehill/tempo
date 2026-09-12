@@ -410,7 +410,7 @@ Partially complete. Shipped features marked with ✅.
 | ✅ Completion sparkle | Hedonic adaptation | Research-backed | Shipped (#51) — SVG particle burst on checkbox |
 | ✅ Energy-adaptive theme | Variable arousal states | Novel | Shipped (#51, #52) — warm/soft at low energy, vivid/crisp at high |
 | ✅ Routine playlists | Sequencing, working memory | Routinery | Shipped (#51) — full CRUD + "Start" flow |
-| Time estimation calibration | Time blindness (metacognitive) | Novel | Not started — track actual vs. estimated, show patterns in Review |
+| ✅ Time estimation calibration | Time blindness (metacognitive) | Novel | Shipped (#118) — `actual_minutes` from the timer, "Time sense" in Weekly Review, size hints on estimate chips |
 | Ambient soundscapes | Under-arousal, focus | Research-backed | Not started — white/pink/brown noise + nature sounds |
 | Voice input + transcription | Capture friction | Multiple | Not started — see [Future.md](Future.md) |
 | Work/Personal modes | Context bleed | Multiple | Not started — see [Future.md](Future.md) |

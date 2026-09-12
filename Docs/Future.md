@@ -35,8 +35,7 @@ Like https://www.tiimoapp.com/product/mood-tracking. A simple slider with a big,
 - Sync to Apple Health (optional)
 
 ## Time Tracker & Time Blindness
-~~Built~~ — Timer, dynamic end-time, and time estimates shipped (#46). Remaining:
-- Time estimation calibration: track actual vs. estimated time, show patterns in Weekly Review
+~~Built~~ — Timer, dynamic end-time, and time estimates shipped (#46). Now card on Today (#117). Time estimation calibration: `started_at` / `actual_minutes` on todos, "Time sense" in Weekly Review, size hints under estimate chips (#118). Remaining: see `TimeVisibility.md` phase 3 (overcommitment) and phase 4 (playlist Start & focus).
 
 ## Guided Planning & Rituals
 ~~Built~~ — Morning planning (#49), Focus Mode (#47), transition breathing space (#47) shipped. Remaining:
