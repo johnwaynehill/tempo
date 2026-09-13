@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { useNavigate, useSearchParams } from 'react-router'
+import type { Todo } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useTodaySet } from '@/hooks/useTodaySet'
 import { usePreferences } from '@/hooks/usePreferences'
@@ -11,6 +12,7 @@ import { CompletionToast } from '@/components/ui/CompletionToast'
 
 export function FocusModePage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { todos, pinned, completeTodo, deferTodo, dismissFromToday, addTodo, loading: todosLoading } = useTodos()
   const { preferences } = usePreferences()
   const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
@@ -25,21 +27,36 @@ export function FocusModePage() {
   const captureRef = useRef<HTMLInputElement>(null)
 
   const loading = todosLoading || setLoading
+
+  // `?queue=id,id,…` (a playlist just started) walks exactly those todos in that
+  // order; otherwise Focus Mode walks Today. Done todos drop out of the queue as
+  // they're completed, so the list only ever holds what's left.
+  const queueParam = searchParams.get('queue')
+  const focusTodos = useMemo(() => {
+    if (!queueParam) return todayTodos
+    const byId = new Map(todos.map((t) => [t.id, t]))
+    return queueParam
+      .split(',')
+      .map((id) => byId.get(id))
+      .filter((t): t is Todo => !!t && t.status !== 'done')
+  }, [queueParam, todos, todayTodos])
+
   // A timer started elsewhere (the Now card on Today) decides which task is current.
-  const activeIndex = timer.activeTaskId ? todayTodos.findIndex((t) => t.id === timer.activeTaskId) : -1
+  const activeIndex = timer.activeTaskId ? focusTodos.findIndex((t) => t.id === timer.activeTaskId) : -1
   const effectiveIndex = activeIndex >= 0 ? activeIndex : currentIndex
-  const currentTodo = todayTodos[effectiveIndex]
-  const nextTodo = todayTodos[effectiveIndex + 1]
+  const currentTodo = focusTodos[effectiveIndex]
+  const nextTodo = focusTodos[effectiveIndex + 1]
   const estimateMin = currentTodo ? getEstimate(currentTodo) : 0
   const estimateSec = estimateMin * 60
   const progress = estimateSec > 0 ? Math.min((timer.elapsedSeconds / estimateSec) * 100, 100) : 0
   const isOvertime = timer.elapsedSeconds > estimateSec
 
-  // Auto-start timer on the current task
+  // Auto-start timer on the current task. A timer running on something outside
+  // the queue (e.g. a Today task) is stopped first so the queue's own task takes over.
   useEffect(() => {
-    if (currentTodo && phase === 'focus' && !timer.isRunning) {
-      timer.start(currentTodo.id)
-    }
+    if (!currentTodo || phase !== 'focus') return
+    if (timer.isRunning && queueParam && activeIndex < 0) timer.stop()
+    if (!timer.isRunning || (queueParam && activeIndex < 0)) timer.start(currentTodo.id)
   }, [currentTodo?.id, phase])
 
   // Escape exits focus mode
@@ -159,7 +176,7 @@ export function FocusModePage() {
           ← Today
         </button>
         <span className="text-on-surface-variant text-xs">
-          {effectiveIndex + 1} of {todayTodos.length}
+          {effectiveIndex + 1} of {focusTodos.length}
         </span>
       </div>
 

@@ -56,8 +56,7 @@ We created "Unstick Me" prompts for hard-to-tackle todos. Build more features th
 ## Routine Playlists
 ~~Built~~ — Full CRUD + "Start" flow shipped (#51). Remaining enhancements:
 - Voice-guided step-by-step execution
-- Auto-advance between steps with timer
-- Timer integration per playlist item during playback
+- ~~Auto-advance between steps with timer~~ / ~~Timer integration per playlist item during playback~~ — shipped (#120): **Start & focus** on playlist detail walks the steps in order in Focus Mode (`/focus?queue=…`)
 
 ## Auth
 - Migrate from Firebase Auth to Better Auth (self-hosted). Full plan in `BetterAuthMigration.md`.

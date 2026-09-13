@@ -3,7 +3,7 @@
 Making time tangible on the Today page, learning from what actually happens,
 and catching over-planning before it happens.
 
-**Status:** planned 2026-09-02. Phase 1 shipped 2026-09-11 (PR #117). Phase 2 shipped 2026-09-13 (PR #118). Phase 3 built 2026-09-13 (PR #119); phase 4 not started.
+**Status:** planned 2026-09-02. Phase 1 shipped 2026-09-11 (PR #117). Phase 2 shipped 2026-09-13 (PR #118). Phase 3 shipped 2026-09-13 (PR #119). Phase 4 built 2026-09-13 (PR #120). **All phases done.**
 
 ## What already exists (don't rebuild)
 
