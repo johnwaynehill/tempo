@@ -545,9 +545,39 @@ Server-side proxy to `api.anthropic.com`. Injects `ANTHROPIC_API_KEY` so the bro
 
 **Streaming:** set `stream: true` in the body. The response is forwarded as SSE (`text/event-stream`).
 
+**Guards (applied before the request reaches Anthropic)**
+- `model` must be one Tempo uses (the Sonnet 4.5 / 4.6 / Sonnet 5 / Haiku 4.5 ids listed in `api/src/lib/ai-pricing.ts`); anything else is **`400`** `{ "type": "error", "error": { "type": "model_not_allowed", "message": "…" } }`.
+- `max_tokens` is clamped to **4096**.
+- **Daily spend cap.** Each call's tokens are priced from the response's `usage` block and added to the user's row in `ai_usage_daily` for their local day (`autoplan_timezone`). Once the day's total reaches `AI_DAILY_CAP_USD` (default **2**; `0` disables), further calls return **`429`**:
+
+```json
+{
+  "type": "error",
+  "error": {
+    "type": "ai_budget_exceeded",
+    "message": "Daily AI budget of $2.00 reached. Tempo AI is resting until 2026-09-14T07:00:00.000Z.",
+    "cap_usd": 2,
+    "spent_usd": 2.0137,
+    "resets_at": "2026-09-14T07:00:00.000Z"
+  }
+}
+```
+
+The shape matches Anthropic's own errors, so the browser SDK surfaces it as an `APIError` with `error.type === "ai_budget_exceeded"`. The morning autoplan counts toward the same cap and falls back to the heuristic picker when it's reached. A stream that ends before reporting usage is charged an input-only estimate (~4 characters per token).
+
 **Errors**
 - `500` — `ANTHROPIC_API_KEY` not configured on the server.
 - `502` — upstream Anthropic unreachable.
+
+#### `GET /api/ai-usage`
+Today's AI spend against the cap plus the last 7 days with any use. Snake_case on purpose.
+
+```json
+{
+  "today": { "date": "2026-09-13", "timezone": "America/Los_Angeles", "spent_usd": 0.0412, "cap_usd": 2, "requests": 9, "resets_at": "2026-09-14T07:00:00.000Z", "exceeded": false },
+  "history": [{ "date": "2026-09-13", "requests": 9, "input_tokens": 11200, "output_tokens": 1830, "spent_usd": 0.0412 }]
+}
+```
 - Other statuses are passed through from upstream.
 
 ---

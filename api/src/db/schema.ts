@@ -9,6 +9,7 @@ import {
   date,
   jsonb,
   primaryKey,
+  numeric,
   unique,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
@@ -275,3 +276,19 @@ export const apiKeys = pgTable('api_keys', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
 })
+
+// --- AI usage (daily spend cap) ---
+// One row per (user, local day). The Anthropic proxy and the morning autoplan
+// add each call here; the proxy refuses new calls once cost_usd hits the cap.
+
+export const aiUsageDaily = pgTable('ai_usage_daily', {
+  userId: text('user_id').notNull(),
+  date: text('date').notNull(),
+  requests: integer('requests').notNull().default(0),
+  inputTokens: integer('input_tokens').notNull().default(0),
+  outputTokens: integer('output_tokens').notNull().default(0),
+  cacheReadTokens: integer('cache_read_tokens').notNull().default(0),
+  cacheWriteTokens: integer('cache_write_tokens').notNull().default(0),
+  costUsd: numeric('cost_usd', { precision: 12, scale: 6 }).notNull().default('0'),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [primaryKey({ columns: [t.userId, t.date] })])

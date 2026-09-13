@@ -199,6 +199,21 @@ export const MOOD_ANCHORS = [
   { value: 100, label: 'Great' },
 ] as const
 
+// --- AI usage (daily spend cap) — served in snake_case by GET /api/ai-usage ---
+
+export interface AiUsageSummary {
+  today: {
+    date: string
+    timezone: string
+    spent_usd: number
+    cap_usd: number
+    requests: number
+    resets_at: string
+    exceeded: boolean
+  }
+  history: { date: string; requests: number; input_tokens: number; output_tokens: number; spent_usd: number }[]
+}
+
 // --- User Preferences ---
 
 export interface UserPreferences {
