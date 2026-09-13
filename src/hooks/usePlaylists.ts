@@ -47,11 +47,12 @@ export function usePlaylists() {
     invalidate()
   }, [])
 
-  const startPlaylist = useCallback(async (id: string): Promise<number> => {
+  /** Pins the playlist's steps to Today, in order. Returns the new todo ids. */
+  const startPlaylist = useCallback(async (id: string): Promise<{ todoIds: string[]; count: number }> => {
     const result = await api.playlists.start(id)
     qc.invalidateQueries({ queryKey: ['todos'] })
     qc.invalidateQueries({ queryKey: ['today-set'] })
-    return result.count
+    return result
   }, [])
 
   return { playlists, loading, addPlaylist, updatePlaylist, deletePlaylist, startPlaylist }

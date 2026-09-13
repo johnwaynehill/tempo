@@ -18,7 +18,7 @@ export function PlaylistDetailPage() {
   const [newTitle, setNewTitle] = useState('')
   const [dirty, setDirty] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [starting, setStarting] = useState(false)
+  const [starting, setStarting] = useState<'today' | 'focus' | null>(null)
 
   // Sync from playlist data
   useEffect(() => {
@@ -81,9 +81,18 @@ export function PlaylistDetailPage() {
 
   const handleStart = async () => {
     if (!id) return
-    setStarting(true)
+    setStarting('today')
     await startPlaylist(id)
     navigate('/today')
+  }
+
+  // Pin the steps, then walk them in order in Focus Mode with its timer,
+  // transition pause and auto-advance — Routinery-style playback for free.
+  const handleStartAndFocus = async () => {
+    if (!id) return
+    setStarting('focus')
+    const { todoIds } = await startPlaylist(id)
+    navigate(`/focus?queue=${todoIds.join(',')}`)
   }
 
   if (loading) {
@@ -121,13 +130,24 @@ export function PlaylistDetailPage() {
             {items.length} task{items.length !== 1 ? 's' : ''} &middot; {formatMinutes(totalMinutes)}
           </p>
         </div>
-        <button
-          onClick={handleStart}
-          disabled={starting || items.length === 0}
-          className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px] disabled:opacity-50 shrink-0"
-        >
-          {starting ? 'Starting...' : 'Start'}
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={handleStart}
+            disabled={starting !== null || items.length === 0}
+            className="px-4 py-2.5 rounded-xl bg-surface-container-high text-on-surface text-sm font-medium hover:bg-surface-container-highest transition-colors cursor-pointer min-h-[44px] disabled:opacity-50"
+            title="Pin the steps to Today"
+          >
+            {starting === 'today' ? 'Starting...' : 'Start'}
+          </button>
+          <button
+            onClick={handleStartAndFocus}
+            disabled={starting !== null || items.length === 0}
+            className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-dim transition-colors cursor-pointer min-h-[44px] disabled:opacity-50"
+            title="Pin the steps to Today and walk them one at a time with the timer"
+          >
+            {starting === 'focus' ? 'Starting...' : 'Start & focus'}
+          </button>
+        </div>
       </div>
 
       {/* Items */}
