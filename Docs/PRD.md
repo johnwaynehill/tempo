@@ -397,7 +397,7 @@ Partially complete. Shipped features marked with ✅.
 | ✅ Momentum streaks | Positive reinforcement | Multiple | Shipped (#50) — flame indicator on Today |
 | ✅ "Just pick for me" AI picker | Decision paralysis | BeeDone | Shipped (#50) — AI selects task with reasoning |
 | ✅ Smart quick capture | Capture friction | Multiple | Shipped (#50) — AI suggests metadata while typing |
-| Overcommitment detection | Optimism bias | Sunsama | Not started — compare total estimates vs. available hours |
+| ✅ Overcommitment detection | Optimism bias | Sunsama | Shipped (#119) — working hours preference, free time minus timed events, gentle sentence on Today and Plan My Day |
 | Daily shutdown ritual | Hyperfocus overwork | Sunsama | Not started — evening review + defer + reflection |
 | Shame-free visual language audit | Emotional dysregulation | Tiimo | Not started — review all UI for implicit judgment |
 

@@ -14,6 +14,8 @@ import { useTaskTimer } from '@/hooks/useTaskTimer'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
 import { TodaysEvents, UpcomingEvents } from '@/components/today/dayEvents'
 import { DaySummary, NowCard } from '@/components/today/NowCard'
+import { useEvents } from '@/hooks/useEvents'
+import { todayOvercommitMessage } from '@/lib/availability'
 import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
@@ -25,6 +27,7 @@ export function TodayPage() {
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { latestMood } = useMood()
   const timer = useTaskTimer()
+  const { events } = useEvents()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -140,7 +143,18 @@ export function TodayPage() {
         <p className="text-on-surface-variant text-sm py-8">Loading...</p>
       ) : (
         <>
-          <DaySummary todos={todayTodos} timer={timer} onStart={timer.start} />
+          <DaySummary
+            todos={todayTodos}
+            timer={timer}
+            onStart={timer.start}
+            note={todayOvercommitMessage({
+              todos: todayTodos,
+              timer: timer.isRunning ? timer : null,
+              events,
+              dayStart: preferences.work_day_start,
+              dayEnd: preferences.work_day_end,
+            })}
+          />
 
           {activeTodo && (
             <NowCard

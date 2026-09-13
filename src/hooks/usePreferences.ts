@@ -11,6 +11,8 @@ const DEFAULT_PREFS: UserPreferences = {
   adaptive_theme: false,
   autoplan_enabled: false,
   autoplan_timezone: 'America/Los_Angeles',
+  work_day_start: '09:00',
+  work_day_end: '17:00',
 }
 
 export function usePreferences() {
@@ -28,6 +30,8 @@ export function usePreferences() {
         adaptive_theme: (result.adaptive_theme as boolean) ?? false,
         autoplan_enabled: (result.autoplan_enabled as boolean) ?? false,
         autoplan_timezone: (result.autoplan_timezone as string) ?? 'America/Los_Angeles',
+        work_day_start: (result.work_day_start as string) ?? '09:00',
+        work_day_end: (result.work_day_end as string) ?? '17:00',
       } as UserPreferences
     },
     enabled: !!user,

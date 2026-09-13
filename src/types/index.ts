@@ -210,4 +210,7 @@ export interface UserPreferences {
   autoplan_enabled: boolean
   /** IANA timezone used to compute "today" for the auto-plan run. */
   autoplan_timezone: string
+  /** Working hours, "HH:MM" local wall-clock, for overcommitment detection. */
+  work_day_start: string
+  work_day_end: string
 }

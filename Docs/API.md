@@ -322,7 +322,9 @@ Upsert.
   "notificationsEnabled": true,
   "adaptiveTheme": false,
   "autoplanEnabled": true,
-  "autoplanTimezone": "America/Los_Angeles"
+  "autoplanTimezone": "America/Los_Angeles",
+  "workDayStart": "09:00",
+  "workDayEnd": "17:00"
 }
 ```
 

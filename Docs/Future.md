@@ -9,7 +9,7 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 ## Today View
 ~~Built~~ — Now card on Today (#117): day summary line ("3 tasks · 1h 30m · done by ~5:25 PM"), play affordance on rows, the running task lifted into a card with timer, progress, pause/stop and complete (no duplicate row). Plan in `TimeVisibility.md`. Remaining:
 - Consider adding a view of Habits into Today
-- Overcommitment detection: warn when total estimated time exceeds available hours (TimeVisibility phase 3)
+- ~~Overcommitment detection: warn when total estimated time exceeds available hours~~ — shipped (#119): working-hours preference, free time minus today's timed events, one gentle sentence on Today and Plan My Day when over by 30+ min
 
 ✓ Chat bar fixed at bottom with safe-area-aware positioning (#66)
 
