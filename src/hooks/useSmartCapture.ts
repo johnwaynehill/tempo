@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { anthropic, AI_ENABLED, AI_MODEL } from '@/lib/anthropic'
+import { anthropic, AI_ENABLED, AI_MODEL, AI_THINKING_OFF } from '@/lib/anthropic'
 import type { EnergyLevel, TodoSize } from '@/types'
 
 export interface SmartSuggestions {
@@ -64,6 +64,7 @@ export function useSmartCapture(
 
         const response = await anthropic.messages.create({
           model: AI_MODEL,
+          thinking: AI_THINKING_OFF,
           max_tokens: 120,
           system: `You are a task metadata classifier. Given a task title, suggest metadata. Return ONLY valid JSON with these optional fields:
 - energy_level: one of "low", "medium_low", "medium", "high"
@@ -81,7 +82,7 @@ Return JSON only, no explanation.`,
 
         if (controller.signal.aborted) return
 
-        let text = response.content[0]?.type === 'text' ? response.content[0].text.trim() : null
+        let text = response.content.find((b) => b.type === 'text')?.text.trim() ?? null
         // Strip markdown code fences if present
         if (text) {
           text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,  '').trim()
