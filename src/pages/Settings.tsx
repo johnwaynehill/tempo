@@ -453,6 +453,32 @@ export function SettingsPage() {
               />
             </div>
           )}
+          {/* Working hours */}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Working hours</p>
+              <p className="text-on-surface-variant text-xs">
+                Used to check whether today's plan fits in the time you have.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 shrink-0">
+              <input
+                type="time"
+                value={preferences.work_day_start}
+                onChange={(e) => e.target.value && updatePreferences({ work_day_start: e.target.value })}
+                aria-label="Working hours start"
+                className="bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface outline-none font-mono"
+              />
+              <span className="text-on-surface-variant text-xs">to</span>
+              <input
+                type="time"
+                value={preferences.work_day_end}
+                onChange={(e) => e.target.value && updatePreferences({ work_day_end: e.target.value })}
+                aria-label="Working hours end"
+                className="bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface outline-none font-mono"
+              />
+            </div>
+          </div>
         </div>
       </section>
 

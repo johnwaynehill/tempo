@@ -20,13 +20,15 @@ interface DaySummaryProps {
   todos: Todo[]
   timer: TaskTimer
   onStart: (id: string) => void
+  /** A gentle sentence under the line, e.g. the overcommitment check. */
+  note?: string | null
 }
 
 /**
  * One line above the task list: how much is planned and when it would be done.
  * Offers a Start button until a timer is running; after that the Now card has the controls.
  */
-export function DaySummary({ todos, timer, onStart }: DaySummaryProps) {
+export function DaySummary({ todos, timer, onStart, note }: DaySummaryProps) {
   if (todos.length === 0) return null
 
   const snapshot = timer.isRunning ? timer : null
@@ -34,7 +36,8 @@ export function DaySummary({ todos, timer, onStart }: DaySummaryProps) {
   const endTime = projectedEndTime(todos, snapshot)
 
   return (
-    <div className="mb-3 flex items-center justify-between gap-3 px-1 text-sm text-on-surface-variant min-h-[36px]">
+    <div className="mb-3 px-1">
+      <div className="flex items-center justify-between gap-3 text-sm text-on-surface-variant min-h-[36px]">
       <p className="tabular-nums truncate">
         {todos.length} task{todos.length !== 1 ? 's' : ''}
         <span className="mx-1.5 opacity-50">·</span>
@@ -50,6 +53,10 @@ export function DaySummary({ todos, timer, onStart }: DaySummaryProps) {
           <PlayIcon className="w-3 h-3" />
           Start
         </button>
+      )}
+      </div>
+      {note && (
+        <p className="text-xs text-on-surface-variant/80 mt-1 max-w-md">{note}</p>
       )}
     </div>
   )

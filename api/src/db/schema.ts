@@ -162,6 +162,9 @@ export const userPreferences = pgTable('user_preferences', {
   // Last successful auto-plan run (ISO date in user's tz). Used to make the
   // /api/internal/autoplan endpoint idempotent within a 24h window.
   autoplanLastRunDate: text('autoplan_last_run_date'),
+  // Working hours ("HH:MM" local wall-clock) for overcommitment detection.
+  workDayStart: text('work_day_start').notNull().default('09:00'),
+  workDayEnd: text('work_day_end').notNull().default('17:00'),
 })
 
 // --- Today Sets ---

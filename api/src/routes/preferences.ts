@@ -17,6 +17,8 @@ router.get('/', async (req, res) => {
       adaptiveTheme: false,
       autoplanEnabled: false,
       autoplanTimezone: 'America/Los_Angeles',
+      workDayStart: '09:00',
+      workDayEnd: '17:00',
     })
     return
   }

@@ -2,6 +2,8 @@ import { useState, useMemo, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router'
 import { MoodSlider } from '@/components/ui/MoodSlider'
 import { EstimateHint } from '@/components/ui/EstimateHint'
+import { todayOvercommitMessage } from '@/lib/availability'
+import { useEvents } from '@/hooks/useEvents'
 import { useTodos } from '@/hooks/useTodos'
 import { usePreferences } from '@/hooks/usePreferences'
 import { useMood } from '@/hooks/useMood'
@@ -92,6 +94,14 @@ export function PlanMyDayPage() {
   // Total time estimate
   const totalMinutes = useMemo(() => totalEstimatedMinutes(selectedTodos), [selectedTodos])
   const endTime = useMemo(() => formatClock(projectedEndTime(selectedTodos, null)), [selectedTodos])
+  const { events } = useEvents()
+  const overcommitNote = todayOvercommitMessage({
+    todos: selectedTodos,
+    timer: null,
+    events,
+    dayStart: preferences.work_day_start,
+    dayEnd: preferences.work_day_end,
+  })
 
   const toggleTodo = useCallback((id: string) => {
     setSelectedIds((prev) => {
@@ -354,6 +364,11 @@ export function PlanMyDayPage() {
             <p className="text-on-surface-variant text-sm">
               Done by ~{endTime}
             </p>
+            {overcommitNote && (
+              <p className="text-on-surface-variant text-sm mt-3 max-w-sm mx-auto">
+                {overcommitNote}
+              </p>
+            )}
 
             <div className="mt-8 space-y-2">
               {selectedTodos.map((todo) => (
