@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { formatMinutes } from '@/lib/time'
+import { formatMinutes, getEstimate } from '@/lib/time'
 import type { PlaylistItem } from '@/types'
 
 type ItemDraft = Omit<PlaylistItem, 'id' | 'playlist_id'>
@@ -103,7 +103,8 @@ export function PlaylistDetailPage() {
     return <p className="text-on-surface-variant text-sm py-8">Playlist not found.</p>
   }
 
-  const totalMinutes = items.reduce((sum, item) => sum + (item.estimated_minutes ?? 15), 0)
+  // Same fallback the steps get once they become todos (size-based, default 25).
+  const totalMinutes = items.reduce((sum, item) => sum + getEstimate(item), 0)
 
   return (
     <div>

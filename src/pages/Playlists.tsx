@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
-import { formatMinutes } from '@/lib/time'
+import { formatMinutes, getEstimate } from '@/lib/time'
 import { MenuButton } from '@/components/ui/MenuButton'
 
 export function PlaylistsPage() {
@@ -73,7 +73,7 @@ export function PlaylistsPage() {
       ) : (
         <div className="space-y-3">
           {playlists.map((playlist) => {
-            const totalMinutes = playlist.items.reduce((sum, item) => sum + (item.estimated_minutes ?? 15), 0)
+            const totalMinutes = playlist.items.reduce((sum, item) => sum + getEstimate(item), 0)
             return (
               <div
                 key={playlist.id}
