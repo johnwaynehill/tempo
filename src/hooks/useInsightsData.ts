@@ -1,5 +1,7 @@
 import { useMemo } from 'react'
 import type { Todo } from '@/types'
+import { computeCalibration } from '@/lib/calibration'
+import type { Calibration } from '@/lib/calibration'
 import {
   startOfDay,
   endOfDay,
@@ -38,6 +40,9 @@ export interface InsightsData {
   avgPerDay: number
   mostProductiveDay: string | null
   topProject: string | null
+
+  /** Estimated vs actual minutes for timed completions in range. */
+  calibration: Calibration
 }
 
 export function useInsightsData(
@@ -198,6 +203,8 @@ export function useInsightsData(
     // Top project
     const topProject = byProject.length > 0 ? byProject[0].project : null
 
+    const calibration = computeCalibration(inRange)
+
     return {
       totalCompleted,
       completedOnTime,
@@ -212,6 +219,7 @@ export function useInsightsData(
       avgPerDay,
       mostProductiveDay,
       topProject,
+      calibration,
     }
   }, [done, range.start.getTime(), range.end.getTime()])
 }

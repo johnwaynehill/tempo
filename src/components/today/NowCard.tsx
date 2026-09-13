@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 import type { Todo } from '@/types'
 import { projectChipStyle } from '@/types'
-import type { UseTimerResult } from '@/hooks/useTimer'
+import type { TaskTimer } from '@/hooks/useTaskTimer'
 import { CompletionSparkle } from '@/components/ui/CompletionSparkle'
 import { getEstimate, remainingMinutes, projectedEndTime, formatClock, formatElapsed, formatMinutes } from '@/lib/time'
 
@@ -18,7 +18,7 @@ function PlayIcon({ className = 'w-3.5 h-3.5' }: { className?: string }) {
 
 interface DaySummaryProps {
   todos: Todo[]
-  timer: UseTimerResult
+  timer: TaskTimer
   onStart: (id: string) => void
 }
 
@@ -57,7 +57,7 @@ export function DaySummary({ todos, timer, onStart }: DaySummaryProps) {
 
 interface NowCardProps {
   todo: Todo
-  timer: UseTimerResult
+  timer: TaskTimer
   onComplete: (id: string) => void
 }
 

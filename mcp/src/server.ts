@@ -20,7 +20,7 @@ export function createServer(apiKey?: string): McpServer {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number }) {
+  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number; actualMinutes?: number }) {
     const parts = [`[${t.status}] ${t.title}`]
     if (t.project) parts.push(`project: ${t.project}`)
     if (t.dueDate) parts.push(`due: ${t.dueDate.slice(0, 10)}`)
@@ -28,6 +28,7 @@ export function createServer(apiKey?: string): McpServer {
     if (t.impact) parts.push(`impact: ${t.impact}`)
     if (t.energyLevel) parts.push(`energy: ${t.energyLevel}`)
     if (t.estimatedMinutes) parts.push(`${t.estimatedMinutes}m`)
+    if (t.actualMinutes) parts.push(`actual: ${t.actualMinutes}m`)
     parts.push(`id: ${t.id}`)
     return parts.join(' | ')
   }
@@ -156,9 +157,14 @@ export function createServer(apiKey?: string): McpServer {
     'Mark a todo as done',
     {
       id: z.string().describe('Todo ID'),
+      actual_minutes: z.number().int().positive().optional().describe('Minutes actually spent on it, if known. Feeds estimate calibration in Weekly Review.'),
     },
-    async ({ id }) => {
-      const todo = await api.todos.update(id, { status: 'done', completedAt: new Date().toISOString() } as Partial<import('./api.js').Todo>)
+    async ({ id, actual_minutes }) => {
+      const todo = await api.todos.update(id, {
+        status: 'done',
+        completedAt: new Date().toISOString(),
+        ...(actual_minutes ? { actualMinutes: actual_minutes } : {}),
+      } as Partial<import('./api.js').Todo>)
       return {
         content: [{ type: 'text', text: `Completed: ${todo.title}` }],
       }

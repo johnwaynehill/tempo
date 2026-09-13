@@ -69,6 +69,15 @@ export function projectedEndTime(
   return new Date(now.getTime() + remainingSeconds(todos, timer) * 1000)
 }
 
+/** Runs shorter than this are accidental taps, not work. */
+const MIN_RUN_SECONDS = 30
+
+/** Minutes a timer run adds to a todo's actual_minutes; 0 when too short to count. */
+export function minutesToRecord(elapsedSeconds: number): number {
+  if (elapsedSeconds < MIN_RUN_SECONDS) return 0
+  return Math.max(1, Math.round(elapsedSeconds / 60))
+}
+
 /** "4:37 PM" */
 export function formatClock(date: Date): string {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })

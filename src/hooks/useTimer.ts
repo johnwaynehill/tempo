@@ -3,10 +3,14 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 /**
  * Persisted shape. Elapsed time is derived from wall-clock timestamps rather
  * than counted by an interval, so a backgrounded or throttled tab can't lose
- * seconds, and a closed tab picks up where it left off.
+ * seconds, and a closed tab picks up where it left off. A timer whose first
+ * start was on another calendar day is stale (nobody works a 23-hour task) and
+ * is discarded on load and on the next tick.
  */
 interface TimerState {
   activeTaskId: string | null
+  /** Wall-clock ms of the first start; decides which day the timer belongs to. */
+  startedAt: number
   /** Seconds banked before the current run (i.e. across pauses). */
   accumulatedSeconds: number
   /** Wall-clock ms when the current run started; null while paused or stopped. */
@@ -14,7 +18,11 @@ interface TimerState {
 }
 
 const STORAGE_KEY = 'tempo-timer-state'
-const IDLE: TimerState = { activeTaskId: null, accumulatedSeconds: 0, runningSince: null }
+const IDLE: TimerState = { activeTaskId: null, startedAt: 0, accumulatedSeconds: 0, runningSince: null }
+
+function isStale(state: TimerState, now: number): boolean {
+  return state.activeTaskId !== null && new Date(state.startedAt).toDateString() !== new Date(now).toDateString()
+}
 
 function loadState(): TimerState {
   let parsed: Partial<TimerState> | null = null
@@ -24,14 +32,21 @@ function loadState(): TimerState {
   } catch {
     return IDLE
   }
-  if (!parsed || typeof parsed.activeTaskId !== 'string' || typeof parsed.accumulatedSeconds !== 'number') {
+  if (
+    !parsed ||
+    typeof parsed.activeTaskId !== 'string' ||
+    typeof parsed.accumulatedSeconds !== 'number' ||
+    typeof parsed.startedAt !== 'number'
+  ) {
     return IDLE
   }
-  return {
+  const state: TimerState = {
     activeTaskId: parsed.activeTaskId,
+    startedAt: parsed.startedAt,
     accumulatedSeconds: parsed.accumulatedSeconds,
     runningSince: typeof parsed.runningSince === 'number' ? parsed.runningSince : null,
   }
+  return isStale(state, Date.now()) ? IDLE : state
 }
 
 function saveState(state: TimerState) {
@@ -78,7 +93,11 @@ export function useTimer(): UseTimerResult {
   // throttling only delays the display; it never loses time.
   useEffect(() => {
     if (!state.runningSince) return
-    const id = setInterval(() => setNow(Date.now()), 1000)
+    const id = setInterval(() => {
+      const now = Date.now()
+      setNow(now)
+      setState((prev) => (isStale(prev, now) ? IDLE : prev))
+    }, 1000)
     const onVisible = () => { if (document.visibilityState === 'visible') setNow(Date.now()) }
     document.addEventListener('visibilitychange', onVisible)
     return () => {
@@ -97,7 +116,8 @@ export function useTimer(): UseTimerResult {
   }, [])
 
   const start = useCallback((taskId: string) => {
-    setState({ activeTaskId: taskId, accumulatedSeconds: 0, runningSince: Date.now() })
+    const now = Date.now()
+    setState({ activeTaskId: taskId, startedAt: now, accumulatedSeconds: 0, runningSince: now })
   }, [])
 
   const pause = useCallback(() => {

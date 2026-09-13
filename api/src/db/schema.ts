@@ -43,6 +43,9 @@ export const todos = pgTable('todos', {
   reminderAt: timestamp('reminder_at', { withTimezone: true }),
   dismissedFromToday: timestamp('dismissed_from_today', { withTimezone: true }),
   estimatedMinutes: integer('estimated_minutes'),
+  // Timer bookkeeping: first start, and total timed minutes across runs.
+  startedAt: timestamp('started_at', { withTimezone: true }),
+  actualMinutes: integer('actual_minutes'),
   recurrence: jsonb('recurrence'),
   recurrenceParentId: uuid('recurrence_parent_id'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

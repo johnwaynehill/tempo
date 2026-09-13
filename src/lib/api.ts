@@ -94,7 +94,7 @@ function toApi(obj: Record<string, unknown>): Record<string, unknown> {
   return mapKeys(obj, snakeToCamel)
 }
 
-const TODO_DATES = ['due_date', 'defer_until', 'reminder_at', 'dismissed_from_today', 'created_at', 'updated_at', 'completed_at']
+const TODO_DATES = ['due_date', 'defer_until', 'reminder_at', 'dismissed_from_today', 'started_at', 'created_at', 'updated_at', 'completed_at']
 const TIMESTAMP_DATES = ['created_at', 'updated_at']
 const EVENT_DATES = ['start_time', 'end_time', 'created_at', 'updated_at']
 

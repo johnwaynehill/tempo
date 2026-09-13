@@ -10,7 +10,7 @@ import { useTodaySet } from '@/hooks/useTodaySet'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
 import { useStreak } from '@/hooks/useStreak'
 import { useMood } from '@/hooks/useMood'
-import { useTimer } from '@/hooks/useTimer'
+import { useTaskTimer } from '@/hooks/useTaskTimer'
 import { StreakIndicator } from '@/components/ui/StreakIndicator'
 import { TodaysEvents, UpcomingEvents } from '@/components/today/dayEvents'
 import { DaySummary, NowCard } from '@/components/today/NowCard'
@@ -24,7 +24,7 @@ export function TodayPage() {
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { latestMood } = useMood()
-  const timer = useTimer()
+  const timer = useTaskTimer()
   const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
@@ -36,7 +36,7 @@ export function TodayPage() {
   // If the running task left Today (completed in Focus Mode, deferred, unpinned), drop the timer.
   const { activeTaskId, stop: stopTimer } = timer
   useEffect(() => {
-    if (!loading && activeTaskId && !activeTodo) stopTimer()
+    if (!loading && activeTaskId && !activeTodo) stopTimer({ persist: false })
   }, [loading, activeTaskId, activeTodo, stopTimer])
 
   // Count items completed today
@@ -147,8 +147,8 @@ export function TodayPage() {
               todo={activeTodo}
               timer={timer}
               onComplete={(id) => {
-                timer.stop()
-                completeTodo(id)
+                const { actualMinutes } = timer.stop({ persist: false })
+                completeTodo(id, actualMinutes > 0 ? { actual_minutes: actualMinutes } : undefined)
                 triggerToast(activeTodo.title)
               }}
             />

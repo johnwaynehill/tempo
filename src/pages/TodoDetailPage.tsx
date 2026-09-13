@@ -3,6 +3,7 @@ import { useParams, useNavigate, Link } from 'react-router'
 import type { TodoSize } from '@/types'
 import { ENERGY_LABELS, ENERGY_LEVELS } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
+import { EstimateHint } from '@/components/ui/EstimateHint'
 import { useNotes } from '@/hooks/useNotes'
 import { useProjects } from '@/hooks/useProjects'
 import { LinkPicker } from '@/components/ui/LinkPicker'
@@ -467,6 +468,7 @@ export function TodoDetailPage() {
                 </button>
               ))}
             </div>
+            <EstimateHint done={todos.filter((t) => t.status === 'done')} size={todo.size} className="mt-2" />
           </div>
 
           {/* Project + Due date row */}
