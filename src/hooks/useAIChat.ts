@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
-import { anthropic, AI_MODEL } from '@/lib/anthropic'
+import { anthropic, AI_MODEL, isBudgetError, AI_BUDGET_MESSAGE, AI_THINKING_OFF } from '@/lib/anthropic'
 import { AI_TOOLS } from '@/lib/ai-tools'
 import { executeToolCall, type ToolContext } from '@/lib/ai-tool-executor'
 import type Anthropic from '@anthropic-ai/sdk'
@@ -92,7 +92,7 @@ export function useAIChat({
         )
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err)
-        setError(msg)
+        setError(isBudgetError(err) ? AI_BUDGET_MESSAGE : msg)
         console.error('[AI Chat]', err)
       } finally {
         setIsStreaming(false)
@@ -140,6 +140,7 @@ async function streamWithToolLoop(
     // Make the streaming API call
     const stream = anthropic.messages.stream({
       model: AI_MODEL,
+      thinking: AI_THINKING_OFF,
       max_tokens: 2048,
       system: systemPrompt,
       messages: apiMessages,

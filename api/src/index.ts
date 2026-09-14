@@ -5,6 +5,7 @@ import admin from 'firebase-admin'
 import { authenticate } from './middleware/auth.js'
 import { ipRateLimit, userRateLimit, anthropicRateLimit } from './middleware/rate-limit.js'
 import { requireScope, requireMethodScope, requireFirebaseAuth } from './middleware/scopes.js'
+import { aiBudget } from './middleware/ai-budget.js'
 import todosRouter from './routes/todos.js'
 import notesRouter from './routes/notes.js'
 import habitsRouter from './routes/habits.js'
@@ -14,6 +15,7 @@ import todaySetRouter from './routes/today-set.js'
 import reviewsRouter from './routes/reviews.js'
 import apiKeysRouter from './routes/api-keys.js'
 import anthropicRouter from './routes/anthropic.js'
+import aiUsageRouter from './routes/ai-usage.js'
 import conversationsRouter from './routes/conversations.js'
 import projectsRouter from './routes/projects.js'
 import playlistsRouter from './routes/playlists.js'
@@ -114,9 +116,12 @@ app.use('/api/mood', requireMethodScope, moodRouter)
 app.use('/api/google-calendar', requireMethodScope, googleCalendarRouter)
 app.use('/api/mcp-oauth', requireMethodScope, mcpOauthRouter)
 app.use('/api/auth', requireMethodScope, authRouter)
+app.use('/api/ai-usage', requireMethodScope, aiUsageRouter)
 
-// Anthropic proxy is gated on the 'ai' scope (separate from read/write because it spends money).
-app.use('/api/anthropic', requireScope('ai'), anthropicRateLimit, anthropicRouter)
+// Anthropic proxy is gated on the 'ai' scope (separate from read/write because it spends money),
+// rate-limited, and capped at AI_DAILY_CAP_USD per user per local day (aiBudget also
+// clamps max_tokens and rejects models Tempo doesn't use).
+app.use('/api/anthropic', requireScope('ai'), anthropicRateLimit, aiBudget, anthropicRouter)
 
 // API-key management is privileged — only the user (via Firebase auth) can mint or revoke keys.
 // This prevents a 'write'-scoped key from minting an 'ai' key for itself.

@@ -12,6 +12,9 @@
 
 import { and, eq, inArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
+import { getSpendToday, recordUsage } from './ai-usage.js'
+import { localDate } from './ai-pricing.js'
+import type { TokenUsage } from './ai-pricing.js'
 
 // --- Tunables ---
 
@@ -207,10 +210,19 @@ function serializeTodoForAI(t: TodoRow): string {
 async function rankWithAI(
   candidates: TodoRow[],
   currentEnergy: EnergyLevel | null | undefined,
+  budget: { userId: string; timezone: string },
 ): Promise<string[] | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) return null
   if (candidates.length === 0) return []
+
+  // The morning run counts toward the same daily cap as the proxy; over it, fall
+  // back to the heuristic rather than spend.
+  const spend = await getSpendToday(budget.userId)
+  if (spend.exceeded) {
+    console.warn(`[autoplan] user ${budget.userId} is over the daily AI budget; using heuristic`)
+    return null
+  }
 
   const todoList = candidates.map(serializeTodoForAI).join('\n')
   const system =
@@ -251,7 +263,10 @@ async function rankWithAI(
       return null
     }
 
-    const data = (await res.json()) as { content?: { type: string; text?: string }[] }
+    const data = (await res.json()) as { content?: { type: string; text?: string }[]; usage?: TokenUsage }
+    if (data.usage) {
+      void recordUsage(budget.userId, localDate(budget.timezone), ANTHROPIC_MODEL, data.usage)
+    }
     const text = data.content?.find((c) => c.type === 'text')?.text?.trim()
     if (!text) return null
 
@@ -335,7 +350,7 @@ export async function runAutoplanForUser(
     pickedIds = []
     source = 'heuristic'
   } else {
-    const aiPicks = await rankWithAI(candidates, currentEnergy)
+    const aiPicks = await rankWithAI(candidates, currentEnergy, { userId, timezone: timezone })
     if (aiPicks && aiPicks.length >= 1) {
       pickedIds = aiPicks
       source = 'ai'

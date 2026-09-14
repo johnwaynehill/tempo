@@ -1,3 +1,4 @@
+import type { AiUsageSummary } from '@/types'
 import { auth } from '@/lib/firebase'
 
 // In dev, always go same-origin so requests route through Vite's proxy
@@ -161,6 +162,10 @@ export const api = {
       apiFetch<Record<string, unknown> | null>('/api/mood/latest')
         .then(r => r ? fromApi(r, TIMESTAMP_DATES) : null),
   },
+  aiUsage: {
+    get: () => apiFetch<AiUsageSummary>('/api/ai-usage'),
+  },
+
   preferences: {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences')
       .then(r => fromApi(r, [])),

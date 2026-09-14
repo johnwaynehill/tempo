@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useSearchParams } from 'react-router'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/context/AuthContext'
 import { api } from '@/lib/api'
 import { useTodos } from '@/hooks/useTodos'
@@ -48,6 +48,12 @@ export function SettingsPage() {
 
   // --- Google Calendar integration ---
   const queryClient = useQueryClient()
+  const { data: aiUsage } = useQuery({
+    queryKey: ['ai-usage', user?.uid],
+    queryFn: api.aiUsage.get,
+    enabled: !!user,
+    staleTime: 60_000,
+  })
   const [searchParams, setSearchParams] = useSearchParams()
   type GCalStatus = Awaited<ReturnType<typeof api.googleCalendar.status>>
   const [gcal, setGcal] = useState<GCalStatus | null>(null)
@@ -628,6 +634,41 @@ export function SettingsPage() {
               Open ↗
             </span>
           </a>
+        </div>
+      </section>
+
+      {/* Tempo AI usage */}
+      <section className="mb-10">
+        <h2 className="font-display text-lg font-semibold text-on-surface mb-4">Tempo AI</h2>
+        <div className="bg-surface-container-lowest rounded-xl p-5 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Today's AI usage</p>
+              <p className="text-on-surface-variant text-xs">
+                AI features pause for the day once this reaches the cap, and pick up again at midnight.
+              </p>
+            </div>
+            <p className="text-on-surface text-sm tabular-nums shrink-0">
+              {aiUsage ? `$${aiUsage.today.spent_usd.toFixed(2)} of $${aiUsage.today.cap_usd.toFixed(2)}` : '—'}
+            </p>
+          </div>
+          <div className="h-1.5 rounded-full bg-surface-container-high overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+              style={{
+                width: aiUsage && aiUsage.today.cap_usd > 0
+                  ? `${Math.min(100, (aiUsage.today.spent_usd / aiUsage.today.cap_usd) * 100)}%`
+                  : '0%',
+              }}
+            />
+          </div>
+          {aiUsage && (
+            <p className="text-on-surface-variant text-xs tabular-nums">
+              {aiUsage.today.requests} request{aiUsage.today.requests !== 1 ? 's' : ''} today
+              <span className="mx-1.5 opacity-50">·</span>
+              ${aiUsage.history.reduce((sum, d) => sum + d.spent_usd, 0).toFixed(2)} over the last {aiUsage.history.length || 1} day{aiUsage.history.length !== 1 ? 's' : ''} with any use
+            </p>
+          )}
         </div>
       </section>
 

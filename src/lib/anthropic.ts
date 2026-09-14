@@ -32,7 +32,19 @@ export const anthropic = new Anthropic({
   fetch: authedFetch,
 })
 
-export const AI_MODEL = 'claude-sonnet-4-20250514'
+// Sonnet 4 was retired (the API now 404s on it). Sonnet 5 runs adaptive thinking by
+// default, which the one-line helpers don't want — every call passes AI_THINKING_OFF.
+export const AI_MODEL = 'claude-sonnet-5'
+export const AI_THINKING_OFF = { type: 'disabled' } as const
+
+export const AI_BUDGET_MESSAGE = "Tempo AI is resting until tomorrow. Today's AI budget is used up."
+
+/** The proxy's daily-cap refusal: a 429 whose body is `{ error: { type: 'ai_budget_exceeded' } }`. */
+export function isBudgetError(err: unknown): boolean {
+  if (!(err instanceof Anthropic.APIError)) return false
+  const body = err.error as { type?: string } | undefined
+  return err.status === 429 && body?.type === 'ai_budget_exceeded'
+}
 
 // AI is enabled if we have a key (dev) or we're in production (proxy always available)
 export const AI_ENABLED = isDev ? Boolean(devApiKey) : true
