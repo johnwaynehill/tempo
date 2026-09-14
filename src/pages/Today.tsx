@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router'
 import { MenuButton } from '@/components/ui/MenuButton'
 import { TodoItem } from '@/components/ui/TodoItem'
@@ -16,7 +16,6 @@ import { TodaysEvents, UpcomingEvents } from '@/components/today/dayEvents'
 import { DaySummary, NowCard } from '@/components/today/NowCard'
 import { useEvents } from '@/hooks/useEvents'
 import { todayOvercommitMessage } from '@/lib/availability'
-import { AI_ENABLED } from '@/lib/anthropic'
 
 export function TodayPage() {
   const navigate = useNavigate()
@@ -28,7 +27,6 @@ export function TodayPage() {
   const { latestMood } = useMood()
   const timer = useTaskTimer()
   const { events } = useEvents()
-  const [aiInput, setAiInput] = useState('')
 
   const loading = todosLoading || setLoading
 
@@ -57,7 +55,7 @@ export function TodayPage() {
       : `All done. You knocked out ${todayCompletedCount} tasks today.`
 
   return (
-    <div className="pb-24">
+    <div>
       {/* Page header */}
       <div className="mb-6 md:mb-8 flex items-start justify-between gap-2">
         <div className="min-w-0">
@@ -219,33 +217,6 @@ export function TodayPage() {
 
       {/* Upcoming events — next 3 days, below tasks as reference */}
       <UpcomingEvents />
-
-      {/* AI Chat Bar — sticky above bottom nav */}
-      {AI_ENABLED && (
-        <div className="fixed bottom-[calc(3.5rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 md:left-52 z-30 px-4 pb-2 pt-2 bg-surface/80 backdrop-blur-xl">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              const text = aiInput.trim()
-              if (!text) return
-              navigate(`/chat?mode=today&q=${encodeURIComponent(text)}`)
-            }}
-            className="max-w-3xl mx-auto flex items-center gap-2 bg-surface-container-low rounded-2xl px-4 py-2.5 border border-outline-variant/15 focus-within:border-primary/30 transition-colors"
-          >
-            <svg className="w-4 h-4 text-primary/50 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
-              <path d="M7 2C7 5.5 9 7.5 13 8C9 8.5 7 10.5 7 14C7 10.5 5 8.5 1 8C5 7.5 7 5.5 7 2Z" />
-              <path d="M13 0C13 1.2 13.8 2 15 2C13.8 2 13 2.8 13 4C13 2.8 12.2 2 11 2C12.2 2 13 1.2 13 0Z" opacity="0.55" />
-            </svg>
-            <input
-              type="text"
-              value={aiInput}
-              onChange={(e) => setAiInput(e.target.value)}
-              placeholder="Ask Tempo AI to help plan your day..."
-              className="flex-1 bg-transparent text-on-surface text-sm outline-none placeholder:text-on-surface-variant/40"
-            />
-          </form>
-        </div>
-      )}
 
       {toastMessage && (
         <CompletionToast message={toastMessage} onDismiss={dismissToast} />
