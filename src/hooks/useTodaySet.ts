@@ -2,8 +2,7 @@ import { useEffect, useMemo, useRef, useCallback } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { suggestTodayTodos } from '@/lib/scoring'
-import type { Todo, TodaySet, EnergyLevel } from '@/types'
+import type { Todo, TodaySet } from '@/types'
 
 function todayDateString(): string {
   const d = new Date()
@@ -22,7 +21,6 @@ interface UseTodaySetResult {
 export function useTodaySet(
   todos: Todo[],
   pinned: Todo[],
-  currentEnergy?: EnergyLevel,
 ): UseTodaySetResult {
   const { user } = useAuth()
   const qc = useQueryClient()
@@ -33,7 +31,7 @@ export function useTodaySet(
     queryKey: ['today-set', user?.uid, todayStr],
     queryFn: async () => {
       const result = await api.todaySet.get(todayStr)
-      return { date: result.date, todo_ids: result.todoIds ?? [] } as TodaySet
+      return { date: result.date, todo_ids: result.todoIds ?? [], exists: result.exists !== false } as TodaySet
     },
     enabled: !!user,
     staleTime: 60_000,
@@ -42,22 +40,19 @@ export function useTodaySet(
   // Generate the daily set if it's a new day
   useEffect(() => {
     if (!user || loading) return
-    if (todaySet?.date === todayStr) return
+    // The API answers a missing day with an empty default row carrying today's
+    // date, so "date matches" never meant "already generated" — check `exists`.
+    if (todaySet?.date === todayStr && todaySet.exists) return
     if (generatingRef.current) return
 
     generatingRef.current = true
 
-    const pinnedIds = new Set(pinned.map((t) => t.id))
-    const suggested = suggestTodayTodos(todos, currentEnergy, pinned.length)
-    const todoIds = suggested
-      .filter((t) => !pinnedIds.has(t.id))
-      .map((t) => t.id)
-
-    api.todaySet.update({ date: todayStr, todoIds }).then(() => {
+    // The server owns the scoring (api/src/lib/autoplan.ts); every client asks it.
+    api.todaySet.generate(todayStr).then(() => {
       generatingRef.current = false
       qc.invalidateQueries({ queryKey: ['today-set'] })
     })
-  }, [user, loading, todaySet, todayStr, todos, pinned, currentEnergy])
+  }, [user, loading, todaySet, todayStr])
 
   // Resolve the daily set IDs to actual todos
   const todayTodos = useMemo(() => {

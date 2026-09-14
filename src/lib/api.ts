@@ -112,6 +112,10 @@ export const api = {
       method: 'PUT', body: JSON.stringify(toApi(data)),
     }).then(r => fromApi(r, TODO_DATES)),
     delete: (id: string) => apiFetch<void>(`/api/todos/${id}`, { method: 'DELETE' }),
+    /** Server-side completion: sets done and creates the next occurrence of a recurring todo. */
+    complete: (id: string, data: Record<string, unknown> = {}) => apiFetch<{ todo: Record<string, unknown>; nextOccurrence: Record<string, unknown> | null }>(`/api/todos/${id}/complete`, {
+      method: 'POST', body: JSON.stringify(toApi(data)),
+    }),
   },
   notes: {
     list: () => apiFetch<Record<string, unknown>[]>('/api/notes')
@@ -174,9 +178,13 @@ export const api = {
     }).then(r => fromApi(r, [])),
   },
   todaySet: {
-    get: (date: string) => apiFetch<{ userId: string; date: string; todoIds: string[] }>(`/api/today-set?date=${date}`),
+    get: (date: string) => apiFetch<{ userId: string; date: string; todoIds: string[]; exists?: boolean }>(`/api/today-set?date=${date}`),
     update: (data: { date: string; todoIds: string[] }) => apiFetch<Record<string, unknown>>('/api/today-set', {
       method: 'PUT', body: JSON.stringify(data),
+    }),
+    /** Ask the server to build the day's suggestion set with its scoring. */
+    generate: (date: string) => apiFetch<{ userId: string; date: string; todoIds: string[] }>('/api/today-set/generate', {
+      method: 'POST', body: JSON.stringify({ date }),
     }),
   },
   reviews: {

@@ -160,13 +160,12 @@ export function createServer(apiKey?: string): McpServer {
       actual_minutes: z.number().int().positive().optional().describe('Minutes actually spent on it, if known. Feeds estimate calibration in Weekly Review.'),
     },
     async ({ id, actual_minutes }) => {
-      const todo = await api.todos.update(id, {
-        status: 'done',
-        completedAt: new Date().toISOString(),
-        ...(actual_minutes ? { actualMinutes: actual_minutes } : {}),
-      } as Partial<import('./api.js').Todo>)
+      const { todo, nextOccurrence } = await api.todos.complete(id, actual_minutes)
+      const text = nextOccurrence?.dueDate
+        ? `Completed: ${todo.title} (recurs; next due ${nextOccurrence.dueDate.slice(0, 10)})`
+        : `Completed: ${todo.title}`
       return {
-        content: [{ type: 'text', text: `Completed: ${todo.title}` }],
+        content: [{ type: 'text', text }],
       }
     },
   )

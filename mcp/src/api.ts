@@ -139,6 +139,11 @@ export function createApi(apiKey?: string) {
       create: (data: Partial<Todo>) => apiFetch<Todo>('/api/todos', { method: 'POST', body: JSON.stringify(data) }),
       update: (id: string, data: Partial<Todo>) => apiFetch<Todo>(`/api/todos/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
       delete: (id: string) => apiFetch<void>(`/api/todos/${id}`, { method: 'DELETE' }),
+      complete: (id: string, actualMinutes?: number) =>
+        apiFetch<{ todo: Todo; nextOccurrence: Todo | null }>(`/api/todos/${id}/complete`, {
+          method: 'POST',
+          body: JSON.stringify(actualMinutes ? { actualMinutes } : {}),
+        }),
     },
     habits: {
       list: () => apiFetch<Habit[]>('/api/habits'),

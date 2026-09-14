@@ -21,7 +21,7 @@ export function TodayPage() {
   const navigate = useNavigate()
   const { todos, pinned, done, completeTodo, deferTodo, dismissFromToday, loading: todosLoading } = useTodos()
   const { preferences } = usePreferences()
-  const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
+  const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned)
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
   const { currentStreak, hasCompletedToday } = useStreak(todos)
   const { latestMood } = useMood()

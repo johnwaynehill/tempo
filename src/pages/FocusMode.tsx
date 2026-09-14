@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router'
 import type { Todo } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useTodaySet } from '@/hooks/useTodaySet'
-import { usePreferences } from '@/hooks/usePreferences'
 import { useTaskTimer } from '@/hooks/useTaskTimer'
 import { getEstimate, formatElapsed, formatMinutes } from '@/lib/time'
 import { useCompletionToast } from '@/hooks/useCompletionToast'
@@ -14,8 +13,7 @@ export function FocusModePage() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const { todos, pinned, completeTodo, deferTodo, dismissFromToday, addTodo, loading: todosLoading } = useTodos()
-  const { preferences } = usePreferences()
-  const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned, preferences.current_energy)
+  const { todayTodos, loading: setLoading, dismissFromSet } = useTodaySet(todos, pinned)
   const timer = useTaskTimer()
   const { message: toastMessage, trigger: triggerToast, dismiss: dismissToast } = useCompletionToast()
 

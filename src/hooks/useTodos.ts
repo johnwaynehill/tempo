@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { v4 as uuid } from 'uuid'
 import { api } from '@/lib/api'
 import { useAuth } from '@/context/AuthContext'
-import { getNextOccurrence } from '@/lib/recurrence'
 import type { Todo, TodoStatus, EnergyLevel, TodoSize, RecurrenceRule } from '@/types'
 
 export interface AddTodoInput {
@@ -73,29 +72,14 @@ export function useTodos() {
     await invalidate()
   }, [])
 
+  // Completion is server-side (POST /todos/:id/complete) so the next occurrence
+  // of a recurring todo is created the same way for web, iOS and the MCP server.
   const completeTodo = useCallback(async (id: string, extra?: Partial<Todo>) => {
-    const todo = todos.find((t) => t.id === id)
-    await updateTodo(id, { ...extra, status: 'done', completed_at: new Date() })
-
-    // If recurring, create next occurrence
-    if (todo?.recurrence) {
-      const nextDue = getNextOccurrence(todo.recurrence, todo.due_date ?? new Date())
-      await api.todos.create({
-        title: todo.title,
-        status: 'backlog',
-        project: todo.project,
-        size: todo.size,
-        impact: todo.impact,
-        energy_level: todo.energy_level,
-        due_date: nextDue,
-        recurrence: todo.recurrence,
-        recurrence_parent_id: todo.recurrence_parent_id ?? todo.id,
-        note_id: todo.note_id,
-        supports: todo.supports,
-      } as unknown as Record<string, unknown>)
-      await invalidate()
-    }
-  }, [todos, updateTodo])
+    const data: Record<string, unknown> = {}
+    if (extra?.actual_minutes) data.actual_minutes = extra.actual_minutes
+    await api.todos.complete(id, data)
+    await invalidate()
+  }, [])
 
   const deferTodo = useCallback(async (id: string, until?: Date) => {
     await updateTodo(id, {

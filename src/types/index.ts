@@ -116,6 +116,8 @@ export interface Project {
 // --- Today Set ---
 
 export interface TodaySet {
+  /** False when no row has been written for the day yet (the client should generate one). */
+  exists?: boolean
   date: string       // ISO date string, e.g. "2026-03-29"
   todo_ids: string[] // IDs of the todos selected for the day
 }

@@ -166,6 +166,17 @@ Create a todo.
 #### `PUT /api/todos/:id`
 Update a todo. Any subset of the create fields. `id`, `userId`, `createdAt`, `firestoreId` in the body are ignored.
 
+#### `POST /api/todos/:id/complete`
+Mark a todo done. Server-side so every client (web, iOS, MCP) completes the same way — in particular the **next occurrence of a recurring todo is created here**, as midnight in the user's `autoplanTimezone`.
+
+**Body:** `{ "actualMinutes": 42 }` (optional; total timed minutes from the timer).
+
+**200 OK**
+```json
+{ "todo": { "…": "the completed row" }, "nextOccurrence": { "…": "the new backlog row" } }
+```
+`nextOccurrence` is `null` for non-recurring todos. Idempotent: completing a todo that is already done returns it unchanged with `nextOccurrence: null`. **404** if not found.
+
 #### `DELETE /api/todos/:id`
 **204 No Content** on success, **404** if not found.
 
@@ -391,17 +402,8 @@ the fallback path when the server hasn't populated `today_sets` yet.
 
 The curated list of todos pinned for a specific day (max 5 in the UI, but the API doesn't enforce a cap). One row per `(user_id, date)`.
 
-#### `GET /api/today-set`
-Get the set for a specific date.
-
-**Query:** `?date=YYYY-MM-DD` (defaults to today in server local time).
-
-**200 OK**
-```json
-{ "userId": "...", "date": "2026-04-22", "todoIds": ["uuid1", "uuid2"] }
-```
-
-Returns an empty stub if no row exists.
+#### `GET /api/today-set?date=YYYY-MM-DD`
+The day's suggestion set (defaults to today, UTC). When no row exists yet the response is `{ "userId", "date", "todoIds": [], "exists": false }`; stored rows carry `"exists": true`. Clients should generate a set when `exists` is false, not when `todoIds` is empty — an empty set can be the user's doing.
 
 #### `PUT /api/today-set`
 Upsert.
@@ -410,6 +412,13 @@ Upsert.
 ```json
 { "date": "2026-04-22", "todoIds": ["uuid1", "uuid2", "uuid3"] }
 ```
+
+#### `POST /api/today-set/generate`
+Build (or rebuild) the day's suggestion set with the server-side scoring in `api/src/lib/autoplan.ts` — mandatory due-or-overdue Chore todos first, then the best-scoring discretionary todos up to five minus what's already pinned. Does **not** change any todo's status and does not call the AI. The web client used to compute this in the browser on the first open of each day; now every client asks here.
+
+**Body:** `{ "date": "YYYY-MM-DD" }` (optional; defaults to today in the user's timezone).
+
+**200 OK** — the stored row: `{ "userId", "date", "todoIds": [] }`.
 
 ---
 
