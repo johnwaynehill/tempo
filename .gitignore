@@ -39,3 +39,9 @@ functions/lib
 
 # Test data
 test-data/
+
+# Design
+Design/
+
+# TypeScript incremental build info
+*.tsbuildinfo
