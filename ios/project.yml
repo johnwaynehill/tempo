@@ -1,0 +1,65 @@
+name: Tempo
+
+options:
+  bundleIdPrefix: com.johnwaynehill
+  deploymentTarget:
+    iOS: "26.0"
+  xcodeVersion: "26.6"
+  createIntermediateGroups: true
+  groupSortPosition: top
+
+packages:
+  TempoKit:
+    path: TempoKit
+
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_STRICT_CONCURRENCY: complete
+    CODE_SIGN_STYLE: Automatic
+    # Pick your team in Xcode: Tempo target > Signing & Capabilities.
+    # DEVELOPMENT_TEAM is intentionally unset.
+
+targets:
+  Tempo:
+    type: application
+    platform: iOS
+    sources:
+      - path: Tempo
+    dependencies:
+      - package: TempoKit
+    info:
+      path: Tempo/Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        CFBundleName: Tempo
+        UILaunchScreen: {}
+        ITSAppUsesNonExemptEncryption: false
+        UISupportedInterfaceOrientations:
+          - UIInterfaceOrientationPortrait
+        NSAppTransportSecurity:
+          # Lets TEMPO_API_URL point at http://localhost:3001 for local testing.
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+schemes:
+  Tempo:
+    build:
+      targets:
+        Tempo: all
+    run:
+      config: Debug
+      environmentVariables:
+        # Flip this on (Edit Scheme > Run > Arguments) to point the app at a local API.
+        - variable: TEMPO_API_URL
+          value: http://localhost:3001
+          isEnabled: false
+    archive:
+      config: Release
