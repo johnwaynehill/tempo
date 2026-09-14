@@ -15,9 +15,7 @@ Research-informed priorities are in the PRD backlog (`PRD.md` § Remaining Backl
 
 ## Tempo AI
 ~~Built~~ — Server-side morning auto-plan (#92): Railway cron service hits the API daily at 06:30 PT, picks 3–5 todos via Anthropic, replaces Today. Opt-in via Settings. Also nightly Claude Routine (#91) writes a `Plan for <tomorrow>` Tempo Note at 21:00 PT for review. Remaining:
-- Chat bar should stay fixed at the bottom
-- Chat bar should expand in height up to a max of 7 lines of text
-- Weird zoom-in issue when selecting the Chat bar
+- ~~Chat bar should stay fixed at the bottom~~ / ~~expand up to 7 lines~~ / ~~zoom-in issue when selecting it~~ — moot: the Today chat bar was removed (#123); Tempo AI lives in its own page via the menu
 - Tempo AI header has weird scrolling issue
 
 ## Navigation
