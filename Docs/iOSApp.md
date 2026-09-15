@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written. Phase 3 in progress (branch `feature/ios-phase-3`).
+Decisions originally marked **[you]** are now settled as written. Phase 3 built 2026-09-15: share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle.
 
 ## Why native, and why now
 
