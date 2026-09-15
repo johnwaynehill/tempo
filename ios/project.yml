@@ -29,12 +29,29 @@ targets:
       - path: Tempo
       # Live Activity attributes + the few colours the widget needs; also in TempoWidgets.
       - path: Shared
+      # App Intents: Shortcuts actions, App Shortcut phrases, widget buttons; also in TempoWidgets.
+      - path: Intents
     dependencies:
       - package: TempoKit
       - target: TempoWidgets
+      - target: TempoShare
+    entitlements:
+      path: Tempo/Tempo.entitlements
+      properties:
+        # One team-wide keychain group so extensions can read the API key.
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
+        # Shared container: offline cache, extension inbox, timer state for the widget.
+        com.apple.security.application-groups:
+          - group.com.johnwaynehill.Tempo
+        # Mood check-ins are saved to Apple Health as State of Mind (write only).
+        com.apple.developer.healthkit: true
+        com.apple.developer.healthkit.access: []
     info:
       path: Tempo/Info.plist
       properties:
+        TempoKeychainAccessGroup: "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
+        NSHealthUpdateUsageDescription: Tempo saves your mood check-ins to Apple Health as State of Mind.
         CFBundleDisplayName: Tempo
         CFBundleName: Tempo
         UILaunchScreen: {}
@@ -58,7 +75,7 @@ targets:
         SWIFT_EMIT_LOC_STRINGS: YES
         ENABLE_USER_SCRIPT_SANDBOXING: YES
 
-  # Widget extension: hosts the timer's Live Activity (Home Screen widgets come in Phase 3).
+  # Widget extension: the timer's Live Activity and the Home Screen widgets.
   TempoWidgets:
     type: app-extension
     platform: iOS
@@ -66,15 +83,65 @@ targets:
     sources:
       - path: TempoWidgets
       - path: Shared
+      - path: Intents
+    dependencies:
+      - package: TempoKit
+    entitlements:
+      path: TempoWidgets/TempoWidgets.entitlements
+      properties:
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
+        # Shared container: offline cache, extension inbox, timer state for the widget.
+        com.apple.security.application-groups:
+          - group.com.johnwaynehill.Tempo
     info:
       path: TempoWidgets/Info.plist
       properties:
+        TempoKeychainAccessGroup: "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
         CFBundleDisplayName: Tempo
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo.TempoWidgets
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        SKIP_INSTALL: YES
+
+  # Share extension: text or a link from any app becomes an Inbox todo.
+  TempoShare:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: TempoShare
+      - path: Shared
+    dependencies:
+      - package: TempoKit
+    entitlements:
+      path: TempoShare/TempoShare.entitlements
+      properties:
+        keychain-access-groups:
+          - "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
+        # Shared container: offline cache, extension inbox, timer state for the widget.
+        com.apple.security.application-groups:
+          - group.com.johnwaynehill.Tempo
+    info:
+      path: TempoShare/Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        TempoKeychainAccessGroup: "$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.share-services
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).ShareViewController
+          NSExtensionAttributes:
+            NSExtensionActivationRule:
+              NSExtensionActivationSupportsText: true
+              NSExtensionActivationSupportsWebURLWithMaxCount: 1
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo.TempoShare
         TARGETED_DEVICE_FAMILY: "1"
         SWIFT_EMIT_LOC_STRINGS: YES
         ENABLE_USER_SCRIPT_SANDBOXING: YES

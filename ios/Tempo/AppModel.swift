@@ -2,6 +2,7 @@ import CryptoKit
 import Foundation
 import Observation
 import TempoKit
+import WidgetKit
 import os
 
 /// The session's data, loaded once and mutated in one place.
@@ -51,7 +52,7 @@ final class AppModel {
     /// The todo the current Live Activity was requested for; nil once ended.
     private var activityTodoId: UUID?
 
-    private static let timerDefaultsKey = "tempo-timer-state"
+    private static let timerDefaultsKey = AppGroup.timerStateKey
     private static let log = Logger(subsystem: "com.johnwaynehill.Tempo", category: "store")
 
     init(
@@ -68,15 +69,29 @@ final class AppModel {
         restoreTimer()
     }
 
-    /// Application Support/Tempo/<first 12 hex chars of SHA-256(key)>: one folder per
-    /// account so `signOut()` can't wipe anyone else's cache.
+    /// `<App Group>/Tempo/<account folder>` (`AppGroup.accountDirectory`) so the widget can read
+    /// the cached snapshot; one folder per account so `signOut()` can't wipe anyone else's cache.
+    /// A cache an earlier build left in Application Support is moved over once. A build without
+    /// the App Group entitlement keeps using Application Support.
     static func storeDirectory(for apiKey: String) -> URL {
-        let digest = SHA256.hash(data: Data(apiKey.utf8))
-        let hex = digest.map { String(format: "%02x", $0) }.joined()
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
-            ?? FileManager.default.temporaryDirectory
-        return base.appendingPathComponent("Tempo", isDirectory: true)
-            .appendingPathComponent(String(hex.prefix(12)), isDirectory: true)
+        let legacy = (FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory)
+            .appendingPathComponent("Tempo", isDirectory: true)
+            .appendingPathComponent(AppGroup.accountFolderName(forAPIKey: apiKey), isDirectory: true)
+        guard let shared = AppGroup.accountDirectory(forAPIKey: apiKey) else { return legacy }
+
+        let files = FileManager.default
+        if !files.fileExists(atPath: shared.path), files.fileExists(atPath: legacy.path) {
+            do {
+                try files.createDirectory(at: shared.deletingLastPathComponent(), withIntermediateDirectories: true)
+                try files.moveItem(at: legacy, to: shared)
+                log.info("store: moved the cache into the App Group")
+            } catch {
+                log.error("store: couldn't move the cache into the App Group: \(String(describing: error), privacy: .public)")
+                return legacy
+            }
+        }
+        return shared
     }
 
     // MARK: Derived
@@ -139,6 +154,7 @@ final class AppModel {
             apply(cached)
             hasLoaded = true
         }
+        await drainInbox()
         await refresh()
         await flush()
         Self.log.info("load: done hasLoaded=\(self.hasLoaded) offline=\(self.isOffline) pending=\(self.pendingCount)")
@@ -146,6 +162,7 @@ final class AppModel {
 
     /// Pull-to-refresh: drain the queue first so the pull reflects our own writes.
     func reload() async {
+        await drainInbox()
         await flush()
         await refresh()
     }
@@ -154,8 +171,21 @@ final class AppModel {
     func activate() async {
         guard loadTask != nil else { return }
         tick()
+        await drainInbox()
         await flush()
         await refresh()
+    }
+
+    /// Imports writes the share extension and App Intents dropped in the App Group inbox,
+    /// so they get the same optimistic apply, queue and flush as writes made in the app.
+    private func drainInbox() async {
+        guard let url = AppGroup.inboxURL else { return }
+        let imported = await PendingOpInbox(directory: url).drain(into: store)
+        guard imported > 0 else { return }
+        Self.log.info("inbox: imported \(imported) op(s)")
+        pendingCount = await store.pendingCount
+        apply(await store.snapshot)
+        scheduleFlush()
     }
 
     private func refresh() async {
@@ -190,6 +220,8 @@ final class AppModel {
         preferences = snapshot.preferences
         todaySet = snapshot.todaySets[todayString]
         didChange()
+        // The store has already written the snapshot to disk; let the widget re-read it.
+        WidgetCenter.shared.reloadAllTimelines()
     }
 
     // MARK: Todo mutations
@@ -330,14 +362,14 @@ final class AppModel {
 
     private func restoreTimer() {
         activity.adoptExisting()
-        guard let data = UserDefaults.standard.data(forKey: Self.timerDefaultsKey),
+        guard let data = AppGroup.defaults.data(forKey: Self.timerDefaultsKey) ?? Self.takeLegacyTimerData(),
               let saved = try? TempoJSON.decoder.decode(TimerState.self, from: data)
         else {
             if activity.isActive { endActivity() }
             return
         }
         if saved.isStale(at: Date(), calendar: calendar) {
-            UserDefaults.standard.removeObject(forKey: Self.timerDefaultsKey)
+            AppGroup.defaults.removeObject(forKey: Self.timerDefaultsKey)
             if activity.isActive { endActivity() }
             return
         }
@@ -350,12 +382,21 @@ final class AppModel {
         }
     }
 
+    /// Shared defaults, so the widget and App Intents see the same clock.
     private func persistTimer() {
         if timer.isActive, let data = try? TempoJSON.encoder.encode(timer) {
-            UserDefaults.standard.set(data, forKey: Self.timerDefaultsKey)
+            AppGroup.defaults.set(data, forKey: Self.timerDefaultsKey)
         } else {
-            UserDefaults.standard.removeObject(forKey: Self.timerDefaultsKey)
+            AppGroup.defaults.removeObject(forKey: Self.timerDefaultsKey)
         }
+        WidgetCenter.shared.reloadAllTimelines()
+    }
+
+    /// A timer saved before the App Group existed; moved out of standard defaults once.
+    private static func takeLegacyTimerData() -> Data? {
+        guard let data = UserDefaults.standard.data(forKey: timerDefaultsKey) else { return nil }
+        UserDefaults.standard.removeObject(forKey: timerDefaultsKey)
+        return data
     }
 
     /// A 1 Hz tick only while running; paused and idle timers have nothing to redraw.

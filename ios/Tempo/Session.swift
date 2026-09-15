@@ -5,7 +5,9 @@ import TempoKit
 /// Who is signed in and how to talk to the API. Injected via `.environment`.
 @Observable @MainActor
 final class Session {
-    private static let keychainKey = "apiKey"
+    private static let keychainKey = AppGroup.apiKeyKeychainKey
+    /// Stored next to the key so extensions talk to the same server as the app.
+    static let baseURLKeychainKey = AppGroup.baseURLKeychainKey
 
     /// Where requests go. Production unless `TEMPO_API_URL` is set (environment
     /// variable or `-TEMPO_API_URL <url>` launch argument), e.g. `http://localhost:3001`.
@@ -19,6 +21,9 @@ final class Session {
 
     init() {
         baseURL = Session.resolveBaseURL()
+        // Keys saved before extensions existed sit in the app's private group; move them so the
+        // widget, share extension and App Intents can read them.
+        Keychain.migrateToSharedGroup(Session.keychainKey)
         // `TEMPO_API_KEY` in the environment signs in without the Keychain — for
         // simulator runs and UI checks only; it is never stored.
         let envKey = ProcessInfo.processInfo.environment["TEMPO_API_KEY"]
@@ -41,6 +46,7 @@ final class Session {
 
         do {
             try Keychain.save(key, for: Session.keychainKey)
+            try Keychain.save(baseURL.absoluteString, for: Session.baseURLKeychainKey)
         } catch {
             throw SignInError.keychain
         }
@@ -52,6 +58,7 @@ final class Session {
 
     func signOut() {
         Keychain.delete(Session.keychainKey)
+        Keychain.delete(Session.baseURLKeychainKey)
         apiKey = nil
         client = nil
         me = nil
