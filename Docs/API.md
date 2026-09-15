@@ -161,6 +161,8 @@ Create a todo.
 
 **201 Created** — returns the full row.
 
+Creates are **idempotent on a client-supplied `id`**: posting a todo whose `id` already exists for this user returns that existing row with **200** (the body of the repeat is ignored), and an `id` owned by another user returns **409**. Clients that generate ids (web, iOS, the share extension) can therefore retry a create whose response they never saw without making a second copy or blocking an offline queue.
+
 `startedAt` is set the first time a timer runs on the todo; `actualMinutes` is the total timed minutes across runs, written when the timer stops or the todo completes. Both are null for untimed todos and are excluded from calibration.
 
 #### `PUT /api/todos/:id`
