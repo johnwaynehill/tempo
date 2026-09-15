@@ -123,3 +123,17 @@ Tokens are in `Tempo/Theme.swift` and follow `Docs/Design.md` ("Quiet Rhythm"):
 no borders, hierarchy from the surface ramp, 16pt card radius, 8pt grid, muted
 sage primary. Fonts go through `Theme.font(...)` so Manrope/Inter can be bundled
 later without touching views.
+
+## App icon
+
+The icon comes from Figma "Tempo-Web", node `4:2` ("app-icon-editable 2"): the sage-gradient "T." monogram on white. Note the web favicon and PWA icons in `public/` are the inverse (sage background, cream monogram).
+
+- Sources live in `ios/Branding/AppIcon/` as SVG: `AppIcon-Light.svg` (the Figma design, opaque full-bleed square — iOS applies the corner mask), `AppIcon-Dark.svg` (same geometry, transparent background, gradient lifted toward the dark-theme primary), and `AppIcon-Tinted.svg` (grayscale, transparent, for tinted Home Screens).
+- Render the PNGs into the asset catalog from the repo root:
+
+  ```bash
+  node ios/scripts/generate-app-icon.mjs
+  ```
+
+  It uses `sharp` from the web app's `node_modules` (`npm install` at the root first). The light icon is flattened with no alpha channel, which iOS requires.
+- To change the icon, edit the SVGs (or re-export from Figma) and re-run the script. Don't hand-edit the PNGs.

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <title>Tempo iOS app icon (tinted)</title>
+  <desc>Same geometry as AppIcon-Light. Grayscale on a transparent background: iOS reads luminance and applies the user's tint. The gradient keeps the diagonal depth of the original.</desc>
+  <path id="t" d="M366 96C389.196 96 408 112.118 408 132V156C408 175.882 389.196 192 366 192H256V368C256 398.928 234.51 424 208 424C181.49 424 160 398.928 160 368V192H130C106.804 192 88 175.882 88 156V132C88 112.118 106.804 96 130 96H366Z" fill="url(#t-fill)"/>
+  <path id="period" d="M356 424C384.719 424 408 400.719 408 372C408 343.281 384.719 320 356 320C327.281 320 304 343.281 304 372C304 400.719 327.281 424 356 424Z" fill="url(#period-fill)"/>
+  <defs>
+    <linearGradient id="t-fill" x1="120.5" y1="119.063" x2="388.448" y2="390.481" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#A6A6A6"/>
+    </linearGradient>
+    <linearGradient id="period-fill" x1="314.562" y1="327.313" x2="399.469" y2="415.469" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#A6A6A6"/>
+    </linearGradient>
+  </defs>
+</svg>
