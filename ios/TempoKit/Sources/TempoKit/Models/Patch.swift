@@ -36,3 +36,12 @@ extension KeyedEncodingContainer {
         }
     }
 }
+
+extension KeyedDecodingContainer {
+    /// The inverse of `encodePatch`: a missing key is `nil`, JSON `null` is `.null`,
+    /// anything else is `.set`. (`decodeIfPresent` would collapse `null` into `nil`.)
+    public func decodePatch<V>(forKey key: Key) throws -> Patch<V>? {
+        guard contains(key) else { return nil }
+        return try decode(Patch<V>.self, forKey: key)
+    }
+}

@@ -6,7 +6,7 @@ Dynamic Island, reminders that fire when the app is closed, a Home Screen
 widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
-pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 built 2026-09-14: `ios/TempoKit` (53 tests) and the app target with sign-in and read-only Today, verified on the iOS 26.5 simulator.
+pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
 Decisions originally marked **[you]** are now settled as written.
 
 ## Why native, and why now
