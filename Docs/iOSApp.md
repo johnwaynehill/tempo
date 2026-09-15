@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written.
+Decisions originally marked **[you]** are now settled as written. Phase 3 in progress (branch `feature/ios-phase-3`).
 
 ## Why native, and why now
 
@@ -180,6 +180,33 @@ Effort: L. This is the app.
 - Mood logging to HealthKit's State of Mind, the backlog item.
 
 Effort: M. Each is small once Phase 2 exists.
+
+**What a free personal team can sign** (checked 2026-09-15 against Apple's
+[supported capabilities table](https://developer.apple.com/help/account/reference/supported-capabilities-ios),
+"Apple Developer" column; the user's profiles are 7-day personal-team profiles):
+
+| Available | Not available |
+|---|---|
+| App Groups, Keychain Sharing, HealthKit, Background Modes, Data Protection | Siri, Push Notifications, Time Sensitive Notifications, Associated Domains, App Attest, Group Activities |
+
+So Shortcuts go through App Intents and App Shortcuts (no Siri entitlement
+needed), and nothing in Phase 3 depends on push or universal links.
+
+**How the extensions share the app's data**
+
+- **Sign-in:** the API key and server address live in one Keychain access
+  group, `$(AppIdentifierPrefix)com.johnwaynehill.Tempo.shared`, so the widget,
+  share extension and App Intents read what the app stored. A key saved by an
+  earlier build migrates into the group on launch.
+- **Data:** the App Group `group.com.johnwaynehill.Tempo` holds the offline
+  cache (the widget reads it), the timer state (widget and intents read it),
+  and an `Inbox/` folder. Out-of-app writers never touch the app's queue file;
+  they drop one `WriteOp` file per write into the inbox (TempoKit
+  `PendingOpInbox`), and the app imports them on launch, foreground and
+  refresh, then sends them like any other write.
+- **Targets:** the app (HealthKit write for mood), `TempoWidgets` (Live
+  Activity plus Home Screen and Lock Screen widgets), and `TempoShare`. App
+  Intents live in `ios/Intents/`, compiled into both the app and the widget.
 
 ### Phase 4: breadth
 
