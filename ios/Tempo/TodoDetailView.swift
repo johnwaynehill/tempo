@@ -16,6 +16,8 @@ struct TodoDetailView: View {
     @State private var titleSave: Task<Void, Never>?
     @State private var descriptionSave: Task<Void, Never>?
     @State private var confirmDelete = false
+    /// Success haptic when Complete is tapped.
+    @State private var completions = 0
     @FocusState private var focus: Field?
 
     private enum Field { case title, description }
@@ -33,6 +35,7 @@ struct TodoDetailView: View {
             }
         }
         .background(Theme.surface.ignoresSafeArea())
+        .sensoryFeedback(.success, trigger: completions)
         .toolbarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
@@ -282,8 +285,11 @@ struct TodoDetailView: View {
             case .todayPinned:
                 Button("Not today") { finish { await model.dismissFromToday(id: id) } }
                     .buttonStyle(SecondaryButtonStyle())
-                Button("Complete") { finish { await model.complete(id: id) } }
-                    .buttonStyle(BarPrimaryButtonStyle())
+                Button("Complete") {
+                    completions += 1
+                    finish { await model.complete(id: id) }
+                }
+                .buttonStyle(BarPrimaryButtonStyle())
             case .done:
                 Text("Completed\(todo.completedAt.map { " " + TimeMath.formatClock($0) } ?? "")")
                     .font(Theme.font(.subheadline))
@@ -301,7 +307,10 @@ struct TodoDetailView: View {
     private func overflowMenu(_ todo: Todo) -> some View {
         Menu {
             if todo.status != .todayPinned && todo.status != .done {
-                Button("Complete", systemImage: "checkmark") { finish { await model.complete(id: id) } }
+                Button("Complete", systemImage: "checkmark") {
+                    completions += 1
+                    finish { await model.complete(id: id) }
+                }
             }
             if todo.status != .done {
                 Menu("Defer") {

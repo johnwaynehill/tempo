@@ -89,6 +89,12 @@ simulator (`Tempo/DebugLaunch.swift`; compiled out of Release):
 | `TEMPO_DEBUG_FOCUS=1` | Open Focus Mode |
 | `TEMPO_DEBUG_CAPTURE=<title>` | Create an inbox todo with that title |
 | `TEMPO_DEBUG_COMPLETE_AFTER=<seconds>` | Call `completeActive()` after that many seconds |
+| `TEMPO_DEBUG_SPARKLE=1` | Fire every completion sparkle on screen three times, 3 s apart |
+| `TEMPO_DEBUG_SPARKLE_SCALE=<n>` | Slow the sparkle down n times (for screenshots) |
+| `TEMPO_DEBUG_REDUCE_MOTION=1` | Treat Reduce Motion as on (the sparkle then never renders); `simctl` can't toggle it |
+| `TEMPO_DEBUG_MOOD_SHEET=1` | Present the mood check-in sheet |
+| `TEMPO_DEBUG_MOOD_HEALTH=1` | Turn "Also save to Apple Health" on and request State of Mind access |
+| `TEMPO_DEBUG_LOG_MOOD=<value>:<note>` | Save a check-in through the sheet's save path (and to Health if the toggle is on) |
 
 With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
 `SIMCTL_CHILD_TEMPO_DEBUG_START_TIMER=1 xcrun simctl launch booted com.johnwaynehill.Tempo`.
@@ -100,6 +106,22 @@ Extensions (widget, share sheet, App Intents) read the API key and server addres
 ```bash
 xcodebuild -project Tempo.xcodeproj -scheme Tempo -destination 'platform=iOS Simulator,id=<device id>' CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= build
 ```
+
+## Mood check-ins, Apple Health, haptics
+
+Today's top row shows the mood logged today (blob, label, note from `GET /api/mood?days=1`)
+or "How are you feeling?". Tapping opens `MoodCheckInSheet`: a 1–100 slider that reshapes
+the blob, an optional note, and **Also save to Apple Health** (`UserDefaults`
+`tempo-mood-save-to-health`, off by default; switching it on asks for access). Save posts to
+`/api/mood` first; with the toggle on it then writes an `HKStateOfMind` (momentary emotion,
+valence linear from 1–100 to −1…1, labels per bucket, see `HealthMoodWriter.swift`). If Health
+is unavailable or not allowed, the mood still saves and the sheet says Health wasn't updated.
+Mood logging is online only (it isn't a queued `WriteOp`); offline, the sheet says so and stays open.
+
+Completing a todo from the Now card, a Today row, Focus Mode or the todo detail plays a success
+haptic; starting, pausing or resuming the timer plays a light impact. The Now card and Today
+rows also play `CompletionSparkle`, a ~600 ms burst of sage and neutral dots, skipped entirely
+when Reduce Motion is on.
 
 ## Building from the command line
 
