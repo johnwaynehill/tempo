@@ -1,10 +1,11 @@
 import SwiftUI
 import WidgetKit
 
-/// Just the timer's Live Activity for now; Home Screen widgets arrive in Phase 3.
+/// The timer's Live Activity and the Today widget (Home Screen and Lock Screen).
 @main
 struct TempoWidgetsBundle: WidgetBundle {
     var body: some Widget {
         TempoTimerLiveActivity()
+        TodayWidget()
     }
 }

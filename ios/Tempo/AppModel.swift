@@ -39,6 +39,8 @@ final class AppModel {
     private(set) var timer: TimerState = .idle
     /// Republished once a second while the timer runs so views re-render.
     private(set) var now = Date()
+    /// Set when the Start focus App Intent asks for Focus Mode; Today presents it and clears this.
+    var focusRequested = false
 
     let calendar: Calendar
     private let store: TempoStore
@@ -67,6 +69,7 @@ final class AppModel {
         self.activity = activity
         self.calendar = calendar
         restoreTimer()
+        consumeFocusRequest()
     }
 
     /// `<App Group>/Tempo/<account folder>` (`AppGroup.accountDirectory`) so the widget can read
@@ -169,6 +172,9 @@ final class AppModel {
 
     /// The scene came to the foreground: same two calls as launch, minus the disk read.
     func activate() async {
+        // A timer the widget or a Shortcut started while we were away, and a pending Start focus.
+        adoptSharedTimer()
+        consumeFocusRequest()
         guard loadTask != nil else { return }
         tick()
         await drainInbox()
@@ -365,6 +371,11 @@ final class AppModel {
         guard let data = AppGroup.defaults.data(forKey: Self.timerDefaultsKey) ?? Self.takeLegacyTimerData(),
               let saved = try? TempoJSON.decoder.decode(TimerState.self, from: data)
         else {
+            // Cleared by another process while this model still showed a clock.
+            if timer.isActive {
+                timer = .idle
+                updateTick()
+            }
             if activity.isActive { endActivity() }
             return
         }
@@ -533,6 +544,46 @@ final class AppModel {
         case .transport: "Couldn't reach Tempo. Pull to try again."
         case .http(let status, _): "Tempo answered with an error (\(status))."
         case .decoding, .invalidResponse: "Tempo sent something unexpected."
+        }
+    }
+}
+
+// MARK: - App Intents
+
+/// Intents running in the app's process go through the model (`TempoIntentBridge.host`), so the
+/// Now card, the write queue and the Live Activity stay in step with what the intent did.
+extension AppModel: TempoIntentHost {
+    /// The summary line's Start, for Start next. Nil before the first load so the intent falls
+    /// back to the shared-container path rather than reading an empty list.
+    func startNextTask() async -> StartNextOutcome? {
+        guard hasLoaded else { return nil }
+        if let id = timer.activeTaskId {
+            return .alreadyRunning(title: todo(id: id)?.title ?? "your task")
+        }
+        guard let first = todayTodos.first else { return .nothingToday }
+        startTimer(first.id)
+        // Let the Live Activity request land while the intent still keeps the process awake.
+        await activityTask?.value
+        return .started(title: first.title)
+    }
+
+    func addTodo(title: String) async {
+        await createTodo(title: title, status: .inbox)
+    }
+
+    /// The launch-time restore, re-run: adopts a timer (and its Live Activity) another process
+    /// saved to the App Group, then builds the activity if the restore couldn't.
+    func adoptSharedTimer() {
+        restoreTimer()
+        now = Date()
+        if timer.isActive, activityTodoId != timer.activeTaskId, activeTodo != nil {
+            syncActivity(previous: .idle)
+        }
+    }
+
+    func consumeFocusRequest() {
+        if TempoIntentBridge.takeFocusRequest() {
+            focusRequested = true
         }
     }
 }
