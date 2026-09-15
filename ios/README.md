@@ -1,13 +1,19 @@
 # Tempo for iOS
 
 Native SwiftUI client for the Tempo API. Phase 1: sign in with an API key and a
-read-only Today screen. The plan and later phases live in `Docs/iOSApp.md`.
+read-only Today screen. Phase 2: the daily loop — Today with the summary line
+and Now card, Focus Mode, Inbox capture, Backlog, todo detail, Habits, local
+reminders, an offline cache with a write queue, and the timer's Live Activity.
+The plan and later phases live in `Docs/iOSApp.md`.
 
 ```
 ios/
 ├── project.yml        XcodeGen spec (source of truth for the project)
 ├── Tempo.xcodeproj    generated; committed so it opens without extra tools
 ├── Tempo/             the app target (SwiftUI, @Observable view models)
+│   └── AppModel.swift one shared source of truth; every write goes through it
+├── TempoWidgets/      widget extension: the timer's Live Activity
+├── Shared/            compiled into both targets: Live Activity attributes, WidgetTheme
 └── TempoKit/          local Swift package: models, TempoClient, logic ports, tests
 ```
 
@@ -35,10 +41,9 @@ cd ios && xcodegen generate
    trust the developer certificate on the phone under
    Settings → General → VPN & Device Management.
 
-`DEVELOPMENT_TEAM` is deliberately not set in `project.yml`; Xcode writes your
-choice into the project file, and `xcodegen generate` will drop it again, so
-either re-pick the team after regenerating or add
-`DEVELOPMENT_TEAM: <your team id>` under `settings.base` in `project.yml`.
+`DEVELOPMENT_TEAM` lives under `settings.base` in `project.yml` so that
+`xcodegen generate` keeps the team picked in Xcode; change it there, not in the
+project file, if you sign with a different team.
 
 ## Pointing at a local API
 
@@ -54,6 +59,41 @@ Override with `TEMPO_API_URL`, either as an environment variable or as a
   LAN address instead).
 
 `Info.plist` sets `NSAllowsLocalNetworking` so plain `http://localhost` is allowed.
+
+`TEMPO_API_KEY=<key>` in the environment signs in with that key for the run
+without touching the Keychain (simulator checks only).
+
+## Offline cache and the timer
+
+`AppModel` sits on `TempoKit`'s `TempoStore`: the last snapshot is cached under
+Application Support/Tempo/<12 hex chars of SHA-256(api key)> and rendered the
+moment the app launches, then refreshed. Every write is applied locally and
+queued; a non-blocking flush drains the queue after each write, when the scene
+becomes active, and on pull-to-refresh. Today shows a one-line "Offline" note
+only while something is queued and the last flush couldn't reach the server.
+
+The task timer (`TimerState`) is persisted to `UserDefaults` under
+`tempo-timer-state`, discarded on load if it started on another day, and drives
+the Now card, Focus Mode, and the Live Activity from one clock. Elapsed time is
+always derived from timestamps, never counted.
+
+## Debug launch hooks
+
+Debug builds read a few environment variables once after Today's first load, so
+the app can be driven from the command line where nothing can tap the
+simulator (`Tempo/DebugLaunch.swift`; compiled out of Release):
+
+| Variable | Effect |
+| --- | --- |
+| `TEMPO_DEBUG_START_TIMER=1` | Start the timer on the first Today todo, then log `Activity<TempoTimerAttributes>.activities.count` |
+| `TEMPO_DEBUG_FOCUS=1` | Open Focus Mode |
+| `TEMPO_DEBUG_CAPTURE=<title>` | Create an inbox todo with that title |
+| `TEMPO_DEBUG_COMPLETE_AFTER=<seconds>` | Call `completeActive()` after that many seconds |
+
+With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
+`SIMCTL_CHILD_TEMPO_DEBUG_START_TIMER=1 xcrun simctl launch booted com.johnwaynehill.Tempo`.
+Log lines land in the `com.johnwaynehill.Tempo` subsystem:
+`xcrun simctl spawn booted log stream --predicate 'subsystem == "com.johnwaynehill.Tempo"' --style compact`.
 
 ## Building from the command line
 

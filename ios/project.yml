@@ -17,8 +17,9 @@ settings:
     SWIFT_VERSION: "6.0"
     SWIFT_STRICT_CONCURRENCY: complete
     CODE_SIGN_STYLE: Automatic
-    # Pick your team in Xcode: Tempo target > Signing & Capabilities.
-    # DEVELOPMENT_TEAM is intentionally unset.
+    # The team picked in Xcode (Tempo target > Signing & Capabilities); kept here so
+    # `xcodegen generate` doesn't drop it.
+    DEVELOPMENT_TEAM: AMA7J4DZRB
 
 targets:
   Tempo:
@@ -26,8 +27,11 @@ targets:
     platform: iOS
     sources:
       - path: Tempo
+      # Live Activity attributes + the few colours the widget needs; also in TempoWidgets.
+      - path: Shared
     dependencies:
       - package: TempoKit
+      - target: TempoWidgets
     info:
       path: Tempo/Info.plist
       properties:
@@ -35,6 +39,7 @@ targets:
         CFBundleName: Tempo
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
+        NSSupportsLiveActivities: true
         # Bundled variable fonts (SIL OFL; licences alongside them in Tempo/Fonts).
         UIAppFonts:
           - "Manrope[wght].ttf"
@@ -52,6 +57,28 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         SWIFT_EMIT_LOC_STRINGS: YES
         ENABLE_USER_SCRIPT_SANDBOXING: YES
+
+  # Widget extension: hosts the timer's Live Activity (Home Screen widgets come in Phase 3).
+  TempoWidgets:
+    type: app-extension
+    platform: iOS
+    deploymentTarget: "26.0"
+    sources:
+      - path: TempoWidgets
+      - path: Shared
+    info:
+      path: TempoWidgets/Info.plist
+      properties:
+        CFBundleDisplayName: Tempo
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo.TempoWidgets
+        TARGETED_DEVICE_FAMILY: "1"
+        SWIFT_EMIT_LOC_STRINGS: YES
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+        SKIP_INSTALL: YES
 
 schemes:
   Tempo:

@@ -2,26 +2,42 @@ import Foundation
 import Observation
 import TempoKit
 
-/// Loads and shapes everything the Today screen shows. Read-only in Phase 1.
+/// Shapes what the Today screen shows out of `AppModel`. Holds no data of its own:
+/// the todo list, the day's set, the events, and the timer all live on the model, so
+/// a mutation made from any tab shows up here without a refetch.
 @Observable @MainActor
 final class TodayViewModel {
-    private(set) var todayTodos: [Todo] = []
-    private(set) var todayEvents: [CalendarEvent] = []
-    private(set) var isLoading = false
-    private(set) var hasLoaded = false
-    var error: String?
+    private let model: AppModel
 
-    private let client: TempoClient
-    private let calendar: Calendar
-    /// Only ask the server to generate once per day per launch, even if the set stays empty.
-    private var generatedFor: String?
-
-    init(client: TempoClient, calendar: Calendar = .current) {
-        self.client = client
-        self.calendar = calendar
+    init(model: AppModel) {
+        self.model = model
     }
 
-    // MARK: Derived
+    var todayTodos: [Todo] { model.todayTodos }
+    var todayEvents: [CalendarEvent] { model.todayEvents }
+    var isLoading: Bool { model.isLoading }
+    var hasLoaded: Bool { model.hasLoaded }
+    var error: String? { model.error }
+    var completedTodayCount: Int { model.completedTodayCount }
+
+    /// "Offline. Changes will sync when you're back." — only while something is
+    /// actually waiting; a quiet offline read needs no banner.
+    var showsOfflineBanner: Bool { model.isOffline && model.pendingCount > 0 }
+
+    // MARK: Timer
+
+    var timer: TimerState { model.timer }
+    var elapsedSeconds: Int { model.elapsedSeconds }
+    var timerSnapshot: TimerSnapshot? { model.timerSnapshot }
+
+    /// The running task, lifted out of the list into the Now card.
+    var activeTodo: Todo? { model.activeTodo }
+
+    /// Everything on Today except the task on the clock.
+    var listTodos: [Todo] {
+        guard let active = activeTodo else { return todayTodos }
+        return todayTodos.filter { $0.id != active.id }
+    }
 
     struct Summary: Equatable {
         var taskCount: Int
@@ -34,81 +50,69 @@ final class TodayViewModel {
         }
     }
 
+    /// Recomputed every tick while a timer runs, since `model.now` feeds the snapshot.
     var summary: Summary? {
-        guard !todayTodos.isEmpty else { return nil }
+        let todos = todayTodos
+        guard !todos.isEmpty else { return nil }
+        let snapshot = timerSnapshot
         return Summary(
-            taskCount: todayTodos.count,
-            remainingMinutes: TimeMath.remainingMinutes(todayTodos, timer: nil),
-            projectedEnd: TimeMath.projectedEndTime(todayTodos, timer: nil)
+            taskCount: todos.count,
+            remainingMinutes: TimeMath.remainingMinutes(todos, timer: snapshot),
+            projectedEnd: TimeMath.projectedEndTime(todos, timer: snapshot, now: model.now)
         )
     }
 
-    var todayString: String {
-        TodayResolution.todayDateString(now: Date(), calendar: calendar)
+    /// The overcommitment sentence under the summary line, when the plan doesn't fit
+    /// the working hours left today.
+    var overcommitNote: String? {
+        Availability.todayOvercommitMessage(
+            todos: todayTodos,
+            timer: timerSnapshot,
+            events: model.events,
+            dayStart: model.preferences?.workDayStart ?? Availability.DEFAULT_WORK_DAY_START,
+            dayEnd: model.preferences?.workDayEnd ?? Availability.DEFAULT_WORK_DAY_END,
+            now: model.now,
+            calendar: model.calendar
+        )
     }
 
-    // MARK: Loading
+    // MARK: Actions
 
     func loadIfNeeded() async {
-        guard !hasLoaded else { return }
-        await reload()
+        await model.loadIfNeeded()
     }
 
     func reload() async {
-        guard !isLoading else { return }
-        isLoading = true
-        defer { isLoading = false }
-
-        let today = todayString
-        do {
-            async let todosTask = client.todos()
-            async let setTask = client.todaySet(date: today)
-            async let eventsTask = client.events()
-
-            let todos = try await todosTask
-            var set = try await setTask
-            let events = try await eventsTask
-
-            // A day with no row yet (`exists: false`) gets its set built by the server;
-            // an empty but existing set is the user's doing and stays empty.
-            if !set.isGenerated, generatedFor != today {
-                generatedFor = today
-                _ = try await client.generateTodaySet(date: today)
-                set = try await client.todaySet(date: today)
-            }
-
-            let pinned = todos.filter { $0.status == .todayPinned }
-            todayTodos = TodayResolution.resolveTodayTodos(
-                todaySet: set, todos: todos, pinned: pinned, today: today
-            )
-            todayEvents = Self.eventsForToday(events, now: Date(), calendar: calendar)
-            error = nil
-            hasLoaded = true
-        } catch let apiError as TempoAPIError {
-            self.error = Self.describe(apiError)
-        } catch _ {
-            self.error = "Something went wrong loading Today."
-        }
+        await model.reload()
     }
 
-    // MARK: Helpers
-
-    /// Events starting on the same local day as `now`; all-day first, then by start time.
-    static func eventsForToday(_ events: [CalendarEvent], now: Date, calendar: Calendar) -> [CalendarEvent] {
-        events
-            .filter { calendar.isDate($0.startTime, inSameDayAs: now) }
-            .sorted { a, b in
-                if a.allDay != b.allDay { return a.allDay }
-                return a.startTime < b.startTime
-            }
+    func complete(id: UUID) async {
+        await model.complete(id: id)
     }
 
-    private static func describe(_ error: TempoAPIError) -> String {
-        switch error {
-        case .unauthorized: "Your API key was rejected. Sign out and paste a fresh one."
-        case .transport: "Couldn't reach Tempo. Pull to try again."
-        case .http(let status, _): "Tempo answered with an error (\(status))."
-        case .decoding, .invalidResponse: "Tempo sent something unexpected."
-        }
+    func notToday(id: UUID) async {
+        await model.dismissFromToday(id: id)
+    }
+
+    func start(id: UUID) {
+        model.startTimer(id)
+    }
+
+    /// The summary line's Start: the first task on Today.
+    func startFirst() {
+        guard let first = todayTodos.first else { return }
+        model.startTimer(first.id)
+    }
+
+    func pause() { model.pauseTimer() }
+    func resume() { model.resumeTimer() }
+    func stop() { model.stopTimer() }
+
+    func completeActive() async {
+        await model.completeActive()
+    }
+
+    func signOut() async {
+        await model.signOut()
     }
 }

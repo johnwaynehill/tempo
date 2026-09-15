@@ -88,9 +88,11 @@ public struct Todo: Codable, Identifiable, Hashable, Sendable {
 
 extension Todo: Estimable, Calibratable {}
 
-/// Body for `POST /api/todos`. Only non-nil fields are sent; the client may supply `id`.
+/// Body for `POST /api/todos`. Only non-nil fields are sent. `id` is generated on the
+/// client (the API accepts it) so an offline create can be shown, referenced, and
+/// retried before the server ever hears about it.
 public struct TodoDraft: Codable, Hashable, Sendable {
-    public var id: UUID?
+    public var id: UUID
     public var title: String
     public var description: String?
     public var status: TodoStatus?
@@ -109,7 +111,7 @@ public struct TodoDraft: Codable, Hashable, Sendable {
     public var recurrenceParentId: UUID?
 
     public init(
-        id: UUID? = nil,
+        id: UUID = UUID(),
         title: String,
         description: String? = nil,
         status: TodoStatus? = nil,
@@ -149,8 +151,10 @@ public struct TodoDraft: Codable, Hashable, Sendable {
 
 /// Body for `PUT /api/todos/:id`. Each field is a three-state `Patch`:
 /// `nil` leaves the column alone, `.set(x)` writes `x`, `.null` clears it.
-/// Only touched fields are encoded.
-public struct TodoPatch: Encodable, Hashable, Sendable {
+/// Only touched fields are encoded, and decoding preserves the three states (a missing
+/// key stays `nil`, JSON `null` becomes `.null`) so a queued patch survives a round
+/// trip through disk unchanged.
+public struct TodoPatch: Codable, Hashable, Sendable {
     public var title: Patch<String>?
     public var description: Patch<String>?
     public var status: Patch<TodoStatus>?
@@ -230,6 +234,30 @@ public struct TodoPatch: Encodable, Hashable, Sendable {
             && recurrenceParentId == nil && completedAt == nil
     }
 
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        title = try c.decodePatch(forKey: .title)
+        description = try c.decodePatch(forKey: .description)
+        status = try c.decodePatch(forKey: .status)
+        progress = try c.decodePatch(forKey: .progress)
+        project = try c.decodePatch(forKey: .project)
+        size = try c.decodePatch(forKey: .size)
+        impact = try c.decodePatch(forKey: .impact)
+        energyLevel = try c.decodePatch(forKey: .energyLevel)
+        dueDate = try c.decodePatch(forKey: .dueDate)
+        supports = try c.decodePatch(forKey: .supports)
+        noteId = try c.decodePatch(forKey: .noteId)
+        deferUntil = try c.decodePatch(forKey: .deferUntil)
+        reminderAt = try c.decodePatch(forKey: .reminderAt)
+        dismissedFromToday = try c.decodePatch(forKey: .dismissedFromToday)
+        estimatedMinutes = try c.decodePatch(forKey: .estimatedMinutes)
+        startedAt = try c.decodePatch(forKey: .startedAt)
+        actualMinutes = try c.decodePatch(forKey: .actualMinutes)
+        recurrence = try c.decodePatch(forKey: .recurrence)
+        recurrenceParentId = try c.decodePatch(forKey: .recurrenceParentId)
+        completedAt = try c.decodePatch(forKey: .completedAt)
+    }
+
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encodePatch(title, forKey: .title)
@@ -264,5 +292,57 @@ public struct CompletionResult: Codable, Hashable, Sendable {
     public init(todo: Todo, nextOccurrence: Todo? = nil) {
         self.todo = todo
         self.nextOccurrence = nextOccurrence
+    }
+}
+
+extension Todo {
+    /// The todo after `patch`, the way the server would apply it: `.set` writes,
+    /// `.null` clears a nullable column, and `.null` on a required column (`title`,
+    /// `status`) is ignored rather than corrupting the row. Used for optimistic updates.
+    public func applying(_ patch: TodoPatch, updatedAt now: Date) -> Todo {
+        var t = self
+        if let v = patch.title?.value { t.title = v }
+        if let v = patch.status?.value { t.status = v }
+        Todo.apply(patch.description, to: &t.description)
+        Todo.apply(patch.progress, to: &t.progress)
+        Todo.apply(patch.project, to: &t.project)
+        Todo.apply(patch.size, to: &t.size)
+        Todo.apply(patch.impact, to: &t.impact)
+        Todo.apply(patch.energyLevel, to: &t.energyLevel)
+        Todo.apply(patch.dueDate, to: &t.dueDate)
+        Todo.apply(patch.supports, to: &t.supports)
+        Todo.apply(patch.noteId, to: &t.noteId)
+        Todo.apply(patch.deferUntil, to: &t.deferUntil)
+        Todo.apply(patch.reminderAt, to: &t.reminderAt)
+        Todo.apply(patch.dismissedFromToday, to: &t.dismissedFromToday)
+        Todo.apply(patch.estimatedMinutes, to: &t.estimatedMinutes)
+        Todo.apply(patch.startedAt, to: &t.startedAt)
+        Todo.apply(patch.actualMinutes, to: &t.actualMinutes)
+        Todo.apply(patch.recurrence, to: &t.recurrence)
+        Todo.apply(patch.recurrenceParentId, to: &t.recurrenceParentId)
+        Todo.apply(patch.completedAt, to: &t.completedAt)
+        t.updatedAt = now
+        return t
+    }
+
+    /// A row built from a create body, with the defaults the server would fill in.
+    public init(draft: TodoDraft, userId: String, createdAt now: Date) {
+        self.init(
+            id: draft.id, userId: userId, title: draft.title, description: draft.description,
+            status: draft.status ?? .inbox, progress: draft.progress, project: draft.project,
+            size: draft.size, impact: draft.impact, energyLevel: draft.energyLevel, dueDate: draft.dueDate,
+            supports: draft.supports, noteId: draft.noteId, deferUntil: draft.deferUntil,
+            reminderAt: draft.reminderAt, estimatedMinutes: draft.estimatedMinutes,
+            recurrence: draft.recurrence, recurrenceParentId: draft.recurrenceParentId,
+            createdAt: now, updatedAt: now
+        )
+    }
+
+    private static func apply<V>(_ patch: Patch<V>?, to field: inout V?) {
+        guard let patch else { return }
+        switch patch {
+        case .set(let v): field = v
+        case .null: field = nil
+        }
     }
 }

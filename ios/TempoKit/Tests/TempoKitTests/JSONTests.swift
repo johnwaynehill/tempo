@@ -131,7 +131,8 @@ import Testing
     @Test func todoDraftOmitsNil() throws {
         let draft = TodoDraft(title: "New", dueDate: LA.day(2026, 9, 14), recurrence: RecurrenceRule(frequency: .daily))
         let obj = try #require(JSONSerialization.jsonObject(with: TempoJSON.encoder.encode(draft)) as? [String: Any])
-        #expect(Set(obj.keys) == ["title", "dueDate", "recurrence"])
+        #expect(Set(obj.keys) == ["id", "title", "dueDate", "recurrence"], "id is always sent so offline creates are idempotent")
+        #expect((obj["id"] as? String)?.lowercased() == draft.id.uuidString.lowercased())
         #expect(obj["dueDate"] as? String == "2026-09-14T07:00:00.000Z")
     }
 

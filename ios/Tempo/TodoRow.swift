@@ -4,6 +4,10 @@ import TempoKit
 /// One task card on Today. Mirrors `TodoItem.tsx`: title, then a wrap of quiet chips.
 struct TodoRow: View {
     let todo: Todo
+    /// Inbox hides the energy chip, as `Inbox.tsx` does with `showEnergy={false}`.
+    var showEnergy = true
+    /// Today's leading play affordance; nil hides it (other lists, or a timer already running).
+    var onStart: (() -> Void)? = nil
 
     private static let dueFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -13,6 +17,26 @@ struct TodoRow: View {
     }()
 
     var body: some View {
+        HStack(alignment: .top, spacing: Theme.grid) {
+            if let onStart {
+                PlayButton(action: onStart)
+                    .accessibilityLabel("Start timer for \(todo.title)")
+                    // Pull the 44pt target up and left so the glyph sits on the title's line.
+                    .padding(.top, -12)
+                    .padding(.leading, -12)
+            }
+            content
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(Theme.grid * 2)
+        .background(
+            Theme.surfaceContainerLowest,
+            in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
+        )
+        .accessibilityElement(children: .contain)
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: Theme.grid) {
             Text(todo.title)
                 .font(Theme.font(size: 15))
@@ -25,7 +49,7 @@ struct TodoRow: View {
                     if let project = todo.project, !project.isEmpty {
                         Chip(text: project, background: Theme.primaryContainer, foreground: Theme.onSurface)
                     }
-                    if let energy = todo.energyLevel {
+                    if showEnergy, let energy = todo.energyLevel {
                         Chip(text: Self.label(for: energy))
                     }
                     if let size = todo.size {
@@ -44,16 +68,11 @@ struct TodoRow: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.grid * 2)
-        .background(
-            Theme.surfaceContainerLowest,
-            in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
-        )
         .accessibilityElement(children: .combine)
     }
 
     private var hasMetadata: Bool {
-        (todo.project?.isEmpty == false) || todo.energyLevel != nil || todo.size != nil
+        (todo.project?.isEmpty == false) || (showEnergy && todo.energyLevel != nil) || todo.size != nil
             || (todo.estimatedMinutes ?? 0) > 0 || todo.dueDate != nil
     }
 
@@ -72,6 +91,29 @@ struct TodoRow: View {
         case .medium: "Medium"
         case .large: "Large"
         }
+    }
+}
+
+/// The small `play.fill` that starts a task from its row: a 28pt sage disc inside a
+/// 44pt hit target, mirroring the play affordance on `TodoItem.tsx`.
+struct PlayButton: View {
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                Circle()
+                    .fill(Theme.primary.opacity(0.12))
+                    .frame(width: 28, height: 28)
+                Image(systemName: "play.fill")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(Theme.primary)
+                    .offset(x: 1)
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
     }
 }
 
@@ -123,7 +165,7 @@ struct FlowLayout: Layout {
             title: "Write the iOS README", project: "Tempo", size: .medium,
             energyLevel: .medium, dueDate: Date(), estimatedMinutes: 30
         ))
-        TodoRow(todo: Todo(title: "Call the dentist"))
+        TodoRow(todo: Todo(title: "Call the dentist"), onStart: {})
     }
     .padding()
     .background(Theme.surface)
