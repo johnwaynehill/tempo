@@ -95,6 +95,12 @@ With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
 Log lines land in the `com.johnwaynehill.Tempo` subsystem:
 `xcrun simctl spawn booted log stream --predicate 'subsystem == "com.johnwaynehill.Tempo"' --style compact`.
 
+Extensions (widget, share sheet, App Intents) read the API key and server address from the shared Keychain, not from the environment. For simulator checks of those, add `TEMPO_DEBUG_STORE_KEY=1` alongside `TEMPO_API_KEY` / `TEMPO_API_URL` so the DEBUG build saves them there. Simulator builds that exercise the App Group or Keychain group also need entitlements, so build with ad-hoc signing rather than `CODE_SIGNING_ALLOWED=NO`:
+
+```bash
+xcodebuild -project Tempo.xcodeproj -scheme Tempo -destination 'platform=iOS Simulator,id=<device id>' CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= build
+```
+
 ## Building from the command line
 
 ```sh

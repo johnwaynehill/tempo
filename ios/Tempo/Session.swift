@@ -31,6 +31,15 @@ final class Session {
             apiKey = key
             client = TempoClient(baseURL: baseURL, apiKey: key)
         }
+        #if DEBUG
+        // Simulator checks of the widget, share extension and App Intents need the key in the
+        // shared Keychain, which the environment sign-in above deliberately skips. Opt in with
+        // TEMPO_DEBUG_STORE_KEY=1; never compiled into release builds.
+        if let envKey, !envKey.isEmpty, ProcessInfo.processInfo.environment["TEMPO_DEBUG_STORE_KEY"] == "1" {
+            try? Keychain.save(envKey, for: Session.keychainKey)
+            try? Keychain.save(baseURL.absoluteString, for: Session.baseURLKeychainKey)
+        }
+        #endif
     }
 
     /// Verifies the key against `GET /api/auth/me`, then stores it.
