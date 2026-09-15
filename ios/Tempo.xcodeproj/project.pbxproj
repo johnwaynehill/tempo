@@ -13,6 +13,7 @@
 		14A476EDF9F71063E6609360 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		15A4A75096B2CBCA88C37474 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		1733EF77EA11BE505634EA02 /* TempoShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B0F094A01188C3ADDDFC6264 /* TempoShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1EF0A65FE16EF6465AA0B1A2 /* CompletionSparkle.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */; };
 		25A2F6225C6396E81CFE55E6 /* TimerActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E267F3FADBB034D8C2D37A /* TimerActivityController.swift */; };
 		2807A7A777C18FDF2C614E9D /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
 		28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08F9555222BA9FC6A779A05 /* HabitsView.swift */; };
@@ -20,6 +21,7 @@
 		30C7A54DAD3F6BC5ACBED8A5 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		342D1C6FCD8C01DC5047FF55 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		38A283033C3D6D54AAD3277E /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */; };
+		38B975C56D6B6168DB5C6F34 /* HealthMoodWriter.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFBEC45DD7202363CB7A808F /* HealthMoodWriter.swift */; };
 		3CDADF7F0E8CF5D819573198 /* TempoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE37B2DC31D748FD529F6B6B /* TempoApp.swift */; };
 		3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		409469BBFD1FB2C382857683 /* NowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AC3C4EF8741909180B7B06 /* NowCard.swift */; };
@@ -28,6 +30,7 @@
 		4B55908B27441800288D6A22 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1720DA0DCE4697825E4EBAA6 /* InboxView.swift */; };
 		4C3624309BEDFA2D7F6E2FCF /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9E8A9F2018543CA0905879C7 /* TempoKit */; };
 		54C4A30E27996CD2484A1F77 /* TempoTimerActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */; };
+		56D0A04FF3C3EB0301D6B695 /* MoodCheckInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */; };
 		5C3B2E437D408850B60D4E60 /* TempoTimerActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */; };
 		5DC245C15D3E21EC4AC59F2F /* TempoTimerActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */; };
 		5FD485E2943463AEA432395F /* TempoWidgetsBundle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74371ED08F71EA13BDC933C1 /* TempoWidgetsBundle.swift */; };
@@ -44,6 +47,7 @@
 		7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */ = {isa = PBXBuildFile; fileRef = BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */; };
 		81B6B74291999DB49918A787 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D130652D396BC200072A61 /* Components.swift */; };
 		8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4143A9116E71B967F64B9E /* DebugShareHook.swift */; };
+		86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A7ECCB4658931900F1D758 /* MoodModel.swift */; };
 		8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		99EDE3220A4B6A7FDE3832AC /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		A52C8FC7FDF8E563B80C4C86 /* TempoWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 59C09C83F2476D5A09CAA82A /* TempoWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -51,6 +55,7 @@
 		B215D3F82F435885BF6B00AC /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D333CBB10B80C4E808007F90 /* Chip.swift */; };
 		B26D4CAEE8DF489D3BDA8AC9 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C71775352D4383D2544089 /* ShareViewController.swift */; };
 		B287BE2C8F5A22394B8CB8F7 /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
+		BBD0B74C7A8B37B4D641BE28 /* MoodBlobView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D258C77431FEA29F00D90BAF /* MoodBlobView.swift */; };
 		BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */ = {isa = PBXBuildFile; fileRef = FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */; };
 		C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		CAD6AFEF4EA4D90FDC000776 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
@@ -104,9 +109,11 @@
 		24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppGroup.swift; sourceTree = "<group>"; };
 		270B87214C8958180521CF6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		37879D7066A981F5542A7570 /* WidgetTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTheme.swift; sourceTree = "<group>"; };
+		37A7ECCB4658931900F1D758 /* MoodModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodModel.swift; sourceTree = "<group>"; };
 		410E1C43D2E3E7174D34A175 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeView.swift; sourceTree = "<group>"; };
 		503EDF7A08F7B75087C30CAD /* TempoIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoIntents.swift; sourceTree = "<group>"; };
+		54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckInView.swift; sourceTree = "<group>"; };
 		59C09C83F2476D5A09CAA82A /* TempoWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TempoWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A6246B31BA2F1224264AD02 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		5CEDCC092F352AF31653D674 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
@@ -129,12 +136,15 @@
 		BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Inter.txt"; sourceTree = "<group>"; };
 		BE9A0D1585591DE3E5153935 /* TempoKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TempoKit; path = TempoKit; sourceTree = SOURCE_ROOT; };
 		C5C71775352D4383D2544089 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
+		CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionSparkle.swift; sourceTree = "<group>"; };
 		CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
 		D08F9555222BA9FC6A779A05 /* HabitsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsView.swift; sourceTree = "<group>"; };
+		D258C77431FEA29F00D90BAF /* MoodBlobView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodBlobView.swift; sourceTree = "<group>"; };
 		D333CBB10B80C4E808007F90 /* Chip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip.swift; sourceTree = "<group>"; };
 		DD2C38FFE5B9785C164115A2 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		DE37B2DC31D748FD529F6B6B /* TempoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoApp.swift; sourceTree = "<group>"; };
 		E8EB24AF38DE9E38AB653AEE /* TempoWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TempoWidgets.entitlements; sourceTree = "<group>"; };
+		EFBEC45DD7202363CB7A808F /* HealthMoodWriter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthMoodWriter.swift; sourceTree = "<group>"; };
 		F32F128E1D77765991B47C81 /* Tempo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tempo.entitlements; sourceTree = "<group>"; };
 		F36FD1BD076D3B37332369F5 /* BacklogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogView.swift; sourceTree = "<group>"; };
 		F4D130652D396BC200072A61 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
@@ -238,13 +248,18 @@
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
 				F36FD1BD076D3B37332369F5 /* BacklogView.swift */,
 				D333CBB10B80C4E808007F90 /* Chip.swift */,
+				CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */,
 				F4D130652D396BC200072A61 /* Components.swift */,
 				95A0449A5BBE528B535297D6 /* DebugLaunch.swift */,
 				AD4143A9116E71B967F64B9E /* DebugShareHook.swift */,
 				426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */,
 				D08F9555222BA9FC6A779A05 /* HabitsView.swift */,
+				EFBEC45DD7202363CB7A808F /* HealthMoodWriter.swift */,
 				1720DA0DCE4697825E4EBAA6 /* InboxView.swift */,
 				270B87214C8958180521CF6C /* Info.plist */,
+				D258C77431FEA29F00D90BAF /* MoodBlobView.swift */,
+				54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */,
+				37A7ECCB4658931900F1D758 /* MoodModel.swift */,
 				62AC3C4EF8741909180B7B06 /* NowCard.swift */,
 				09C257BC542B015099982FCC /* ReminderScheduler.swift */,
 				5A6246B31BA2F1224264AD02 /* Session.swift */,
@@ -450,13 +465,18 @@
 				60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */,
 				F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */,
 				B215D3F82F435885BF6B00AC /* Chip.swift in Sources */,
+				1EF0A65FE16EF6465AA0B1A2 /* CompletionSparkle.swift in Sources */,
 				81B6B74291999DB49918A787 /* Components.swift in Sources */,
 				439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */,
 				8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */,
 				612204B4C806B8211D94E8FC /* FocusModeView.swift in Sources */,
 				28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */,
+				38B975C56D6B6168DB5C6F34 /* HealthMoodWriter.swift in Sources */,
 				4B55908B27441800288D6A22 /* InboxView.swift in Sources */,
 				AFC33BF04587985D51B9EF13 /* Keychain.swift in Sources */,
+				BBD0B74C7A8B37B4D641BE28 /* MoodBlobView.swift in Sources */,
+				56D0A04FF3C3EB0301D6B695 /* MoodCheckInView.swift in Sources */,
+				86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */,
 				409469BBFD1FB2C382857683 /* NowCard.swift in Sources */,
 				DEECE97C9065D5F8D026769C /* ReminderScheduler.swift in Sources */,
 				680F5CF364C9F8D2A88A02A9 /* Session.swift in Sources */,

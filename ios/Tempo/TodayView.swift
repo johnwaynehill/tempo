@@ -54,6 +54,10 @@ struct TodayView: View {
 private struct TodayContent: View {
     let model: TodayViewModel
 
+    /// Light tap when a timer starts from this screen; success when the context menu completes.
+    @State private var timerStarts = 0
+    @State private var menuCompletions = 0
+
     private static let dateFormatter: DateFormatter = {
         let f = DateFormatter()
         f.locale = Locale(identifier: "en_US")
@@ -74,6 +78,9 @@ private struct TodayContent: View {
                         .padding(.bottom, Theme.grid * 2)
                         .transition(.opacity)
                 }
+
+                MoodRow()
+                    .padding(.bottom, Theme.grid * 2)
 
                 eventsSection
                     .padding(.bottom, Theme.grid * 3)
@@ -102,6 +109,8 @@ private struct TodayContent: View {
         .refreshable { await model.reload() }
         .animation(.easeOut(duration: 0.3), value: model.hasLoaded)
         .animation(.easeOut(duration: 0.3), value: model.showsOfflineBanner)
+        .sensoryFeedback(.impact(weight: .light), trigger: timerStarts)
+        .sensoryFeedback(.success, trigger: menuCompletions)
     }
 
     // MARK: Events
@@ -160,14 +169,23 @@ private struct TodayContent: View {
             LazyVStack(spacing: Theme.grid * 1.5) {
                 ForEach(model.listTodos) { todo in
                     NavigationLink(value: todo.id) {
-                        TodoRow(todo: todo, onStart: model.timer.isActive ? nil : { model.start(id: todo.id) })
+                        TodoRow(
+                            todo: todo,
+                            onStart: model.timer.isActive ? nil : {
+                                timerStarts += 1
+                                model.start(id: todo.id)
+                            },
+                            onComplete: { Task { await model.complete(id: todo.id) } }
+                        )
                     }
                     .buttonStyle(.plain)
                     .contextMenu {
                         Button("Start timer", systemImage: "play.fill") {
+                            timerStarts += 1
                             model.start(id: todo.id)
                         }
                         Button("Complete", systemImage: "checkmark") {
+                            menuCompletions += 1
                             Task { await model.complete(id: todo.id) }
                         }
                         Button("Not today", systemImage: "moon") {
@@ -204,7 +222,10 @@ private struct TodayContent: View {
                 Spacer(minLength: 0)
 
                 if !model.timer.isActive {
-                    Button(action: model.startFirst) {
+                    Button {
+                        timerStarts += 1
+                        model.startFirst()
+                    } label: {
                         HStack(spacing: 6) {
                             Image(systemName: "play.fill")
                                 .font(.system(size: 9, weight: .bold))

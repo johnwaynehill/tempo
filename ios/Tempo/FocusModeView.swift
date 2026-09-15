@@ -18,6 +18,8 @@ struct FocusModeView: View {
     @State private var captureText = ""
     @State private var captureFlash = false
     @State private var completions = 0
+    /// Light tap when the timer starts, pauses for a break, or resumes.
+    @State private var timerTaps = 0
     @State private var advanceTask: Task<Void, Never>?
 
     private var focusTodos: [Todo] { model.todayTodos }
@@ -67,6 +69,7 @@ struct FocusModeView: View {
         }
         .tint(Theme.primary)
         .sensoryFeedback(.success, trigger: completions)
+        .sensoryFeedback(.impact(weight: .light), trigger: timerTaps)
         .onAppear(perform: autoStart)
         .onChange(of: currentTodo?.id) { _, _ in autoStart() }
         .onChange(of: phase) { _, _ in autoStart() }
@@ -306,9 +309,13 @@ struct FocusModeView: View {
     private func autoStart() {
         guard phase == .focus, let todo = currentTodo else { return }
         if model.timer.activeTaskId == todo.id {
-            if model.timer.isPaused { model.resumeTimer() }
+            if model.timer.isPaused {
+                model.resumeTimer()
+                timerTaps += 1
+            }
         } else if !model.timer.isRunning {
             model.startTimer(todo.id)
+            timerTaps += 1
         }
     }
 
@@ -350,11 +357,13 @@ struct FocusModeView: View {
 
     private func takeBreak() {
         model.pauseTimer()
+        timerTaps += 1
         phase = .breakTime
     }
 
     private func resumeFromBreak() {
         model.resumeTimer()
+        timerTaps += 1
         phase = .focus
     }
 

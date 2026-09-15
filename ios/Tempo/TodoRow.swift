@@ -8,6 +8,12 @@ struct TodoRow: View {
     var showEnergy = true
     /// Today's leading play affordance; nil hides it (other lists, or a timer already running).
     var onStart: (() -> Void)? = nil
+    /// Today's trailing complete circle; nil hides it. Called ~700 ms after the tap, once the
+    /// check, sparkle and fade have played, as `TodoItem.tsx` does.
+    var onComplete: (() -> Void)? = nil
+
+    @State private var completing = false
+    @State private var sparkles = 0
 
     private static let dueFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -26,6 +32,12 @@ struct TodoRow: View {
                     .padding(.leading, -12)
             }
             content
+            if onComplete != nil {
+                completeButton
+                    // Pull the 44pt target up and right so the circle sits on the title's line.
+                    .padding(.top, -12)
+                    .padding(.trailing, -12)
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.grid * 2)
@@ -33,7 +45,50 @@ struct TodoRow: View {
             Theme.surfaceContainerLowest,
             in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
         )
+        .opacity(completing ? 0 : 1)
+        // Outside the fade, centred on the complete control (16pt padding − 12pt pull = 4pt).
+        .overlay(alignment: .topTrailing) {
+            if onComplete != nil {
+                CompletionSparkle(trigger: sparkles)
+                    .frame(width: 44, height: 44)
+                    .padding(.top, 4)
+                    .padding(.trailing, 4)
+            }
+        }
+        .offset(x: completing ? 16 : 0)
+        .animation(.easeOut(duration: 0.5), value: completing)
+        .sensoryFeedback(.success, trigger: completing) { _, new in new }
         .accessibilityElement(children: .contain)
+    }
+
+    private var completeButton: some View {
+        Button {
+            guard !completing, let onComplete else { return }
+            completing = true
+            sparkles += 1
+            Task {
+                try? await Task.sleep(for: .milliseconds(700))
+                onComplete()
+            }
+        } label: {
+            ZStack {
+                Circle()
+                    .strokeBorder(completing ? Theme.primary : Theme.outlineVariant, lineWidth: 2)
+                    .background(Circle().fill(completing ? Theme.primary : .clear))
+                    .frame(width: 20, height: 20)
+                Image(systemName: "checkmark")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundStyle(Theme.onPrimary)
+                    .opacity(completing ? 1 : 0)
+            }
+            .scaleEffect(completing ? 1.1 : 1)
+            .animation(.spring(duration: 0.3), value: completing)
+            .frame(width: 44, height: 44)
+            .contentShape(Circle())
+        }
+        .buttonStyle(.plain)
+        .disabled(completing)
+        .accessibilityLabel("Complete \"\(todo.title)\"")
     }
 
     private var content: some View {
