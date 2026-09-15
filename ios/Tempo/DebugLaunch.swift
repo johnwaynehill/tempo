@@ -23,6 +23,7 @@ enum DebugLaunch {
         guard !ran else { return }
         ran = true
         let env = ProcessInfo.processInfo.environment
+        await DebugShareHook.run()
 
         if let title = env["TEMPO_DEBUG_CAPTURE"], !title.isEmpty {
             let todo = await model.createTodo(title: title, status: .inbox)
