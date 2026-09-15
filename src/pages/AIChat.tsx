@@ -45,7 +45,7 @@ export function AIChatPage() {
   const { habits } = useHabits()
   const { events } = useEvents()
   const { preferences } = usePreferences()
-  const { todayTodos } = useTodaySet(todos, pinned, preferences.current_energy)
+  const { todayTodos } = useTodaySet(todos, pinned)
 
   // Chat history
   const {

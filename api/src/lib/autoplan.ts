@@ -423,6 +423,54 @@ export async function runAutoplanForUser(
 }
 
 /**
+ * Generate today's suggestion set on demand, without AI and without touching
+ * todo statuses. This is what the web client used to compute in the browser
+ * (`suggestTodayTodos` in src/lib/scoring.ts) the first time Today opened
+ * each day; every client now asks the server instead so there's one
+ * implementation of the scoring and the Chore gate.
+ *
+ * Mirrors the client rule exactly: mandatory (due-or-overdue Chore) todos
+ * first, then the best-scoring discretionary todos to fill
+ * `TARGET_COUNT_MAX - pinnedCount - mandatory.length` slots. Already-pinned
+ * todos are never in the set (Today shows them regardless).
+ */
+export async function generateTodaySet(
+  userId: string,
+  timezone: string,
+  date?: string,
+): Promise<{ userId: string; date: string; todoIds: string[] }> {
+  const todayDate = date ?? localDate(timezone)
+
+  const [prefs] = await db
+    .select({ currentEnergy: schema.userPreferences.currentEnergy })
+    .from(schema.userPreferences)
+    .where(eq(schema.userPreferences.userId, userId))
+
+  const todos = await db
+    .select()
+    .from(schema.todos)
+    .where(eq(schema.todos.userId, userId))
+
+  const currentEnergy = (prefs?.currentEnergy ?? null) as EnergyLevel | null
+  const pinnedCount = todos.filter((t) => t.status === 'today_pinned').length
+  const { candidates, mandatory } = selectCandidates(todos, currentEnergy, todayDate, timezone)
+  const discretionary = candidates.filter((t) => !isDueDateGatedProject(t.project))
+  const slots = Math.max(0, TARGET_COUNT_MAX - pinnedCount - mandatory.length)
+  const todoIds = [...mandatory, ...discretionary.slice(0, slots)].map((t) => t.id)
+
+  const [row] = await db
+    .insert(schema.todaySets)
+    .values({ userId, date: todayDate, todoIds })
+    .onConflictDoUpdate({
+      target: [schema.todaySets.userId, schema.todaySets.date],
+      set: { todoIds },
+    })
+    .returning()
+
+  return { userId: row.userId, date: String(row.date), todoIds: row.todoIds }
+}
+
+/**
  * Run auto-plan for every opted-in user. Returns one result per user.
  * Per-user errors are caught and surfaced in the result so one bad user
  * doesn't abort the whole batch.
