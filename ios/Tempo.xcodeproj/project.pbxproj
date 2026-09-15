@@ -11,11 +11,14 @@
 		03B0BDCB9B9F78DEA3D32ECC /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F2B287CDB50455F97B74F9D /* TempoKit */; };
 		065771C04C0A706889D796C1 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */; };
 		14A476EDF9F71063E6609360 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
+		15A4A75096B2CBCA88C37474 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		1733EF77EA11BE505634EA02 /* TempoShare.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = B0F094A01188C3ADDDFC6264 /* TempoShare.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		25A2F6225C6396E81CFE55E6 /* TimerActivityController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14E267F3FADBB034D8C2D37A /* TimerActivityController.swift */; };
 		2807A7A777C18FDF2C614E9D /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
 		28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08F9555222BA9FC6A779A05 /* HabitsView.swift */; };
 		2A519594247308AB32A1864D /* Manrope[wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */; };
+		30C7A54DAD3F6BC5ACBED8A5 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
+		342D1C6FCD8C01DC5047FF55 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		38A283033C3D6D54AAD3277E /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */; };
 		3CDADF7F0E8CF5D819573198 /* TempoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE37B2DC31D748FD529F6B6B /* TempoApp.swift */; };
 		3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
@@ -40,18 +43,22 @@
 		78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */; };
 		7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */ = {isa = PBXBuildFile; fileRef = BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */; };
 		81B6B74291999DB49918A787 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D130652D396BC200072A61 /* Components.swift */; };
+		8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4143A9116E71B967F64B9E /* DebugShareHook.swift */; };
 		8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
+		99EDE3220A4B6A7FDE3832AC /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		A52C8FC7FDF8E563B80C4C86 /* TempoWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 59C09C83F2476D5A09CAA82A /* TempoWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		AFC33BF04587985D51B9EF13 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		B215D3F82F435885BF6B00AC /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D333CBB10B80C4E808007F90 /* Chip.swift */; };
 		B26D4CAEE8DF489D3BDA8AC9 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C71775352D4383D2544089 /* ShareViewController.swift */; };
 		B287BE2C8F5A22394B8CB8F7 /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
 		BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */ = {isa = PBXBuildFile; fileRef = FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */; };
+		C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		CAD6AFEF4EA4D90FDC000776 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		CAFCAD89BA4019D9A6029E60 /* Inter[opsz,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */; };
 		D1A0C6E5A8EE517555A298ED /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = A501EFA5E1E9239BCBDB799A /* TempoKit */; };
 		D1B50AF423AB988E82E1C61A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410E1C43D2E3E7174D34A175 /* Theme.swift */; };
 		DEECE97C9065D5F8D026769C /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C257BC542B015099982FCC /* ReminderScheduler.swift */; };
+		EA0E00BF58E741B756D4D673 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F36FD1BD076D3B37332369F5 /* BacklogView.swift */; };
 /* End PBXBuildFile section */
 
@@ -111,8 +118,10 @@
 		90A098D118D78BA3A0265147 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		95A0449A5BBE528B535297D6 /* DebugLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLaunch.swift; sourceTree = "<group>"; };
 		99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
+		9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCapture.swift; sourceTree = "<group>"; };
 		A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoRow.swift; sourceTree = "<group>"; };
 		A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter[opsz,wght].ttf"; sourceTree = "<group>"; };
+		AD4143A9116E71B967F64B9E /* DebugShareHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugShareHook.swift; sourceTree = "<group>"; };
 		AE6263597B3354C508BBC7D4 /* Tempo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tempo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoDetailView.swift; sourceTree = "<group>"; };
 		B0F094A01188C3ADDDFC6264 /* TempoShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TempoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -129,6 +138,7 @@
 		F32F128E1D77765991B47C81 /* Tempo.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Tempo.entitlements; sourceTree = "<group>"; };
 		F36FD1BD076D3B37332369F5 /* BacklogView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BacklogView.swift; sourceTree = "<group>"; };
 		F4D130652D396BC200072A61 /* Components.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Components.swift; sourceTree = "<group>"; };
+		F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Manrope.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -230,6 +240,7 @@
 				D333CBB10B80C4E808007F90 /* Chip.swift */,
 				F4D130652D396BC200072A61 /* Components.swift */,
 				95A0449A5BBE528B535297D6 /* DebugLaunch.swift */,
+				AD4143A9116E71B967F64B9E /* DebugShareHook.swift */,
 				426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */,
 				D08F9555222BA9FC6A779A05 /* HabitsView.swift */,
 				1720DA0DCE4697825E4EBAA6 /* InboxView.swift */,
@@ -266,6 +277,8 @@
 			children = (
 				24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */,
 				751BA7C01657B3A2B0E73F7F /* Keychain.swift */,
+				9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */,
+				F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */,
 				0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */,
 				37879D7066A981F5542A7570 /* WidgetTheme.swift */,
 			);
@@ -405,6 +418,8 @@
 			files = (
 				CAD6AFEF4EA4D90FDC000776 /* AppGroup.swift in Sources */,
 				14A476EDF9F71063E6609360 /* Keychain.swift in Sources */,
+				15A4A75096B2CBCA88C37474 /* ShareCapture.swift in Sources */,
+				30C7A54DAD3F6BC5ACBED8A5 /* ShareCardView.swift in Sources */,
 				B26D4CAEE8DF489D3BDA8AC9 /* ShareViewController.swift in Sources */,
 				5C3B2E437D408850B60D4E60 /* TempoTimerActivity.swift in Sources */,
 				B287BE2C8F5A22394B8CB8F7 /* WidgetTheme.swift in Sources */,
@@ -417,6 +432,8 @@
 			files = (
 				8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */,
 				00739EF01C7CB4AA18BA65A2 /* Keychain.swift in Sources */,
+				EA0E00BF58E741B756D4D673 /* ShareCapture.swift in Sources */,
+				C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */,
 				69902063B0118B543EF22B0F /* TempoIntents.swift in Sources */,
 				54C4A30E27996CD2484A1F77 /* TempoTimerActivity.swift in Sources */,
 				7043593E3FE5431934A35881 /* TempoTimerLiveActivity.swift in Sources */,
@@ -435,6 +452,7 @@
 				B215D3F82F435885BF6B00AC /* Chip.swift in Sources */,
 				81B6B74291999DB49918A787 /* Components.swift in Sources */,
 				439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */,
+				8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */,
 				612204B4C806B8211D94E8FC /* FocusModeView.swift in Sources */,
 				28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */,
 				4B55908B27441800288D6A22 /* InboxView.swift in Sources */,
@@ -442,6 +460,8 @@
 				409469BBFD1FB2C382857683 /* NowCard.swift in Sources */,
 				DEECE97C9065D5F8D026769C /* ReminderScheduler.swift in Sources */,
 				680F5CF364C9F8D2A88A02A9 /* Session.swift in Sources */,
+				342D1C6FCD8C01DC5047FF55 /* ShareCapture.swift in Sources */,
+				99EDE3220A4B6A7FDE3832AC /* ShareCardView.swift in Sources */,
 				6BF5B7D539439BF7F7EB6FED /* SignInView.swift in Sources */,
 				3CDADF7F0E8CF5D819573198 /* TempoApp.swift in Sources */,
 				44B3F8E991B7FAF4B441CE86 /* TempoIntents.swift in Sources */,

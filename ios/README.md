@@ -89,6 +89,8 @@ simulator (`Tempo/DebugLaunch.swift`; compiled out of Release):
 | `TEMPO_DEBUG_FOCUS=1` | Open Focus Mode |
 | `TEMPO_DEBUG_CAPTURE=<title>` | Create an inbox todo with that title |
 | `TEMPO_DEBUG_COMPLETE_AFTER=<seconds>` | Call `completeActive()` after that many seconds |
+| `TEMPO_DEBUG_SHARE="text\|url\|title"` | Run the share extension's `ShareCapture` with the stored key (needs `TEMPO_DEBUG_STORE_KEY=1`): sends an Inbox todo, or writes it to the App Group `Inbox/` when the server is unreachable (`Tempo/DebugShareHook.swift`) |
+| `TEMPO_DEBUG_SHARE_PREVIEW=1` | Present the share sheet's card over the app with sample data; `saving`, `added`, `queued` or `error` shows that state |
 
 With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
 `SIMCTL_CHILD_TEMPO_DEBUG_START_TIMER=1 xcrun simctl launch booted com.johnwaynehill.Tempo`.
