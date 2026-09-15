@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		065771C04C0A706889D796C1 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */; };
+		2A519594247308AB32A1864D /* Manrope[wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */; };
 		345C526E198340E80F06EE36 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5C86C4CE238EC2EF9562E186 /* Keychain.swift */; };
 		38A283033C3D6D54AAD3277E /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */; };
 		3CDADF7F0E8CF5D819573198 /* TempoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE37B2DC31D748FD529F6B6B /* TempoApp.swift */; };
@@ -16,7 +17,10 @@
 		6BF5B7D539439BF7F7EB6FED /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2C38FFE5B9785C164115A2 /* SignInView.swift */; };
 		713CFC8D025B7CBD4BD498EA /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CEDCC092F352AF31653D674 /* TodayView.swift */; };
 		78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */; };
+		7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */ = {isa = PBXBuildFile; fileRef = BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */; };
 		B215D3F82F435885BF6B00AC /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D333CBB10B80C4E808007F90 /* Chip.swift */; };
+		BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */ = {isa = PBXBuildFile; fileRef = FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */; };
+		CAFCAD89BA4019D9A6029E60 /* Inter[opsz,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */; };
 		D1B50AF423AB988E82E1C61A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410E1C43D2E3E7174D34A175 /* Theme.swift */; };
 /* End PBXBuildFile section */
 
@@ -27,13 +31,17 @@
 		5A6246B31BA2F1224264AD02 /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		5C86C4CE238EC2EF9562E186 /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		5CEDCC092F352AF31653D674 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
+		70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope[wght].ttf"; sourceTree = "<group>"; };
 		99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayViewModel.swift; sourceTree = "<group>"; };
 		A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoRow.swift; sourceTree = "<group>"; };
+		A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter[opsz,wght].ttf"; sourceTree = "<group>"; };
 		AE6263597B3354C508BBC7D4 /* Tempo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tempo.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Inter.txt"; sourceTree = "<group>"; };
 		BE9A0D1585591DE3E5153935 /* TempoKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TempoKit; path = TempoKit; sourceTree = SOURCE_ROOT; };
 		D333CBB10B80C4E808007F90 /* Chip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Chip.swift; sourceTree = "<group>"; };
 		DD2C38FFE5B9785C164115A2 /* SignInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignInView.swift; sourceTree = "<group>"; };
 		DE37B2DC31D748FD529F6B6B /* TempoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoApp.swift; sourceTree = "<group>"; };
+		FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Manrope.txt"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -56,6 +64,17 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		7071F5775E773B1CD69A5F52 /* Fonts */ = {
+			isa = PBXGroup;
+			children = (
+				A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */,
+				70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */,
+				BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */,
+				FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */,
+			);
+			path = Fonts;
+			sourceTree = "<group>";
+		};
 		70EE70E1C926D22985DA61E2 /* Packages */ = {
 			isa = PBXGroup;
 			children = (
@@ -76,6 +95,7 @@
 		93A5DFF654AA0B833311F529 /* Tempo */ = {
 			isa = PBXGroup;
 			children = (
+				7071F5775E773B1CD69A5F52 /* Fonts */,
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
 				D333CBB10B80C4E808007F90 /* Chip.swift */,
 				270B87214C8958180521CF6C /* Info.plist */,
@@ -156,6 +176,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */,
+				CAFCAD89BA4019D9A6029E60 /* Inter[opsz,wght].ttf in Resources */,
+				2A519594247308AB32A1864D /* Manrope[wght].ttf in Resources */,
+				7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */,
+				BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -32,7 +32,7 @@ struct SignInView: View {
 
                 VStack(alignment: .leading, spacing: Theme.grid) {
                     TextField("tempo_…", text: $key)
-                        .font(Theme.font(.body, design: .monospaced))
+                        .font(Theme.mono(size: 17))
                         .foregroundStyle(Theme.onSurface)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()

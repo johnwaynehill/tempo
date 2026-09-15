@@ -29,18 +29,48 @@ enum Theme {
     static let grid: CGFloat = 8
 
     // MARK: Type
-    /// Single indirection for fonts so Manrope/Inter can be bundled later without touching views.
-    static func font(_ style: Font.TextStyle, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        Font.system(style, design: design).weight(weight)
+    /// The two bundled faces from the web design system: Inter for body text,
+    /// Manrope for display. Both are variable fonts, so `.weight()` maps onto the
+    /// wght axis. Sizes track Dynamic Type via `relativeTo`.
+    static let bodyFamily = "Inter"
+    static let displayFamily = "Manrope"
+
+    static func font(_ style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
+        Font.custom(bodyFamily, size: pointSize(for: style), relativeTo: style).weight(weight)
     }
 
-    static func font(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        Font.system(size: size, weight: weight, design: design)
+    static func font(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.custom(bodyFamily, size: size).weight(weight)
     }
 
-    /// Headline face ("Manrope" on the web). System font until fonts are bundled.
+    /// Headline face ("Manrope" on the web).
     static func display(_ style: Font.TextStyle, weight: Font.Weight = .bold) -> Font {
-        font(style, weight: weight, design: .rounded)
+        Font.custom(displayFamily, size: pointSize(for: style), relativeTo: style).weight(weight)
+    }
+
+    /// Monospaced digits for timers and totals — the system face is the right tool here.
+    static func mono(size: CGFloat, weight: Font.Weight = .regular) -> Font {
+        Font.system(size: size, weight: weight, design: .monospaced)
+    }
+
+    /// The default point size the system uses for a text style, so custom fonts
+    /// start from the same scale as system text.
+    private static func pointSize(for style: Font.TextStyle) -> CGFloat {
+        let uiStyle: UIFont.TextStyle = switch style {
+        case .largeTitle: .largeTitle
+        case .title: .title1
+        case .title2: .title2
+        case .title3: .title3
+        case .headline: .headline
+        case .subheadline: .subheadline
+        case .body: .body
+        case .callout: .callout
+        case .footnote: .footnote
+        case .caption: .caption1
+        case .caption2: .caption2
+        default: .largeTitle
+        }
+        return UIFont.preferredFont(forTextStyle: uiStyle).pointSize
     }
 
     // MARK: Helpers
