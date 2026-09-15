@@ -12,8 +12,9 @@ ios/
 ├── Tempo.xcodeproj    generated; committed so it opens without extra tools
 ├── Tempo/             the app target (SwiftUI, @Observable view models)
 │   └── AppModel.swift one shared source of truth; every write goes through it
-├── TempoWidgets/      widget extension: the timer's Live Activity
-├── Shared/            compiled into both targets: Live Activity attributes, WidgetTheme
+├── TempoWidgets/      widget extension: the timer's Live Activity and the Today widget
+├── Intents/           App Intents (Start next, Add to Tempo, What's on Today, Start focus) + App Shortcuts; app and widget
+├── Shared/            compiled into every target: Live Activity attributes, WidgetTheme, Today widget data and views
 └── TempoKit/          local Swift package: models, TempoClient, logic ports, tests
 ```
 
@@ -97,6 +98,8 @@ simulator (`Tempo/DebugLaunch.swift`; compiled out of Release):
 | `TEMPO_DEBUG_MOOD_SHEET=1` | Present the mood check-in sheet |
 | `TEMPO_DEBUG_MOOD_HEALTH=1` | Turn "Also save to Apple Health" on and request State of Mind access |
 | `TEMPO_DEBUG_LOG_MOOD=<value>:<note>` | Save a check-in through the sheet's save path (and to Health if the toggle is on) |
+| `TEMPO_DEBUG_RUN_INTENT=startNext\|add:<title>\|today\|focus` | Run that App Intent's `perform()` with no app model registered (the path a widget tap or Shortcut takes when the app isn't running), log the shared timer, Live Activity count and inbox files, then register the model and call `activate()` (`Intents/IntentDebugLaunch.swift`) |
+| `TEMPO_DEBUG_WIDGET_GALLERY=1` | Cover the app with the Today widget's views at their iPhone sizes (medium, small, Lock Screen rectangular and inline), fed by the same `TodayWidgetData.entry()` as the timeline and re-read every 2 s, so they can be screenshotted without adding widgets to the Home Screen |
 
 With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
 `SIMCTL_CHILD_TEMPO_DEBUG_START_TIMER=1 xcrun simctl launch booted com.johnwaynehill.Tempo`.

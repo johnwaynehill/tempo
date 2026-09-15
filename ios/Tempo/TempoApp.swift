@@ -22,8 +22,15 @@ private struct RootView: View {
     var body: some View {
         Group {
             if session.isSignedIn, let model {
-                MainTabs()
-                    .environment(model)
+                ZStack {
+                    MainTabs()
+                        .environment(model)
+                    #if DEBUG
+                    if IntentDebugLaunch.showsWidgetGallery {
+                        WidgetGalleryView()
+                    }
+                    #endif
+                }
             } else if session.isSignedIn {
                 Theme.surface.ignoresSafeArea()
             } else {
@@ -35,7 +42,9 @@ private struct RootView: View {
         .onChange(of: session.apiKey, initial: true) { _, _ in
             // One model per signed-in key; signing out drops it and its data.
             if let client = session.client, let key = session.apiKey {
-                model = AppModel(client: client, apiKey: key)
+                let created = AppModel(client: client, apiKey: key)
+                model = created
+                registerIntentHost(created)
             } else {
                 model = nil
             }
@@ -45,6 +54,22 @@ private struct RootView: View {
             guard phase == .active, let model else { return }
             Task { await model.activate() }
         }
+        #if DEBUG
+        .onChange(of: scenePhase, initial: true) { _, phase in
+            // Not just .active: a system alert (the first-launch notification prompt) holds the scene inactive.
+            guard phase != .background, let model else { return }
+            IntentDebugLaunch.runIfRequested(host: model) { await model.activate() }
+        }
+        #endif
+    }
+
+    /// App Intents running in this process go through the live model instead of the App Group.
+    private func registerIntentHost(_ model: AppModel) {
+        #if DEBUG
+        // TEMPO_DEBUG_RUN_INTENT runs its intent with no host first, as if the app weren't running.
+        if IntentDebugLaunch.holdsHost { return }
+        #endif
+        TempoIntentBridge.host = model
     }
 }
 
@@ -52,6 +77,7 @@ private struct RootView: View {
 private struct MainTabs: View {
     enum Tab: Hashable { case today, inbox, backlog, habits }
 
+    @Environment(AppModel.self) private var model
     @State private var selection: Tab = .today
 
     var body: some View {
@@ -68,6 +94,10 @@ private struct MainTabs: View {
             SwiftUI.Tab("Habits", systemImage: "arrow.trianglehead.2.clockwise", value: Tab.habits) {
                 TabStack { HabitsView() }
             }
+        }
+        // Start focus (App Intent) opens Focus Mode from Today.
+        .onChange(of: model.focusRequested) { _, requested in
+            if requested { selection = .today }
         }
     }
 }

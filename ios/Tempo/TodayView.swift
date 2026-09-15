@@ -42,6 +42,12 @@ struct TodayView: View {
                 FocusModeView()
                     .environment(model)
             }
+            .onChange(of: model.focusRequested, initial: true) { _, requested in
+                // The Start focus App Intent asked for Focus Mode.
+                guard requested else { return }
+                model.focusRequested = false
+                showFocus = true
+            }
             .task {
                 await model.loadIfNeeded()
                 #if DEBUG
