@@ -47,14 +47,26 @@ router.get('/:id', async (req, res) => {
   res.json(row)
 })
 
-// Create todo
+// Create todo. Idempotent on client-supplied ids: a client (web, iOS, the share
+// extension, MCP) may retry a create whose response it never saw, and the iOS sync
+// queue replays writes in order, so a 500 on a repeated id would park every later
+// offline write behind it. A repeat from the same user gets the existing row (200);
+// an id that belongs to someone else is a conflict (409).
 router.post('/', async (req, res) => {
   const [row] = await db
     .insert(schema.todos)
     .values({ ...req.body, userId: req.userId! })
+    .onConflictDoNothing({ target: schema.todos.id })
     .returning()
 
-  res.status(201).json(row)
+  if (row) { res.status(201).json(row); return }
+
+  const id = (req.body as { id?: unknown } | undefined)?.id
+  if (typeof id === 'string') {
+    const [existing] = await db.select().from(schema.todos).where(eq(schema.todos.id, id))
+    if (existing && existing.userId === req.userId) { res.status(200).json(existing); return }
+  }
+  res.status(409).json({ error: 'A todo with that id already exists' })
 })
 
 // Update todo

@@ -15,6 +15,9 @@ struct NowCard: View {
     var onComplete: () -> Void
 
     @State private var completing = false
+    @State private var sparkles = 0
+    /// Light tap on pause and resume.
+    @State private var timerTaps = 0
 
     private var estimateMinutes: Int { TimeMath.getEstimate(todo) }
     private var estimateSeconds: Int { max(60, estimateMinutes * 60) }
@@ -67,9 +70,17 @@ struct NowCard: View {
             in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous)
         )
         .opacity(completing ? 0 : 1)
+        // Outside the fade so the burst stays visible; centred on the 44pt complete control.
+        .overlay(alignment: .bottomTrailing) {
+            CompletionSparkle(trigger: sparkles)
+                .frame(width: 44, height: 44)
+                .padding(.trailing, Theme.grid * 2)
+                .padding(.bottom, 12)
+        }
         .offset(x: completing ? 16 : 0)
         .animation(.easeOut(duration: 0.5), value: completing)
         .sensoryFeedback(.success, trigger: completing) { _, new in new }
+        .sensoryFeedback(.impact(weight: .light), trigger: timerTaps)
     }
 
     /// Fills with sage to the estimate; past it, stays full at 40% opacity.
@@ -92,6 +103,7 @@ struct NowCard: View {
         HStack(spacing: 4) {
             IconButton(symbol: timer.isPaused ? "play.fill" : "pause.fill",
                        label: timer.isPaused ? "Resume timer" : "Pause timer") {
+                timerTaps += 1
                 timer.isPaused ? onResume() : onPause()
             }
             IconButton(symbol: "stop.fill", label: "Stop timer", action: onStop)
@@ -109,8 +121,10 @@ struct NowCard: View {
             Button {
                 guard !completing else { return }
                 completing = true
+                sparkles += 1
                 Task {
-                    try? await Task.sleep(for: .milliseconds(500))
+                    // Long enough for the sparkle (~600 ms) to finish before the card leaves.
+                    try? await Task.sleep(for: .milliseconds(600))
                     onComplete()
                 }
             } label: {
