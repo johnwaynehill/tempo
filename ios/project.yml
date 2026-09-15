@@ -35,6 +35,10 @@ targets:
         CFBundleName: Tempo
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
+        # Bundled variable fonts (SIL OFL; licences alongside them in Tempo/Fonts).
+        UIAppFonts:
+          - "Manrope[wght].ttf"
+          - "Inter[opsz,wght].ttf"
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         NSAppTransportSecurity:
