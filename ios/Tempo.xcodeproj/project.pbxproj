@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		00739EF01C7CB4AA18BA65A2 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		03B0BDCB9B9F78DEA3D32ECC /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F2B287CDB50455F97B74F9D /* TempoKit */; };
+		059FE307DB456E18777F2AD2 /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D702CD8C649D33D7F66640 /* Charts.swift */; };
 		065771C04C0A706889D796C1 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */; };
 		14A476EDF9F71063E6609360 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		1527045DF48BD631C0B666C2 /* WhatsOnTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */; };
@@ -142,6 +143,7 @@
 		410E1C43D2E3E7174D34A175 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsOnTodayIntent.swift; sourceTree = "<group>"; };
 		426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FocusModeView.swift; sourceTree = "<group>"; };
+		48D702CD8C649D33D7F66640 /* Charts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Charts.swift; sourceTree = "<group>"; };
 		4FE0405253AC65CDD39D16DB /* PlanMyDayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlanMyDayView.swift; sourceTree = "<group>"; };
 		503EDF7A08F7B75087C30CAD /* TempoIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoIntents.swift; sourceTree = "<group>"; };
 		54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodCheckInView.swift; sourceTree = "<group>"; };
@@ -295,6 +297,7 @@
 				CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */,
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
 				F36FD1BD076D3B37332369F5 /* BacklogView.swift */,
+				48D702CD8C649D33D7F66640 /* Charts.swift */,
 				D333CBB10B80C4E808007F90 /* Chip.swift */,
 				CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */,
 				F4D130652D396BC200072A61 /* Components.swift */,
@@ -534,6 +537,7 @@
 				3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */,
 				60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */,
 				F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */,
+				059FE307DB456E18777F2AD2 /* Charts.swift in Sources */,
 				B215D3F82F435885BF6B00AC /* Chip.swift in Sources */,
 				1EF0A65FE16EF6465AA0B1A2 /* CompletionSparkle.swift in Sources */,
 				81B6B74291999DB49918A787 /* Components.swift in Sources */,
