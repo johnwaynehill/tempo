@@ -281,6 +281,12 @@ final class AppModel {
         }
     }
 
+    /// Replaces today's suggestion set outright (Plan My Day's "Start my day"). Pinned
+    /// todos show on Today regardless of this set, so pin any newly-chosen ones first.
+    func setTodaySet(todoIds: [UUID]) async {
+        await enqueue(.setTodaySet(date: todayString, todoIds: todoIds))
+    }
+
     // MARK: Habits
 
     func toggleHabit(id: UUID, date: String, completed: Bool) async {

@@ -73,9 +73,10 @@ private struct RootView: View {
     }
 }
 
-/// The web's bottom nav: Today, Inbox, Backlog, Habits. Each tab keeps its own stack.
+/// The web's bottom nav: Today, Inbox, Backlog, Habits, plus a More tab for everything
+/// below the fold (Plan My Day, Playlists, Notes, Insights, Weekly Review, Settings).
 private struct MainTabs: View {
-    enum Tab: Hashable { case today, inbox, backlog, habits }
+    enum Tab: Hashable { case today, inbox, backlog, habits, more }
 
     @Environment(AppModel.self) private var model
     @State private var selection: Tab = .today
@@ -93,6 +94,9 @@ private struct MainTabs: View {
             }
             SwiftUI.Tab("Habits", systemImage: "arrow.trianglehead.2.clockwise", value: Tab.habits) {
                 TabStack { HabitsView() }
+            }
+            SwiftUI.Tab("More", systemImage: "ellipsis", value: Tab.more) {
+                TabStack { MoreView() }
             }
         }
         // Start focus (App Intent) opens Focus Mode from Today.

@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written. Phase 3 built 2026-09-15: share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle.
+Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 built 2026-09-17: Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect.
 
 ## Why native, and why now
 
@@ -208,14 +208,35 @@ needed), and nothing in Phase 3 depends on push or universal links.
   Activity plus Home Screen and Lock Screen widgets), and `TempoShare`. App
   Intents live in `ios/Intents/`, compiled into both the app and the widget.
 
-### Phase 4: breadth
+### Phase 4: breadth (built 2026-09-17)
 
-Notes (Markdown editing), Playlists with Start & focus, Plan My Day, Insights
-and Weekly Review including the Time sense section, Tempo AI chat with tool
-use against `TempoKit`'s mutations, Google Calendar connect via
-`ASWebAuthenticationSession` watching for the existing callback URL.
+Notes, Playlists with Start & focus, Plan My Day, Insights, Weekly Review with
+the Time sense section, and Google Calendar connect. Tempo AI chat was cut
+from scope — the user removed the same feature from the web app shortly
+before this phase, saying they don't use it much, so it wasn't worth porting.
 
-Effort: L, but every screen is independent and can ship one at a time.
+Built as one foundation pass (new `TempoClient` methods for notes/playlists/
+reviews/Google Calendar, a TempoKit `Insights` port of `useInsightsData.ts`
+with its own tests, a 5th "More" tab, a `SettingsView`) followed by four
+subagents working in parallel worktrees, one per screen area, each consuming
+only what the foundation already exposed so their work merged with zero git
+conflicts. A follow-up review pass (a fifth agent, read-only) caught a bug
+pattern common to three of the four: `.onChange(of:)` used as a "did the user
+edit this" signal fired on the server-load assignment too, not just on
+typing, so opening a note/weekly-review/playlist silently wrote it straight
+back to the server. Fixed by comparing the new value against the loaded
+baseline before treating it as a real edit.
+
+Known gaps: no WYSIWYG Markdown editor for Notes (SwiftUI has nothing like
+Milkdown, so it edits raw Markdown source in a `TextEditor`) and no inline
+checkbox-to-todo linking (depends on that WYSIWYG rendering). Google Calendar
+connect needed a small server change: `GET /api/google-calendar/connect`
+accepts `?platform=ios`, and the OAuth callback then redirects to the app's
+`tempo://` custom URL scheme instead of the web app's `/settings` route,
+since a free personal team has no Associated Domains for an https callback
+that `ASWebAuthenticationSession` could intercept directly.
+
+Effort: L, but every screen is independent and shipped in parallel.
 
 ### Phase 5: real accounts, more screens
 
@@ -236,14 +257,33 @@ side benefit worth having regardless.
 - Replacing the web app. It stays the desktop client and the admin surface
   for API keys and Google Calendar.
 - Push notifications from the server. Local notifications cover reminders
-  and the autoplan result can be fetched on launch; APNs can come later if a
-  server-originated alert ever matters.
+  and the autoplan result can be fetched on launch. Revisit if the paid
+  Developer Program below happens — APNs needs it.
 - Android.
 
-## Open questions for you
+## If the paid Apple Developer Program happens
 
-1. Native SwiftUI, agreed?
-2. API-key sign-in for v1, with real accounts deferred to Phase 5?
-3. Personal device via Xcode first, or is the Developer Program worth buying
-   now for TestFlight?
-4. Anything in Phase 4 you'd pull forward, or anything in Phase 2 you'd cut?
+The user is considering signing up (as of 2026-09-17), mainly for three
+things a free personal team can't sign (see the capability table under Phase
+3): **Push notifications** (APNs — a server-originated alert, e.g. "your
+autoplan is ready", instead of only the local reminders Tempo has today),
+**Siri** (a real SiriKit domain/phrase, beyond the App Intents/App Shortcuts
+Phase 3 already ships, which work without this entitlement), and **Apple
+Intelligence** (App Intents becoming visible to system intelligence features,
+beyond what any app gets for free — Writing Tools already works in any text
+field with no entitlement at all). None of this is scoped or estimated yet;
+revisit once the account actually exists rather than building against it
+speculatively. The $99/year membership also unlocks TestFlight (see Phase 3's
+question 3, settled as "own device via Xcode" for now) and real Associated
+Domains, which would let Google Calendar connect (Phase 4) use a normal https
+`ASWebAuthenticationSession` callback instead of the current `tempo://`
+custom-scheme workaround — a nice small cleanup, not a reason on its own to
+pay for the program.
+
+## Decisions, settled
+
+1. Native SwiftUI — agreed 2026-09-14.
+2. API-key sign-in for v1, real accounts deferred to Phase 5 — agreed
+   2026-09-14.
+3. Personal device via Xcode, not the Developer Program — agreed 2026-09-14;
+   revisit above if that changes.

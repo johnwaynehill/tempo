@@ -67,10 +67,14 @@ router.get('/status', async (req: Request, res: Response) => {
 router.get('/connect', async (req: Request, res: Response) => {
   if (!integrationReady(res)) return
   const state = randomBytes(32).toString('hex')
+  // The iOS app has no https callback to intercept (no Associated Domains on a
+  // free personal team), so it asks for `?platform=ios` and the callback below
+  // redirects to the app's custom URL scheme instead of the web app.
+  const platform = req.query.platform === 'ios' ? 'ios' : undefined
   await db.insert(schema.mcpOauthState).values({
     key: state,
     type: STATE_TYPE,
-    data: { userId: req.userId! },
+    data: { userId: req.userId!, platform },
     expiresAt: new Date(Date.now() + STATE_TTL_MS),
   })
   res.json({ url: buildAuthUrl(state) })
@@ -127,22 +131,33 @@ export const googleCalendarCallbackRouter = Router()
  * `?google=<status>` flag the UI can surface.
  */
 googleCalendarCallbackRouter.get('/', async (req: Request, res: Response) => {
+  const { code, state, error } = req.query
+  const stateKey = typeof state === 'string' ? state : null
+
+  // Consume the one-time state as early as possible (even on a denied/missing-code
+  // request) so we know which app to redirect back to — the iOS app watches for its
+  // own URL scheme, not the web app's https URL, and it started this flow with a
+  // state row same as the web app did.
+  const [stateRow] = stateKey
+    ? await db.select().from(schema.mcpOauthState).where(eq(schema.mcpOauthState.key, stateKey))
+    : []
+  if (stateKey) await db.delete(schema.mcpOauthState).where(eq(schema.mcpOauthState.key, stateKey))
+
+  const platform = (stateRow?.data as { platform?: string } | undefined)?.platform
   const redirectBack = (status: string) =>
-    res.redirect(`${appUrl()}/settings?google=${status}`)
+    res.redirect(
+      platform === 'ios'
+        ? `tempo://google-calendar?google=${status}`
+        : `${appUrl()}/settings?google=${status}`,
+    )
 
   if (!isGoogleOAuthConfigured() || !isEncryptionConfigured()) {
     return redirectBack('error')
   }
 
-  const { code, state, error } = req.query
-  if (error || typeof code !== 'string' || typeof state !== 'string') {
+  if (error || typeof code !== 'string' || !stateKey) {
     return redirectBack('denied')
   }
-
-  // Validate + consume the one-time state (delete regardless of outcome).
-  const [stateRow] = await db.select().from(schema.mcpOauthState)
-    .where(eq(schema.mcpOauthState.key, state))
-  await db.delete(schema.mcpOauthState).where(eq(schema.mcpOauthState.key, state))
 
   if (
     !stateRow ||

@@ -66,6 +66,13 @@ targets:
         NSAppTransportSecurity:
           # Lets TEMPO_API_URL point at http://localhost:3001 for local testing.
           NSAllowsLocalNetworking: true
+        # ASWebAuthenticationSession's callback for Google Calendar connect: the free
+        # team can't use an https callback (no Associated Domains), so the server
+        # redirects here instead when it sees the connect request came from iOS.
+        CFBundleURLTypes:
+          - CFBundleURLSchemes:
+              - tempo
+            CFBundleURLName: com.johnwaynehill.Tempo
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo
