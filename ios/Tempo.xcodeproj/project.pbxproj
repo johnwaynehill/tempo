@@ -60,6 +60,7 @@
 		8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4143A9116E71B967F64B9E /* DebugShareHook.swift */; };
 		86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A7ECCB4658931900F1D758 /* MoodModel.swift */; };
 		87A27D1994720792096180B8 /* StartFocusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553624640109CD08CB2D6D78 /* StartFocusIntent.swift */; };
+		8A7CE68460CDB1714981BB44 /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */; };
 		8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		90A5E72ADB0C47DAD7A31E40 /* TodayWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */; };
 		98FF94D5547599B3EF75C16E /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90644EF8DE480FCBE11068D4 /* WeeklyReviewView.swift */; };
@@ -166,6 +167,7 @@
 		AD4143A9116E71B967F64B9E /* DebugShareHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugShareHook.swift; sourceTree = "<group>"; };
 		AE6263597B3354C508BBC7D4 /* Tempo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tempo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoDetailView.swift; sourceTree = "<group>"; };
+		B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		B0F094A01188C3ADDDFC6264 /* TempoShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TempoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B24BA33D57BA2D474DC96172 /* NotesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesListView.swift; sourceTree = "<group>"; };
 		B539B6AA9E4A6FD8CFCABD32 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -310,6 +312,7 @@
 				54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */,
 				37A7ECCB4658931900F1D758 /* MoodModel.swift */,
 				1CB83FB58AC6F86862BD0822 /* MoreView.swift */,
+				B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */,
 				B24BA33D57BA2D474DC96172 /* NotesListView.swift */,
 				62AC3C4EF8741909180B7B06 /* NowCard.swift */,
 				4FE0405253AC65CDD39D16DB /* PlanMyDayView.swift */,
@@ -550,6 +553,7 @@
 				56D0A04FF3C3EB0301D6B695 /* MoodCheckInView.swift in Sources */,
 				86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */,
 				38F601D296D591B7B295928F /* MoreView.swift in Sources */,
+				8A7CE68460CDB1714981BB44 /* NoteEditorView.swift in Sources */,
 				F71535C80EE34C16D81EA7B8 /* NotesListView.swift in Sources */,
 				409469BBFD1FB2C382857683 /* NowCard.swift in Sources */,
 				CFE4B43BA8AADA8C645AD362 /* PlanMyDayView.swift in Sources */,
