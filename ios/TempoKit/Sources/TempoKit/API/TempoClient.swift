@@ -126,11 +126,77 @@ public actor TempoClient {
         try await request("GET", "/api/playlists")
     }
 
+    public func createPlaylist(_ draft: PlaylistDraft) async throws -> Playlist {
+        try await request("POST", "/api/playlists", body: draft)
+    }
+
+    /// Full replace: `update.items` becomes the playlist's entire item list.
+    public func updatePlaylist(id: UUID, _ update: PlaylistUpdate) async throws -> Playlist {
+        try await request("PUT", "/api/playlists/\(id.uuidString.lowercased())", body: update)
+    }
+
+    public func deletePlaylist(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/playlists/\(id.uuidString.lowercased())")
+    }
+
     /// Creates `today_pinned` todos from the playlist's items.
     public func startPlaylist(id: UUID) async throws -> (todoIds: [UUID], count: Int) {
         struct Response: Decodable { var todoIds: [UUID]; var count: Int }
         let r: Response = try await request("POST", "/api/playlists/\(id.uuidString.lowercased())/start")
         return (r.todoIds, r.count)
+    }
+
+    // MARK: Notes
+
+    public func notes() async throws -> [Note] {
+        try await request("GET", "/api/notes")
+    }
+
+    public func createNote(_ draft: NoteDraft) async throws -> Note {
+        try await request("POST", "/api/notes", body: draft)
+    }
+
+    public func updateNote(id: UUID, _ patch: NotePatch) async throws -> Note {
+        try await request("PUT", "/api/notes/\(id.uuidString.lowercased())", body: patch)
+    }
+
+    public func deleteNote(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/notes/\(id.uuidString.lowercased())")
+    }
+
+    // MARK: Weekly reviews
+
+    public func reviews() async throws -> [WeeklyReview] {
+        try await request("GET", "/api/reviews")
+    }
+
+    /// `id` is the week's Monday as `yyyy-MM-dd`; creates the row if it doesn't exist yet.
+    public func updateReview(id: String, reflection: String) async throws -> WeeklyReview {
+        struct Body: Encodable { var reflection: String }
+        return try await request("PUT", "/api/reviews/\(id)", body: Body(reflection: reflection))
+    }
+
+    // MARK: Google Calendar
+
+    public func googleCalendarStatus() async throws -> GoogleCalendarStatus {
+        try await request("GET", "/api/google-calendar/status")
+    }
+
+    /// The consent URL to open in an `ASWebAuthenticationSession`; the server ties the
+    /// eventual callback back to this user via a one-time state token. `?platform=ios`
+    /// tells the callback to redirect to the app's `tempo://` scheme instead of the web app.
+    public func googleCalendarConnectURL() async throws -> URL {
+        struct Response: Decodable { var url: URL }
+        let r: Response = try await request("GET", "/api/google-calendar/connect", query: [URLQueryItem(name: "platform", value: "ios")])
+        return r.url
+    }
+
+    public func disconnectGoogleCalendar() async throws {
+        try await requestVoid("DELETE", "/api/google-calendar")
+    }
+
+    public func syncGoogleCalendar() async throws {
+        try await requestVoid("POST", "/api/google-calendar/sync")
     }
 
     // MARK: AI usage
