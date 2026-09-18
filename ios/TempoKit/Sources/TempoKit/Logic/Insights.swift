@@ -42,13 +42,15 @@ public enum Insights {
     private static let fullDayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
 
     /// Monday-anchored start of the week containing `date`, matching `getStartOfWeek` in dateUtils.ts.
-    static func startOfWeek(_ date: Date, calendar: Calendar) -> Date {
+    /// Public so screens doing week navigation (Weekly Review) can compute the same weeks
+    /// this file scores.
+    public static func startOfWeek(_ date: Date, calendar: Calendar) -> Date {
         let day = DayMath.weekday(date, calendar: calendar) // 0 = Sunday
         let diff = day == 0 ? -6 : 1 - day
         return DayMath.startOfDay(DayMath.adding(days: diff, to: date, calendar: calendar), calendar: calendar)
     }
 
-    static func endOfDay(_ date: Date, calendar: Calendar) -> Date {
+    public static func endOfDay(_ date: Date, calendar: Calendar) -> Date {
         let start = DayMath.startOfDay(date, calendar: calendar)
         return calendar.date(byAdding: DateComponents(day: 1, second: -1), to: start) ?? date
     }
