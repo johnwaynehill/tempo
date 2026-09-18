@@ -276,6 +276,10 @@ struct WeeklyReviewView: View {
         saveTask = Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled else { return }
+            // `reflectionText` is also set programmatically in `loadReview()`, which fires
+            // this same `.onChange` as real typing would — without this guard, just
+            // opening a week re-saves its (unchanged) reflection 800ms later.
+            guard text != (review?.reflection ?? "") else { return }
             do {
                 let saved = try await client.updateReview(id: id, reflection: text)
                 if id == weekId { review = saved }

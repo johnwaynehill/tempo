@@ -92,7 +92,14 @@ struct PlaylistDetailView: View {
             TextField("Playlist name", text: $name)
                 .font(Theme.display(.title2, weight: .bold))
                 .foregroundStyle(Theme.onSurface)
-                .onChange(of: name) { _, _ in dirty = true }
+                .onChange(of: name) { _, newValue in
+                    // `name` is also set programmatically by `load()`/`save()`, which fires
+                    // this same `.onChange` as real typing would — guard against the loaded
+                    // value so that doesn't falsely latch `dirty`, which would both show a
+                    // no-op "Save changes" button and (worse) permanently stop `load()`'s
+                    // `!dirty` refresh gate from applying pulled-to-refresh server data.
+                    if newValue != (playlist?.name ?? newValue) { dirty = true }
+                }
 
             Text("\(items.count) task\(items.count == 1 ? "" : "s") · \(TimeMath.formatMinutes(totalMinutes))")
                 .font(Theme.font(.subheadline))

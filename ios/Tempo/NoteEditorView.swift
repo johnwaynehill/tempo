@@ -220,7 +220,11 @@ struct NoteEditorView: View {
     private func flushContent() {
         contentSave?.cancel()
         contentSave = nil
-        guard note != nil else { return }
+        guard let note else { return }
+        // `content` is also set programmatically in `seedIfNeeded()`, which fires this
+        // same `.onChange` as a real keystroke would — without this guard, just opening
+        // a note re-saves it 800ms later (bumping `updatedAt` and reordering the list).
+        guard content != note.content else { return }
         let tags = Self.extractHashtags(from: content)
         var patch = NotePatch(content: .set(content))
         if tags != lastProjects {
