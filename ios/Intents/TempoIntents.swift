@@ -16,6 +16,9 @@ protocol TempoIntentHost: AnyObject {
     /// Starts the timer on Today's first task. Nil when the app can't answer yet (still on its
     /// first load), so the intent uses the shared-container path instead.
     func startNextTask() async -> StartNextOutcome?
+    /// Completes whatever's on the clock, banking the run's minutes. Nil when the app can't
+    /// answer yet, so the intent uses the shared-container path instead.
+    func completeActiveTask() async -> CompleteActiveOutcome?
     /// Re-reads the timer another process saved to the App Group.
     func adoptSharedTimer()
     /// Creates an Inbox todo through the app's queue.
@@ -69,6 +72,29 @@ enum StartNextOutcome: Sendable, Equatable {
         case .started(let title): "started \"\(title)\""
         case .alreadyRunning(let title): "alreadyRunning \"\(title)\""
         case .nothingToday: "nothingToday"
+        case .signedOut: "signedOut"
+        }
+    }
+}
+
+/// The result of Complete next, whichever path produced it.
+enum CompleteActiveOutcome: Sendable, Equatable {
+    case completed(title: String)
+    case nothingActive
+    case signedOut
+
+    var dialog: String {
+        switch self {
+        case .completed(let title): "Nice work. \(title) is done."
+        case .nothingActive: "Nothing's on the clock right now."
+        case .signedOut: "Open Tempo and sign in first."
+        }
+    }
+
+    var logDescription: String {
+        switch self {
+        case .completed(let title): "completed \"\(title)\""
+        case .nothingActive: "nothingActive"
         case .signedOut: "signedOut"
         }
     }

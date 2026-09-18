@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 built 2026-09-17: Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect.
+Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 shipped 2026-09-18 (PR #131): Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect. The user signed up for the paid Apple Developer Program on 2026-09-18; while it processes, more widgets built 2026-09-18: a large Today widget, a Lock Screen circular complication, an interactive Complete button, and Start Next / Complete Task as Control Center controls.
 
 ## Why native, and why now
 
@@ -261,24 +261,39 @@ side benefit worth having regardless.
   Developer Program below happens — APNs needs it.
 - Android.
 
-## If the paid Apple Developer Program happens
+## Once the paid Apple Developer Program clears
 
-The user is considering signing up (as of 2026-09-17), mainly for three
-things a free personal team can't sign (see the capability table under Phase
-3): **Push notifications** (APNs — a server-originated alert, e.g. "your
-autoplan is ready", instead of only the local reminders Tempo has today),
-**Siri** (a real SiriKit domain/phrase, beyond the App Intents/App Shortcuts
-Phase 3 already ships, which work without this entitlement), and **Apple
-Intelligence** (App Intents becoming visible to system intelligence features,
-beyond what any app gets for free — Writing Tools already works in any text
-field with no entitlement at all). None of this is scoped or estimated yet;
-revisit once the account actually exists rather than building against it
-speculatively. The $99/year membership also unlocks TestFlight (see Phase 3's
-question 3, settled as "own device via Xcode" for now) and real Associated
-Domains, which would let Google Calendar connect (Phase 4) use a normal https
+The user signed up on 2026-09-18; enrollment was still processing, so nothing
+below is built yet. Mainly for three things a free personal team can't sign
+(see the capability table under Phase 3): **Push notifications** (APNs — a
+server-originated alert, e.g. "your autoplan is ready", instead of only the
+local reminders Tempo has today), **Siri** (a real SiriKit domain/phrase,
+beyond the App Intents/App Shortcuts Phase 3 already ships, which work
+without this entitlement), and **Apple Intelligence** (App Intents becoming
+visible to system intelligence features, beyond what any app gets for free —
+Writing Tools already works in any text field with no entitlement at all).
+None of this is scoped or estimated yet; revisit once enrollment actually
+completes rather than building against it speculatively. The $99/year
+membership also unlocks TestFlight (see Phase 3's question 3, settled as "own
+device via Xcode" for now) and real Associated Domains, which would let
+Google Calendar connect (Phase 4) use a normal https
 `ASWebAuthenticationSession` callback instead of the current `tempo://`
 custom-scheme workaround — a nice small cleanup, not a reason on its own to
 pay for the program.
+
+**What was buildable in the meantime, and shipped 2026-09-18:** more Today
+widget sizes and a Control Center control — a `systemLarge` layout, a Lock
+Screen `accessoryCircular` complication (a live progress ring while a task's
+on the clock, an `accessoryCircularCapacity` gauge of today's completed count
+otherwise), an interactive Complete button next to the clock on the medium
+and large sizes, and two Control Center controls (Start Next Task, Complete
+Task) — all through `ControlWidget`/`StaticControlConfiguration`, which
+(like App Intents) needs no capability a free team lacks. Completing from a
+widget or control reuses the same `TempoIntentHost` bridge Start Next
+introduced in Phase 3: the app's process if it's already running, otherwise a
+standalone path that stops the shared timer, banks the run's minutes, and
+drops the completion in the offline `PendingOpInbox` — the same write path
+`AppModel.completeActive()` takes in-app.
 
 ## Decisions, settled
 

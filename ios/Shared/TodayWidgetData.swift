@@ -95,7 +95,8 @@ enum TodayWidgetData {
                 tasks: tasks,
                 remainingMinutes: TimeMath.remainingMinutes(todos, timer: snapshotAtDate),
                 projectedEnd: TimeMath.projectedEndTime(todos, timer: snapshotAtDate, now: date),
-                clock: clock
+                clock: clock,
+                completedToday: completedTodayCount(in: snapshot, now: date, calendar: calendar)
             )))
         }
     }
@@ -142,6 +143,8 @@ struct TodayWidgetTasks: Hashable, Sendable {
     var remainingMinutes: Int
     var projectedEnd: Date
     var clock: TodayWidgetClock?
+    /// Todos completed since local midnight — the accessory-circular complication's ring.
+    var completedToday: Int = 0
 
     /// "3 tasks · 1h 10m · done by ~4:30 PM", the Today screen's summary line.
     var summaryLine: String {

@@ -13,7 +13,7 @@ struct TodayWidget: Widget {
         }
         .configurationDisplayName("Today")
         .description("What's left today, and the task on the clock.")
-        .supportedFamilies([.systemSmall, .systemMedium, .accessoryRectangular, .accessoryInline])
+        .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryRectangular, .accessoryInline, .accessoryCircular])
     }
 }
 
@@ -48,6 +48,8 @@ private struct TodayWidgetEntryView: View {
     var body: some View {
         TodayWidgetView(entry: entry, family: family) {
             StartNextWidgetButton()
+        } completeButton: {
+            CompleteActiveWidgetButton()
         }
         .containerBackground(for: .widget) {
             switch family {

@@ -77,24 +77,37 @@ struct WidgetGalleryView: View {
                     .foregroundStyle(WidgetTheme.onSurfaceVariant)
 
                 if let entry {
-                    tile(entry, family: .systemMedium, size: CGSize(width: 364, height: 170))
+                    tile(entry, family: .systemLarge, size: CGSize(width: 364, height: 382))
                     caption("entry \(entry.date.formatted(date: .omitted, time: .standard))")
+                    Spacer(minLength: 16)
+                    tile(entry, family: .systemMedium, size: CGSize(width: 364, height: 170))
                     Spacer(minLength: 16)
                     HStack(alignment: .top, spacing: 24) {
                         tile(entry, family: .systemSmall, size: CGSize(width: 170, height: 170))
                         VStack(alignment: .leading, spacing: 6) {
                             caption("accessoryRectangular")
-                            TodayWidgetView(entry: entry, family: .accessoryRectangular) { StartNextWidgetButton() }
+                            TodayWidgetView(entry: entry, family: .accessoryRectangular) { StartNextWidgetButton() } completeButton: { CompleteActiveWidgetButton() }
                                 .foregroundStyle(.white)
                                 .frame(width: 172, height: 76)
                                 .environment(\.colorScheme, .dark)
-                            caption("accessoryInline")
-                            TodayWidgetView(entry: entry, family: .accessoryInline) { StartNextWidgetButton() }
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(.white)
-                                .lineLimit(1)
-                                .frame(width: 172, height: 26, alignment: .leading)
-                                .environment(\.colorScheme, .dark)
+                            HStack(alignment: .center, spacing: 12) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    caption("accessoryInline")
+                                    TodayWidgetView(entry: entry, family: .accessoryInline) { StartNextWidgetButton() } completeButton: { CompleteActiveWidgetButton() }
+                                        .font(.system(size: 15, weight: .medium))
+                                        .foregroundStyle(.white)
+                                        .lineLimit(1)
+                                        .frame(width: 132, height: 26, alignment: .leading)
+                                        .environment(\.colorScheme, .dark)
+                                }
+                                VStack(spacing: 6) {
+                                    caption("accessoryCircular")
+                                    TodayWidgetView(entry: entry, family: .accessoryCircular) { StartNextWidgetButton() } completeButton: { CompleteActiveWidgetButton() }
+                                        .foregroundStyle(.white)
+                                        .frame(width: 40, height: 40)
+                                        .environment(\.colorScheme, .dark)
+                                }
+                            }
                         }
                         .padding(12)
                         .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
@@ -118,11 +131,19 @@ struct WidgetGalleryView: View {
 
     private func tile(_ entry: TodayWidgetEntry, family: WidgetFamily, size: CGSize) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            caption(family == .systemSmall ? "systemSmall" : "systemMedium")
-            TodayWidgetView(entry: entry, family: family) { StartNextWidgetButton() }
+            caption(familyName(family))
+            TodayWidgetView(entry: entry, family: family) { StartNextWidgetButton() } completeButton: { CompleteActiveWidgetButton() }
                 .padding(16)
                 .frame(width: size.width, height: size.height)
                 .background(WidgetTheme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+        }
+    }
+
+    private func familyName(_ family: WidgetFamily) -> String {
+        switch family {
+        case .systemSmall: "systemSmall"
+        case .systemLarge: "systemLarge"
+        default: "systemMedium"
         }
     }
 
