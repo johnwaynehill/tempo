@@ -60,6 +60,20 @@ public actor TempoClient {
         return try await request("POST", "/api/todos/\(id.uuidString.lowercased())/complete", body: Body(actualMinutes: actualMinutes))
     }
 
+    // MARK: Mood
+
+    /// `POST /api/mood`. `value` is 1–100, the web mood slider's scale; the server also
+    /// completes any habit with "mood" in its name for the day.
+    public func logMood(value: Int, note: String? = nil) async throws -> MoodEntry {
+        struct Body: Encodable { var value: Int; var note: String? }
+        return try await request("POST", "/api/mood", body: Body(value: value, note: note))
+    }
+
+    /// `GET /api/mood?days=N` — entries from the last `days` days, newest first.
+    public func moodHistory(days: Int = 7) async throws -> [MoodEntry] {
+        try await request("GET", "/api/mood", query: [URLQueryItem(name: "days", value: String(days))])
+    }
+
     // MARK: Today set
 
     /// `date` is `yyyy-MM-dd`.

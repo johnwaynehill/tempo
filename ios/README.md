@@ -12,8 +12,9 @@ ios/
 ├── Tempo.xcodeproj    generated; committed so it opens without extra tools
 ├── Tempo/             the app target (SwiftUI, @Observable view models)
 │   └── AppModel.swift one shared source of truth; every write goes through it
-├── TempoWidgets/      widget extension: the timer's Live Activity
-├── Shared/            compiled into both targets: Live Activity attributes, WidgetTheme
+├── TempoWidgets/      widget extension: the timer's Live Activity and the Today widget
+├── Intents/           App Intents (Start next, Add to Tempo, What's on Today, Start focus) + App Shortcuts; app and widget
+├── Shared/            compiled into every target: Live Activity attributes, WidgetTheme, Today widget data and views
 └── TempoKit/          local Swift package: models, TempoClient, logic ports, tests
 ```
 
@@ -89,11 +90,43 @@ simulator (`Tempo/DebugLaunch.swift`; compiled out of Release):
 | `TEMPO_DEBUG_FOCUS=1` | Open Focus Mode |
 | `TEMPO_DEBUG_CAPTURE=<title>` | Create an inbox todo with that title |
 | `TEMPO_DEBUG_COMPLETE_AFTER=<seconds>` | Call `completeActive()` after that many seconds |
+| `TEMPO_DEBUG_SHARE="text\|url\|title"` | Run the share extension's `ShareCapture` with the stored key (needs `TEMPO_DEBUG_STORE_KEY=1`): sends an Inbox todo, or writes it to the App Group `Inbox/` when the server is unreachable (`Tempo/DebugShareHook.swift`) |
+| `TEMPO_DEBUG_SHARE_PREVIEW=1` | Present the share sheet's card over the app with sample data; `saving`, `added`, `queued` or `error` shows that state |
+| `TEMPO_DEBUG_SPARKLE=1` | Fire every completion sparkle on screen three times, 3 s apart |
+| `TEMPO_DEBUG_SPARKLE_SCALE=<n>` | Slow the sparkle down n times (for screenshots) |
+| `TEMPO_DEBUG_REDUCE_MOTION=1` | Treat Reduce Motion as on (the sparkle then never renders); `simctl` can't toggle it |
+| `TEMPO_DEBUG_MOOD_SHEET=1` | Present the mood check-in sheet |
+| `TEMPO_DEBUG_MOOD_HEALTH=1` | Turn "Also save to Apple Health" on and request State of Mind access |
+| `TEMPO_DEBUG_LOG_MOOD=<value>:<note>` | Save a check-in through the sheet's save path (and to Health if the toggle is on) |
+| `TEMPO_DEBUG_RUN_INTENT=startNext\|add:<title>\|today\|focus` | Run that App Intent's `perform()` with no app model registered (the path a widget tap or Shortcut takes when the app isn't running), log the shared timer, Live Activity count and inbox files, then register the model and call `activate()` (`Intents/IntentDebugLaunch.swift`) |
+| `TEMPO_DEBUG_WIDGET_GALLERY=1` | Cover the app with the Today widget's views at their iPhone sizes (medium, small, Lock Screen rectangular and inline), fed by the same `TodayWidgetData.entry()` as the timeline and re-read every 2 s, so they can be screenshotted without adding widgets to the Home Screen |
 
 With `simctl` prefix each one with `SIMCTL_CHILD_`, e.g.
 `SIMCTL_CHILD_TEMPO_DEBUG_START_TIMER=1 xcrun simctl launch booted com.johnwaynehill.Tempo`.
 Log lines land in the `com.johnwaynehill.Tempo` subsystem:
 `xcrun simctl spawn booted log stream --predicate 'subsystem == "com.johnwaynehill.Tempo"' --style compact`.
+
+Extensions (widget, share sheet, App Intents) read the API key and server address from the shared Keychain, not from the environment. For simulator checks of those, add `TEMPO_DEBUG_STORE_KEY=1` alongside `TEMPO_API_KEY` / `TEMPO_API_URL` so the DEBUG build saves them there. Simulator builds that exercise the App Group or Keychain group also need entitlements, so build with ad-hoc signing rather than `CODE_SIGNING_ALLOWED=NO`:
+
+```bash
+xcodebuild -project Tempo.xcodeproj -scheme Tempo -destination 'platform=iOS Simulator,id=<device id>' CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual DEVELOPMENT_TEAM= build
+```
+
+## Mood check-ins, Apple Health, haptics
+
+Today's top row shows the mood logged today (blob, label, note from `GET /api/mood?days=1`)
+or "How are you feeling?". Tapping opens `MoodCheckInSheet`: a 1–100 slider that reshapes
+the blob, an optional note, and **Also save to Apple Health** (`UserDefaults`
+`tempo-mood-save-to-health`, off by default; switching it on asks for access). Save posts to
+`/api/mood` first; with the toggle on it then writes an `HKStateOfMind` (momentary emotion,
+valence linear from 1–100 to −1…1, labels per bucket, see `HealthMoodWriter.swift`). If Health
+is unavailable or not allowed, the mood still saves and the sheet says Health wasn't updated.
+Mood logging is online only (it isn't a queued `WriteOp`); offline, the sheet says so and stays open.
+
+Completing a todo from the Now card, a Today row, Focus Mode or the todo detail plays a success
+haptic; starting, pausing or resuming the timer plays a light impact. The Now card and Today
+rows also play `CompletionSparkle`, a ~600 ms burst of sage and neutral dots, skipped entirely
+when Reduce Motion is on.
 
 ## Building from the command line
 
