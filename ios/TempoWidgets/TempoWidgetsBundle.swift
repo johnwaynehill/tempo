@@ -8,6 +8,8 @@ struct TempoWidgetsBundle: WidgetBundle {
     var body: some Widget {
         TempoTimerLiveActivity()
         TodayWidget()
+        HabitsWidget()
+        QuickAddWidget()
         StartNextControl()
         CompleteActiveControl()
     }

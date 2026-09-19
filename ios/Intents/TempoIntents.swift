@@ -23,6 +23,10 @@ protocol TempoIntentHost: AnyObject {
     func adoptSharedTimer()
     /// Creates an Inbox todo through the app's queue.
     func addTodo(title: String) async
+    /// Marks a habit done or not-done for a day, through the app's queue. Unlike Start Next and
+    /// Complete this needs no `hasLoaded` guard: it writes blind from just an id, nothing read
+    /// from in-memory state first.
+    func toggleHabit(id: UUID, date: String, completed: Bool) async
     /// Picks up a pending Start focus request.
     func consumeFocusRequest()
 }

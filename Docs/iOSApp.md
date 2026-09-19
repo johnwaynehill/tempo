@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 shipped 2026-09-18 (PR #131): Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect. The user signed up for the paid Apple Developer Program on 2026-09-18; while it processes, more widgets built 2026-09-18: a large Today widget, a Lock Screen circular complication, an interactive Complete button, and Start Next / Complete Task as Control Center controls.
+Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 shipped 2026-09-18 (PR #131): Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect. The user signed up for the paid Apple Developer Program on 2026-09-18; while it processes, more widgets built 2026-09-18: a large Today widget, a Lock Screen circular complication, an interactive Complete button, and Start Next / Complete Task as Control Center controls (PR #132), then a Habits widget and an Add to Tempo capture widget the same day.
 
 ## Why native, and why now
 
@@ -294,6 +294,24 @@ introduced in Phase 3: the app's process if it's already running, otherwise a
 standalone path that stops the shared timer, banks the run's minutes, and
 drops the completion in the offline `PendingOpInbox` — the same write path
 `AppModel.completeActive()` takes in-app.
+
+**Two more widgets, same day:** a **Habits widget** (`systemSmall`/
+`systemMedium`) — each habit is its own row with a tap-to-toggle circle, a
+plain background `AppIntent` (`ToggleHabitWidgetIntent`, not a
+`LiveActivityIntent` — nothing here needs the app to foreground). Its instant
+feedback needed a new pattern: unlike the timer, there's no single owner that
+can safely update `cache.json` in place from outside the app (out-of-app
+writers use `PendingOpInbox` specifically so two processes never race that
+file), so a tap first records a short-lived override in a new App Group
+defaults key, which the widget's timeline provider layers on top of the
+cached snapshot — the same "separate fast channel" idea as the shared timer,
+just for a value the cache itself can't safely absorb from outside the app.
+The override expires after 10 minutes so a write that never landed can't
+wedge the widget in the wrong state forever. And an **Add to Tempo** widget
+(`systemSmall` plus Lock Screen `accessoryRectangular`/`accessoryCircular`) —
+widgets can't host a keyboard, so this deep-links (`tempo://capture`) straight
+into Inbox with its capture field already focused, rather than pretending to
+capture text itself.
 
 ## Decisions, settled
 

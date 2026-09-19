@@ -24,6 +24,13 @@ enum AppGroup {
     /// App Intents read it.
     static let timerStateKey = "tempo-timer-state"
 
+    /// Key for the JSON-encoded habit-completion overrides in `defaults`. The Habits widget's
+    /// toggle button writes here for instant feedback, since (unlike the timer) there's no
+    /// single owner it can safely update in place — the cached snapshot's `cache.json` is only
+    /// ever written by one `TempoStore` at a time, and out-of-app writers go through
+    /// `PendingOpInbox` instead to avoid two processes racing that file.
+    static let habitOverridesKey = "tempo-habit-overrides"
+
     /// Keychain keys the app writes at sign-in and extensions read.
     static let apiKeyKeychainKey = "apiKey"
     static let baseURLKeychainKey = "apiBaseURL"

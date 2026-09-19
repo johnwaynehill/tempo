@@ -2,6 +2,7 @@
 import ActivityKit
 import Foundation
 import SwiftUI
+import TempoKit
 import WidgetKit
 import os
 
@@ -67,8 +68,10 @@ enum IntentDebugLaunch {
 /// be screenshotted without adding widgets to the Home Screen.
 struct WidgetGalleryView: View {
     @State private var entry: TodayWidgetEntry?
+    @State private var habitsEntry: HabitsWidgetEntry?
 
     var body: some View {
+        ScrollView {
         // Medium on top, the rest at the bottom: the middle of the screen is where system alerts
         // (the first-launch notification prompt) land, and nothing here can tap them away.
         VStack(alignment: .leading, spacing: 16) {
@@ -115,17 +118,48 @@ struct WidgetGalleryView: View {
                 } else {
                     ProgressView()
                 }
+
+                Spacer(minLength: 16)
+
+                if let habitsEntry {
+                    caption("Habits — systemSmall / systemMedium")
+                    HStack(alignment: .top, spacing: 24) {
+                        habitsTile(habitsEntry, family: .systemSmall, size: CGSize(width: 170, height: 170))
+                        habitsTile(habitsEntry, family: .systemMedium, size: CGSize(width: 170, height: 170))
+                    }
+                }
+
+                Spacer(minLength: 16)
+
+                caption("Add to Tempo — systemSmall")
+                QuickAddPreview()
+                    .padding(16)
+                    .frame(width: 170, height: 170)
+                    .background(WidgetTheme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
         .padding(24)
         .padding(.top, 32)
         .padding(.bottom, 24)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+        }
         .background(Color(red: 0.62, green: 0.70, blue: 0.66).ignoresSafeArea())
         .task {
             while !Task.isCancelled {
                 entry = await TodayWidgetData.entry()
+                habitsEntry = await HabitsWidgetData.entry()
                 try? await Task.sleep(for: .seconds(2))
             }
+        }
+    }
+
+    private func habitsTile(_ entry: HabitsWidgetEntry, family: WidgetFamily, size: CGSize) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HabitsWidgetView(entry: entry, family: family) { habitId, completedToday in
+                ToggleHabitWidgetButton(habitId: habitId, date: DayMath.isoDateString(entry.date), completedToday: completedToday)
+            }
+            .padding(16)
+            .frame(width: size.width, height: size.height)
+            .background(WidgetTheme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
         }
     }
 
@@ -151,6 +185,28 @@ struct WidgetGalleryView: View {
         Text(text)
             .font(.system(size: 11, weight: .medium))
             .foregroundStyle(.white.opacity(0.9))
+    }
+}
+
+/// Mirrors `QuickAddWidget`'s systemSmall layout (that view is private to its own file, and
+/// has nothing dynamic worth threading through here).
+private struct QuickAddPreview: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Image(systemName: "plus")
+                .font(.system(size: 22, weight: .semibold))
+                .foregroundStyle(WidgetTheme.primary)
+                .frame(width: 44, height: 44)
+                .background(WidgetTheme.primary.opacity(0.12), in: Circle())
+            Spacer(minLength: 12)
+            Text("Add to Tempo")
+                .font(.system(size: 15, weight: .medium))
+                .foregroundStyle(WidgetTheme.onSurface)
+            Text("Tap to capture")
+                .font(.system(size: 12))
+                .foregroundStyle(WidgetTheme.onSurfaceVariant)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 #endif
