@@ -573,6 +573,15 @@ extension AppModel: TempoIntentHost {
         return .started(title: first.title)
     }
 
+    /// The widget's Complete button. Nil before the first load, same reasoning as `startNextTask`.
+    func completeActiveTask() async -> CompleteActiveOutcome? {
+        guard hasLoaded else { return nil }
+        guard let id = timer.activeTaskId else { return .nothingActive }
+        let title = todo(id: id)?.title ?? "your task"
+        await completeActive()
+        return .completed(title: title)
+    }
+
     func addTodo(title: String) async {
         await createTodo(title: title, status: .inbox)
     }

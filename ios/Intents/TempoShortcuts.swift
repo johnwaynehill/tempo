@@ -14,6 +14,15 @@ struct TempoShortcuts: AppShortcutsProvider {
             systemImageName: "play.fill"
         )
         AppShortcut(
+            intent: CompleteActiveTaskIntent(),
+            phrases: [
+                "Complete my task in \(.applicationName)",
+                "Finish my \(.applicationName) task",
+            ],
+            shortTitle: "Complete Task",
+            systemImageName: "checkmark"
+        )
+        AppShortcut(
             intent: AddTodoIntent(),
             phrases: [
                 "Add to \(.applicationName)",

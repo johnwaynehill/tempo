@@ -9,22 +9,29 @@ import WidgetKit
 ///
 /// Quiet Rhythm in a small space: no borders, one surface, sage only for the thing to act on
 /// (the clock, "done by", Start next), system type with rounded numerals.
-struct TodayWidgetView<StartButton: View>: View {
+struct TodayWidgetView<StartButton: View, CompleteButton: View>: View {
     let entry: TodayWidgetEntry
     let family: WidgetFamily
     let startButton: StartButton
+    let completeButton: CompleteButton
 
-    init(entry: TodayWidgetEntry, family: WidgetFamily, @ViewBuilder startButton: () -> StartButton) {
+    init(
+        entry: TodayWidgetEntry, family: WidgetFamily,
+        @ViewBuilder startButton: () -> StartButton, @ViewBuilder completeButton: () -> CompleteButton
+    ) {
         self.entry = entry
         self.family = family
         self.startButton = startButton()
+        self.completeButton = completeButton()
     }
 
     var body: some View {
         switch family {
         case .systemMedium: medium
+        case .systemLarge: large
         case .accessoryRectangular: rectangular
         case .accessoryInline: inline
+        case .accessoryCircular: circular
         default: small
         }
     }
@@ -146,12 +153,15 @@ struct TodayWidgetView<StartButton: View>: View {
                         .lineLimit(2)
                 }
                 Spacer(minLength: 0)
-                TodayWidgetClockText(clock: clock)
-                    .font(.system(size: 30, weight: .medium, design: .rounded))
-                    .foregroundStyle(clock.isPaused ? WidgetTheme.onSurfaceVariant : WidgetTheme.primary)
-                    .multilineTextAlignment(.trailing)
-                    .lineLimit(1)
-                    .frame(maxWidth: 120, alignment: .trailing)
+                VStack(alignment: .trailing, spacing: 6) {
+                    TodayWidgetClockText(clock: clock)
+                        .font(.system(size: 30, weight: .medium, design: .rounded))
+                        .foregroundStyle(clock.isPaused ? WidgetTheme.onSurfaceVariant : WidgetTheme.primary)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                        .frame(maxWidth: 120, alignment: .trailing)
+                    completeButton
+                }
             }
 
             Spacer(minLength: 8)
@@ -173,6 +183,113 @@ struct TodayWidgetView<StartButton: View>: View {
             .font(.system(size: 12))
             .foregroundStyle(WidgetTheme.onSurfaceVariant)
             .padding(.top, 10)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    // MARK: Large
+
+    @ViewBuilder
+    private var large: some View {
+        switch entry.content {
+        case .tasks(let day):
+            if let clock = day.clock {
+                largeRunning(day: day, clock: clock)
+            } else {
+                largeIdle(day: day)
+            }
+        default:
+            quietState
+        }
+    }
+
+    private func largeIdle(day: TodayWidgetTasks) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .center) {
+                WidgetLabel(text: "Today")
+                Spacer(minLength: 8)
+                startButton
+            }
+            .frame(height: 28)
+
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(day.tasks.prefix(6)) { task in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(task.title)
+                            .font(.system(size: 15))
+                            .foregroundStyle(WidgetTheme.onSurface)
+                            .lineLimit(1)
+                        Spacer(minLength: 8)
+                        Text(TimeMath.formatMinutes(task.estimateMinutes))
+                            .font(.system(size: 13))
+                            .monospacedDigit()
+                            .foregroundStyle(WidgetTheme.onSurfaceVariant)
+                    }
+                }
+            }
+            .padding(.top, 14)
+
+            Spacer(minLength: 8)
+
+            Text(day.summaryLine)
+                .font(.system(size: 13))
+                .monospacedDigit()
+                .foregroundStyle(WidgetTheme.onSurfaceVariant)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private func largeRunning(day: TodayWidgetTasks, clock: TodayWidgetClock) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    WidgetLabel(text: clock.isPaused ? "Paused" : "Focusing")
+                    Text(clock.task.title)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(WidgetTheme.onSurface)
+                        .lineLimit(2)
+                }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 8) {
+                    TodayWidgetClockText(clock: clock)
+                        .font(.system(size: 34, weight: .medium, design: .rounded))
+                        .foregroundStyle(clock.isPaused ? WidgetTheme.onSurfaceVariant : WidgetTheme.primary)
+                        .lineLimit(1)
+                    completeButton
+                }
+            }
+
+            Spacer(minLength: 14)
+            TodayWidgetProgress(clock: clock)
+            Spacer(minLength: 18)
+
+            if !day.upNext.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    WidgetLabel(text: "Up next")
+                    ForEach(day.upNext.prefix(4)) { task in
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(task.title)
+                                .font(.system(size: 14))
+                                .foregroundStyle(WidgetTheme.onSurface)
+                                .lineLimit(1)
+                            Spacer(minLength: 8)
+                            Text(TimeMath.formatMinutes(task.estimateMinutes))
+                                .font(.system(size: 12))
+                                .monospacedDigit()
+                                .foregroundStyle(WidgetTheme.onSurfaceVariant)
+                        }
+                    }
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            Text(day.doneByLine)
+                .font(.system(size: 12))
+                .monospacedDigit()
+                .foregroundStyle(WidgetTheme.onSurfaceVariant)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
@@ -239,6 +356,33 @@ struct TodayWidgetView<StartButton: View>: View {
         }
     }
 
+    @ViewBuilder
+    private var circular: some View {
+        switch entry.content {
+        case .tasks(let day):
+            if let clock = day.clock {
+                TodayWidgetProgressRing(clock: clock)
+            } else {
+                Gauge(
+                    value: Double(day.completedToday),
+                    in: 0...Double(max(1, day.completedToday + day.tasks.count))
+                ) {
+                    Text("Today")
+                } currentValueLabel: {
+                    Text("\(day.tasks.count)")
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                }
+                .gaugeStyle(.accessoryCircularCapacity)
+            }
+        case .empty(let done) where done > 0:
+            Image(systemName: "checkmark.circle.fill")
+                .font(.system(size: 22))
+        default:
+            Image(systemName: "circle.circle")
+                .font(.system(size: 22))
+        }
+    }
+
     // MARK: Quiet states
 
     private var quietCopy: (title: String, message: String) {
@@ -286,6 +430,18 @@ struct TodayWidgetStartLabel: View {
         .frame(height: 28)
         .background(WidgetTheme.primary.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
         .accessibilityLabel("Start the next task")
+    }
+}
+
+/// The widget's Complete pill: a small checkmark, sized to sit under the clock.
+struct TodayWidgetCompleteLabel: View {
+    var body: some View {
+        Image(systemName: "checkmark")
+            .font(.system(size: 12, weight: .bold))
+            .foregroundStyle(WidgetTheme.primary)
+            .frame(width: 28, height: 28)
+            .background(WidgetTheme.primary.opacity(0.12), in: Circle())
+            .accessibilityLabel("Complete this task")
     }
 }
 
@@ -338,5 +494,40 @@ private struct TodayWidgetProgress: View {
         .tint(WidgetTheme.primary)
         .frame(height: 4)
         .accessibilityHidden(true)
+    }
+}
+
+/// The same elapsed-vs-estimate progress as a ring, for the Lock Screen circular complication —
+/// the accessory-family counterpart to the Live Activity's Dynamic Island `ProgressRing`.
+struct TodayWidgetProgressRing: View {
+    let clock: TodayWidgetClock
+
+    var body: some View {
+        if let start = clock.clockStart {
+            ProgressView(
+                timerInterval: start...start.addingTimeInterval(Double(clock.estimateSeconds)),
+                countsDown: false,
+                label: { EmptyView() },
+                currentValueLabel: { EmptyView() }
+            )
+            .progressViewStyle(.circular)
+            .tint(WidgetTheme.primary)
+        } else {
+            ZStack {
+                Circle()
+                    .stroke(WidgetTheme.primary.opacity(0.25), lineWidth: 3)
+                Circle()
+                    .trim(from: 0, to: fraction)
+                    .stroke(WidgetTheme.primary, style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                    .rotationEffect(.degrees(-90))
+                Image(systemName: "pause.fill")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(WidgetTheme.primary)
+            }
+        }
+    }
+
+    private var fraction: Double {
+        min(1, Double(clock.accumulatedSeconds) / Double(clock.estimateSeconds))
     }
 }

@@ -53,6 +53,7 @@
 		6BF5B7D539439BF7F7EB6FED /* SignInView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DD2C38FFE5B9785C164115A2 /* SignInView.swift */; };
 		7043593E3FE5431934A35881 /* TempoTimerLiveActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AA7274DB6EAAA51F550B39 /* TempoTimerLiveActivity.swift */; };
 		713CFC8D025B7CBD4BD498EA /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CEDCC092F352AF31653D674 /* TodayView.swift */; };
+		715CE20C03A552AC53300B7D /* CompleteActiveTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */; };
 		73E6ABA3094A8D9395B5C909 /* IntentDebugLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C20C14CB884F051584D8475 /* IntentDebugLaunch.swift */; };
 		78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */; };
 		7A96F839E8E755DDDB6C8708 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C145AFC84C18B35767AD25F0 /* PlaylistDetailView.swift */; };
@@ -60,6 +61,7 @@
 		7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */ = {isa = PBXBuildFile; fileRef = BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */; };
 		81B6B74291999DB49918A787 /* Components.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4D130652D396BC200072A61 /* Components.swift */; };
 		8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */ = {isa = PBXBuildFile; fileRef = AD4143A9116E71B967F64B9E /* DebugShareHook.swift */; };
+		84AB31584EB05B1D5EC9AA9E /* TempoControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C33A1F9FAE0C6C59205915 /* TempoControls.swift */; };
 		86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37A7ECCB4658931900F1D758 /* MoodModel.swift */; };
 		87A27D1994720792096180B8 /* StartFocusIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 553624640109CD08CB2D6D78 /* StartFocusIntent.swift */; };
 		8A7CE68460CDB1714981BB44 /* NoteEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */; };
@@ -80,6 +82,7 @@
 		BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */ = {isa = PBXBuildFile; fileRef = FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */; };
 		C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		C4679302F9397F2ACD715070 /* TodayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC78966D75B91A9E71D0B68 /* TodayWidget.swift */; };
+		C6E7FB7242572972CEC89FD2 /* CompleteActiveTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */; };
 		C774856B6C84D2C25404B958 /* TodayWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */; };
 		CAD6AFEF4EA4D90FDC000776 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		CAFCAD89BA4019D9A6029E60 /* Inter[opsz,wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */; };
@@ -129,6 +132,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteActiveTaskIntent.swift; sourceTree = "<group>"; };
 		09C257BC542B015099982FCC /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
 		0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoTimerActivity.swift; sourceTree = "<group>"; };
 		147D84C2BCB068C399DF8C8E /* TempoShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoShortcuts.swift; sourceTree = "<group>"; };
@@ -173,6 +177,7 @@
 		B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteEditorView.swift; sourceTree = "<group>"; };
 		B0F094A01188C3ADDDFC6264 /* TempoShare.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = TempoShare.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		B24BA33D57BA2D474DC96172 /* NotesListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesListView.swift; sourceTree = "<group>"; };
+		B2C33A1F9FAE0C6C59205915 /* TempoControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoControls.swift; sourceTree = "<group>"; };
 		B539B6AA9E4A6FD8CFCABD32 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWidgetViews.swift; sourceTree = "<group>"; };
 		BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Inter.txt"; sourceTree = "<group>"; };
@@ -232,6 +237,7 @@
 			isa = PBXGroup;
 			children = (
 				F0C35486C97A88D0AE072700 /* AddTodoIntent.swift */,
+				051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */,
 				9C20C14CB884F051584D8475 /* IntentDebugLaunch.swift */,
 				553624640109CD08CB2D6D78 /* StartFocusIntent.swift */,
 				639D2C611797D3B60E6651BD /* StartNextTaskIntent.swift */,
@@ -344,6 +350,7 @@
 			isa = PBXGroup;
 			children = (
 				90A098D118D78BA3A0265147 /* Info.plist */,
+				B2C33A1F9FAE0C6C59205915 /* TempoControls.swift */,
 				60AA7274DB6EAAA51F550B39 /* TempoTimerLiveActivity.swift */,
 				E8EB24AF38DE9E38AB653AEE /* TempoWidgets.entitlements */,
 				74371ED08F71EA13BDC933C1 /* TempoWidgetsBundle.swift */,
@@ -516,12 +523,14 @@
 			files = (
 				7ADFCDA89BF3E229E8E716A8 /* AddTodoIntent.swift in Sources */,
 				8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */,
+				C6E7FB7242572972CEC89FD2 /* CompleteActiveTaskIntent.swift in Sources */,
 				73E6ABA3094A8D9395B5C909 /* IntentDebugLaunch.swift in Sources */,
 				00739EF01C7CB4AA18BA65A2 /* Keychain.swift in Sources */,
 				EA0E00BF58E741B756D4D673 /* ShareCapture.swift in Sources */,
 				C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */,
 				87A27D1994720792096180B8 /* StartFocusIntent.swift in Sources */,
 				B6CDB89B6D21C31A707904DE /* StartNextTaskIntent.swift in Sources */,
+				84AB31584EB05B1D5EC9AA9E /* TempoControls.swift in Sources */,
 				69902063B0118B543EF22B0F /* TempoIntents.swift in Sources */,
 				1C0F8FA79DCCB97A59FE0065 /* TempoShortcuts.swift in Sources */,
 				54C4A30E27996CD2484A1F77 /* TempoTimerActivity.swift in Sources */,
@@ -545,6 +554,7 @@
 				F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */,
 				059FE307DB456E18777F2AD2 /* Charts.swift in Sources */,
 				B215D3F82F435885BF6B00AC /* Chip.swift in Sources */,
+				715CE20C03A552AC53300B7D /* CompleteActiveTaskIntent.swift in Sources */,
 				1EF0A65FE16EF6465AA0B1A2 /* CompletionSparkle.swift in Sources */,
 				81B6B74291999DB49918A787 /* Components.swift in Sources */,
 				439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */,
