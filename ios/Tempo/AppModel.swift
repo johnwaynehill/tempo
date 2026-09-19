@@ -41,6 +41,10 @@ final class AppModel {
     private(set) var now = Date()
     /// Set when the Start focus App Intent asks for Focus Mode; Today presents it and clears this.
     var focusRequested = false
+    /// Set when the Add to Tempo widget's `tempo://capture` link opens the app; Inbox focuses
+    /// its capture field and clears this. Unlike `focusRequested` this comes from `onOpenURL`
+    /// directly (a URL open always happens in-process), never from a standalone intent path.
+    var captureRequested = false
 
     let calendar: Calendar
     private let store: TempoStore

@@ -69,6 +69,13 @@ struct InboxView: View {
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
         .onAppear { captureFocused = true }
+        .onChange(of: model.captureRequested, initial: true) { _, requested in
+            // The Add to Tempo widget asked for capture — refocus even if this tab (and so
+            // this view) was already alive and past its one-time onAppear.
+            guard requested else { return }
+            model.captureRequested = false
+            captureFocused = true
+        }
     }
 
     private var subtitle: String {

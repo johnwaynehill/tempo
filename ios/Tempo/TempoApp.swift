@@ -54,6 +54,13 @@ private struct RootView: View {
             guard phase == .active, let model else { return }
             Task { await model.activate() }
         }
+        .onOpenURL { url in
+            // The Add to Tempo widget's Home Screen and Lock Screen links, and its own
+            // `.widgetURL`. Google Calendar's callback shares the `tempo` scheme but is
+            // intercepted by `ASWebAuthenticationSession` before it ever reaches here.
+            guard url.scheme == "tempo", url.host == "capture" else { return }
+            model?.captureRequested = true
+        }
         #if DEBUG
         .onChange(of: scenePhase, initial: true) { _, phase in
             // Not just .active: a system alert (the first-launch notification prompt) holds the scene inactive.
@@ -102,6 +109,10 @@ private struct MainTabs: View {
         // Start focus (App Intent) opens Focus Mode from Today.
         .onChange(of: model.focusRequested) { _, requested in
             if requested { selection = .today }
+        }
+        // Add to Tempo (widget link) switches to Inbox; InboxView itself focuses the field.
+        .onChange(of: model.captureRequested) { _, requested in
+            if requested { selection = .inbox }
         }
     }
 }
