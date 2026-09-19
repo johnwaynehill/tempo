@@ -5,7 +5,9 @@ struct SignInView: View {
 
     @State private var key = ""
     @State private var isVerifying = false
+    @State private var isSigningInWithGoogle = false
     @State private var errorMessage: String?
+    @State private var showKeyEntry = false
     @FocusState private var keyFocused: Bool
 
     private var looksLikeKey: Bool {
@@ -25,53 +27,35 @@ struct SignInView: View {
                     .foregroundStyle(Theme.primary)
                     .tracking(-0.5)
 
-                Text("Paste an API key from Settings → API Keys on the web app.")
+                Text(showKeyEntry
+                    ? "Paste an API key from Settings → API Keys on the web app."
+                    : "Sign in with the Google account you use for Tempo on the web.")
                     .font(Theme.font(.subheadline))
                     .foregroundStyle(Theme.onSurfaceVariant)
                     .lineSpacing(4)
 
-                VStack(alignment: .leading, spacing: Theme.grid) {
-                    TextField("tempo_…", text: $key)
-                        .font(Theme.mono(size: 17))
-                        .foregroundStyle(Theme.onSurface)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                        .textContentType(nil)
-                        .keyboardType(.asciiCapable)
-                        .submitLabel(.go)
-                        .focused($keyFocused)
-                        .onSubmit { if looksLikeKey { submit() } }
-                        .padding(.vertical, Theme.grid * 1.5)
-                        .padding(.horizontal, Theme.grid * 2)
-                        .background(
-                            Theme.surfaceContainerLow,
-                            in: RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        )
-                        .disabled(isVerifying)
-
-                    if let errorMessage {
-                        Text(errorMessage)
-                            .font(Theme.font(.footnote))
-                            .foregroundStyle(Theme.error)
-                            .transition(.opacity)
-                    }
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(Theme.font(.footnote))
+                        .foregroundStyle(Theme.error)
+                        .transition(.opacity)
                 }
 
-                Button(action: submit) {
-                    ZStack {
-                        Text("Sign in")
-                            .font(Theme.font(.body, weight: .semibold))
-                            .opacity(isVerifying ? 0 : 1)
-                        if isVerifying {
-                            ProgressView()
-                                .tint(Theme.onPrimary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: Theme.grid * 6)
+                if showKeyEntry {
+                    keyEntry
+                } else {
+                    googleButton
                 }
-                .buttonStyle(PrimaryButtonStyle())
-                .disabled(!looksLikeKey || isVerifying)
+
+                Button(showKeyEntry ? "Sign in with Google instead" : "Use an API key instead") {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        showKeyEntry.toggle()
+                        errorMessage = nil
+                    }
+                }
+                .font(Theme.font(.footnote, weight: .medium))
+                .foregroundStyle(Theme.onSurfaceVariant)
+                .disabled(isVerifying || isSigningInWithGoogle)
 
                 Spacer()
             }
@@ -82,7 +66,69 @@ struct SignInView: View {
         .onChange(of: key) { _, _ in errorMessage = nil }
     }
 
-    private func submit() {
+    private var googleButton: some View {
+        Button(action: submitGoogle) {
+            ZStack {
+                HStack(spacing: Theme.grid) {
+                    Image(systemName: "g.circle.fill")
+                        .font(.system(size: 18))
+                    Text("Sign in with Google")
+                        .font(Theme.font(.body, weight: .semibold))
+                }
+                .opacity(isSigningInWithGoogle ? 0 : 1)
+                if isSigningInWithGoogle {
+                    ProgressView()
+                        .tint(Theme.onPrimary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: Theme.grid * 6)
+        }
+        .buttonStyle(PrimaryButtonStyle())
+        .disabled(isSigningInWithGoogle)
+    }
+
+    private var keyEntry: some View {
+        VStack(alignment: .leading, spacing: Theme.grid * 3) {
+            VStack(alignment: .leading, spacing: Theme.grid) {
+                TextField("tempo_…", text: $key)
+                    .font(Theme.mono(size: 17))
+                    .foregroundStyle(Theme.onSurface)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                    .textContentType(nil)
+                    .keyboardType(.asciiCapable)
+                    .submitLabel(.go)
+                    .focused($keyFocused)
+                    .onSubmit { if looksLikeKey { submitKey() } }
+                    .padding(.vertical, Theme.grid * 1.5)
+                    .padding(.horizontal, Theme.grid * 2)
+                    .background(
+                        Theme.surfaceContainerLow,
+                        in: RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    )
+                    .disabled(isVerifying)
+            }
+
+            Button(action: submitKey) {
+                ZStack {
+                    Text("Sign in")
+                        .font(Theme.font(.body, weight: .semibold))
+                        .opacity(isVerifying ? 0 : 1)
+                    if isVerifying {
+                        ProgressView()
+                            .tint(Theme.onPrimary)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.grid * 6)
+            }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(!looksLikeKey || isVerifying)
+        }
+    }
+
+    private func submitKey() {
         guard looksLikeKey, !isVerifying else { return }
         isVerifying = true
         errorMessage = nil
@@ -95,6 +141,34 @@ struct SignInView: View {
             }
             isVerifying = false
         }
+    }
+
+    private func submitGoogle() {
+        guard !isSigningInWithGoogle, let presenter = Self.topViewController() else { return }
+        isSigningInWithGoogle = true
+        errorMessage = nil
+        Task {
+            do {
+                try await session.signInWithGoogle(presenting: presenter)
+            } catch SignInError.googleCancelled {
+                // The user backed out of the account picker; nothing went wrong.
+            } catch {
+                errorMessage = error.localizedDescription
+            }
+            isSigningInWithGoogle = false
+        }
+    }
+
+    /// Google Sign-In needs a `UIViewController` to present its account picker from; SwiftUI
+    /// has no view of its own to hand it, so this walks down from the key window's root.
+    private static func topViewController(from base: UIViewController? = nil) -> UIViewController? {
+        let base = base ?? UIApplication.shared.connectedScenes
+            .compactMap { ($0 as? UIWindowScene)?.keyWindow }
+            .first?.rootViewController
+        if let nav = base as? UINavigationController { return topViewController(from: nav.visibleViewController) }
+        if let tab = base as? UITabBarController, let selected = tab.selectedViewController { return topViewController(from: selected) }
+        if let presented = base?.presentedViewController { return topViewController(from: presented) }
+        return base
     }
 }
 
