@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
+import type { Response } from 'express'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
@@ -91,6 +92,17 @@ if (STDIO_MODE) {
   // Session management
   const transports: Record<string, StreamableHTTPServerTransport> = {}
 
+  // Sessions live in memory, so a restart or redeploy forgets them. The MCP
+  // spec says an unknown session ID gets 404, which tells the client to start
+  // a new session instead of treating the connection as broken.
+  const sessionNotFound = (res: Response) => {
+    res.status(404).json({
+      jsonrpc: '2.0',
+      error: { code: -32001, message: 'Session not found' },
+      id: null,
+    })
+  }
+
   // POST /mcp — main MCP endpoint
   app.post('/mcp', async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
@@ -119,6 +131,9 @@ if (STDIO_MODE) {
         await server.connect(transport)
         await transport.handleRequest(req, res, req.body)
         return
+      } else if (sessionId) {
+        sessionNotFound(res)
+        return
       } else {
         res.status(400).json({
           jsonrpc: '2.0',
@@ -144,8 +159,12 @@ if (STDIO_MODE) {
   // GET /mcp — SSE stream
   app.get('/mcp', async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
-    if (!sessionId || !transports[sessionId]) {
-      res.status(400).send('Invalid or missing session ID')
+    if (!sessionId) {
+      res.status(400).send('Missing session ID')
+      return
+    }
+    if (!transports[sessionId]) {
+      sessionNotFound(res)
       return
     }
     await transports[sessionId].handleRequest(req, res)
@@ -154,8 +173,12 @@ if (STDIO_MODE) {
   // DELETE /mcp — session termination
   app.delete('/mcp', async (req, res) => {
     const sessionId = req.headers['mcp-session-id'] as string | undefined
-    if (!sessionId || !transports[sessionId]) {
-      res.status(400).send('Invalid or missing session ID')
+    if (!sessionId) {
+      res.status(400).send('Missing session ID')
+      return
+    }
+    if (!transports[sessionId]) {
+      sessionNotFound(res)
       return
     }
     await transports[sessionId].handleRequest(req, res)
