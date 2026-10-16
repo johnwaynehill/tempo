@@ -1,11 +1,15 @@
 import SwiftUI
 import TempoKit
 
+/// Wrapped so the push doesn't collide with the `UUID` (todo detail) destination `TabStack` registers.
+private struct LinkedNoteRoute: Hashable { let id: UUID }
+
 /// One todo, editable in place. Mirrors `TodoDetailPage.tsx`: title and description
 /// up top, the chip pickers below, a status-aware action bar pinned to the bottom.
 /// Every change saves through `AppModel.update`; text fields debounce ~500 ms.
 struct TodoDetailView: View {
     @Environment(AppModel.self) private var model
+    @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
 
     let id: UUID
@@ -19,6 +23,11 @@ struct TodoDetailView: View {
     /// Success haptic when Complete is tapped.
     @State private var completions = 0
     @FocusState private var focus: Field?
+    /// Notes aren't cached offline; fetched for the link picker and the linked note's title.
+    @State private var notes: [Note] = []
+    @State private var notesLoaded = false
+    @State private var openedNote: LinkedNoteRoute?
+    @State private var noteError: String?
 
     private enum Field { case title, description }
 
@@ -52,6 +61,15 @@ struct TodoDetailView: View {
         .onChange(of: model.todo(id: id)?.id, initial: true) { _, _ in
             seedIfNeeded()
         }
+        .navigationDestination(item: $openedNote) { route in
+            NoteEditorView(id: route.id, notes: $notes)
+        }
+        .alert("Couldn't update the note", isPresented: Binding(get: { noteError != nil }, set: { if !$0 { noteError = nil } })) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(noteError ?? "")
+        }
+        .task { await loadNotes() }
         .onDisappear {
             flushTitle()
             flushDescription()
@@ -103,6 +121,11 @@ struct TodoDetailView: View {
                             }
                         }
                     }
+                    if let hint = estimateHint(todo) {
+                        Text(hint)
+                            .font(Theme.font(size: 11))
+                            .foregroundStyle(Theme.onSurfaceVariant.opacity(0.7))
+                    }
                 }
 
                 field("Project") { projectPicker(todo) }
@@ -118,30 +141,11 @@ struct TodoDetailView: View {
                     }
                 }
 
-                field("Reminder") {
-                    datePicker(
-                        value: todo.reminderAt,
-                        components: [.date, .hourAndMinute],
-                        addLabel: "Add reminder",
-                        defaultValue: DeferDates.tomorrow(calendar: model.calendar)
-                    ) { date in
-                        save(TodoPatch(reminderAt: date.map { .set($0) } ?? .null))
-                    }
-                }
+                field("Reminder") { reminderField(todo) }
 
-                if let rule = todo.recurrence {
-                    HStack(spacing: 6) {
-                        Image(systemName: "arrow.trianglehead.2.clockwise")
-                            .font(.system(size: 11, weight: .semibold))
-                        Text(Recurrence.describeRecurrence(rule))
-                            .font(Theme.font(size: 12, weight: .medium))
-                    }
-                    .foregroundStyle(Theme.primary)
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, Theme.grid * 1.5)
-                    .background(Theme.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    .accessibilityLabel("Repeats \(Recurrence.describeRecurrence(rule))")
-                }
+                field("Repeat") { repeatField(todo) }
+
+                field("Note") { noteField(todo) }
             }
             .padding(.horizontal, Theme.grid * 2)
             .padding(.top, Theme.grid)
@@ -268,6 +272,223 @@ struct TodoDetailView: View {
         }
     }
 
+    // MARK: Reminder, repeat, note
+
+    /// `ReminderPicker.tsx`'s quick picks, plus the exact picker once one is set.
+    private func reminderField(_ todo: Todo) -> some View {
+        HStack(spacing: Theme.grid) {
+            if let at = todo.reminderAt {
+                DatePicker(
+                    "Reminder",
+                    selection: Binding(get: { at }, set: { save(TodoPatch(reminderAt: .set($0))) }),
+                    displayedComponents: [.date, .hourAndMinute]
+                )
+                .labelsHidden()
+                .tint(Theme.primary)
+            }
+            Menu {
+                let now = Date()
+                Button("In 1 hour") { save(TodoPatch(reminderAt: .set(now.addingTimeInterval(3600)))) }
+                Button("In 3 hours") { save(TodoPatch(reminderAt: .set(now.addingTimeInterval(3 * 3600)))) }
+                Button("Tomorrow 9 AM") { save(TodoPatch(reminderAt: .set(DeferDates.tomorrow(calendar: model.calendar)))) }
+                Button("Monday 9 AM") { save(TodoPatch(reminderAt: .set(DeferDates.nextMonday(calendar: model.calendar)))) }
+                if todo.reminderAt != nil {
+                    Divider()
+                    Button("Remove reminder", systemImage: "bell.slash", role: .destructive) {
+                        save(TodoPatch(reminderAt: .null))
+                    }
+                }
+            } label: {
+                if todo.reminderAt == nil {
+                    Label("Add reminder", systemImage: "bell")
+                        .font(Theme.font(.subheadline, weight: .medium))
+                        .foregroundStyle(Theme.onSurface)
+                        .padding(.horizontal, Theme.grid * 2)
+                        .frame(minHeight: 44)
+                        .background(Theme.surfaceContainer, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                } else {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .frame(width: 44, height: 44)
+                        .background(Theme.surfaceContainer, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            }
+            .accessibilityLabel(todo.reminderAt == nil ? "Add reminder" : "Reminder options")
+        }
+    }
+
+    /// `RecurrencePicker.tsx` inline: tap a frequency to set it (again to remove), then pick days.
+    @ViewBuilder
+    private func repeatField(_ todo: Todo) -> some View {
+        let rule = todo.recurrence
+        VStack(alignment: .leading, spacing: Theme.grid) {
+            chipRow {
+                ForEach([RecurrenceFrequency.daily, .weekly, .monthly], id: \.self) { frequency in
+                    SelectableChip(label: frequency.rawValue.capitalized, isSelected: rule?.frequency == frequency) {
+                        setFrequency(frequency, current: rule)
+                    }
+                }
+            }
+
+            if let rule, rule.frequency == .weekly {
+                let days = rule.daysOfWeek ?? []
+                HStack(spacing: 6) {
+                    ForEach(0..<7, id: \.self) { day in
+                        SelectableChip(label: Self.dayLetters[day], isSelected: days.contains(day), square: true) {
+                            var updated = days.contains(day) ? days.filter { $0 != day } : (days + [day]).sorted()
+                            if updated.isEmpty { updated = days }  // at least one day
+                            save(TodoPatch(recurrence: .set(RecurrenceRule(frequency: .weekly, daysOfWeek: updated))))
+                        }
+                        .accessibilityLabel(Self.dayNames[day])
+                    }
+                }
+            }
+
+            if let rule, rule.frequency == .monthly {
+                let day = rule.dayOfMonth ?? model.calendar.component(.day, from: Date())
+                Stepper(value: Binding(
+                    get: { day },
+                    set: { save(TodoPatch(recurrence: .set(RecurrenceRule(frequency: .monthly, dayOfMonth: $0)))) }
+                ), in: 1...31) {
+                    Text("Day \(day) of the month")
+                        .font(Theme.font(.subheadline))
+                        .foregroundStyle(Theme.onSurface)
+                }
+            }
+
+            if let rule {
+                Text(Recurrence.describeRecurrence(rule))
+                    .font(Theme.font(.caption))
+                    .foregroundStyle(Theme.onSurfaceVariant)
+            }
+        }
+    }
+
+    private func setFrequency(_ frequency: RecurrenceFrequency, current: RecurrenceRule?) {
+        if current?.frequency == frequency {
+            save(TodoPatch(recurrence: .null))
+            return
+        }
+        let rule: RecurrenceRule
+        switch frequency {
+        case .daily:
+            rule = RecurrenceRule(frequency: .daily)
+        case .weekly:
+            let today = model.calendar.component(.weekday, from: Date()) - 1
+            rule = RecurrenceRule(frequency: .weekly, daysOfWeek: [today])
+        case .monthly:
+            rule = RecurrenceRule(frequency: .monthly, dayOfMonth: model.calendar.component(.day, from: Date()))
+        }
+        save(TodoPatch(recurrence: .set(rule)))
+    }
+
+    private static let dayLetters = ["S", "M", "T", "W", "T", "F", "S"]
+    private static let dayNames = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+
+    /// A linked note opens from here; otherwise link one that isn't linked yet, or start a new one.
+    @ViewBuilder
+    private func noteField(_ todo: Todo) -> some View {
+        if let noteId = todo.noteId {
+            let title = notes.first { $0.id == noteId }.map { $0.title.isEmpty ? "Untitled" : $0.title }
+            HStack(spacing: Theme.grid) {
+                Button {
+                    openedNote = LinkedNoteRoute(id: noteId)
+                } label: {
+                    Label(title ?? (notesLoaded ? "Linked note" : "Loading…"), systemImage: "note.text")
+                        .font(Theme.font(.subheadline, weight: .medium))
+                        .foregroundStyle(Theme.primary)
+                        .lineLimit(1)
+                        .padding(.horizontal, Theme.grid * 2)
+                        .frame(minHeight: 44)
+                        .background(Theme.primary.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .disabled(title == nil)
+
+                Button {
+                    Task { await unlinkNote(noteId) }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .frame(width: 44, height: 44)
+                        .background(Theme.surfaceContainer, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Unlink note")
+            }
+        } else {
+            Menu {
+                Button("New note", systemImage: "plus") { Task { await createLinkedNote(todo) } }
+                let unlinked = notes.filter { $0.linkedTodoId == nil }.sorted { $0.updatedAt > $1.updatedAt }
+                if !unlinked.isEmpty {
+                    Divider()
+                    ForEach(unlinked.prefix(25)) { note in
+                        Button(note.title.isEmpty ? "Untitled" : note.title) { Task { await linkNote(note.id) } }
+                    }
+                }
+            } label: {
+                Label("Link a note", systemImage: "link")
+                    .font(Theme.font(.subheadline, weight: .medium))
+                    .foregroundStyle(Theme.onSurface)
+                    .padding(.horizontal, Theme.grid * 2)
+                    .frame(minHeight: 44)
+                    .background(Theme.surfaceContainer, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .disabled(session.client == nil)
+        }
+    }
+
+    private func loadNotes() async {
+        guard let client = session.client else { return }
+        if let fetched = try? await client.notes() { notes = fetched }
+        notesLoaded = true
+    }
+
+    /// Both sides of the link, as the web sets them: `todo.noteId` and `note.linkedTodoId`.
+    private func linkNote(_ noteId: UUID) async {
+        guard let client = session.client else { return }
+        do {
+            let note = try await client.updateNote(id: noteId, NotePatch(linkedTodoId: .set(id)))
+            replace(note)
+            save(TodoPatch(noteId: .set(noteId)))
+        } catch {
+            noteError = "Check your connection and try again."
+        }
+    }
+
+    private func createLinkedNote(_ todo: Todo) async {
+        guard let client = session.client else { return }
+        do {
+            let note = try await client.createNote(NoteDraft(title: todo.title, linkedTodoId: id))
+            notes.append(note)
+            save(TodoPatch(noteId: .set(note.id)))
+            openedNote = LinkedNoteRoute(id: note.id)
+        } catch {
+            noteError = "Check your connection and try again."
+        }
+    }
+
+    private func unlinkNote(_ noteId: UUID) async {
+        save(TodoPatch(noteId: .null))
+        guard let client = session.client,
+              let note = try? await client.updateNote(id: noteId, NotePatch(linkedTodoId: .null)) else { return }
+        replace(note)
+    }
+
+    private func replace(_ note: Note) {
+        if let i = notes.firstIndex(where: { $0.id == note.id }) { notes[i] = note } else { notes.append(note) }
+    }
+
+    /// "Medium tasks usually take you about 45m." from the last four weeks of timed completions.
+    private func estimateHint(_ todo: Todo) -> String? {
+        guard let size = todo.size,
+              let typical = Calibration.typicalMinutesForSize(model.todos.filter { $0.status == .done }, size: size)
+        else { return nil }
+        return "\(TodoRow.label(for: size)) tasks usually take you about \(TimeMath.formatMinutes(typical))."
+    }
+
     // MARK: Actions
 
     @ViewBuilder
@@ -280,6 +501,11 @@ struct TodoDetailView: View {
                 Button("Add to Today") { finish { await model.pin(id: id) } }
                     .buttonStyle(BarPrimaryButtonStyle())
             case .backlog:
+                Button("Complete") {
+                    completions += 1
+                    finish { await model.complete(id: id) }
+                }
+                .buttonStyle(SecondaryButtonStyle())
                 Button("Add to Today") { finish { await model.pin(id: id) } }
                     .buttonStyle(BarPrimaryButtonStyle())
             case .deferred:
@@ -336,6 +562,9 @@ struct TodoDetailView: View {
                     }
                     Button("Next week") {
                         finish { await model.defer(id: id, until: DeferDates.nextWeek(calendar: model.calendar)) }
+                    }
+                    Button("Next month") {
+                        finish { await model.defer(id: id, until: DeferDates.nextMonth(calendar: model.calendar)) }
                     }
                 }
             }

@@ -188,6 +188,17 @@ enum DeferDates {
         morning(of: DayMath.adding(days: 7, to: now, calendar: calendar), calendar: calendar)
     }
 
+    static func nextMonth(from now: Date = Date(), calendar: Calendar = .current) -> Date {
+        morning(of: calendar.date(byAdding: .month, value: 1, to: now) ?? now, calendar: calendar)
+    }
+
+    /// 9:00 on the coming Monday (a week out if today is Monday), as `ReminderPicker.tsx` does.
+    static func nextMonday(from now: Date = Date(), calendar: Calendar = .current) -> Date {
+        let weekday = calendar.component(.weekday, from: now)  // 1 = Sunday
+        let days = weekday == 1 ? 1 : 9 - weekday
+        return morning(of: DayMath.adding(days: days, to: now, calendar: calendar), calendar: calendar)
+    }
+
     private static func morning(of date: Date, calendar: Calendar) -> Date {
         calendar.date(bySettingHour: 9, minute: 0, second: 0, of: date) ?? date
     }

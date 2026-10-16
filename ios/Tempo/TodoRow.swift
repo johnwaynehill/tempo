@@ -110,14 +110,23 @@ struct TodoRow: View {
                     if let size = todo.size {
                         Chip(text: Self.label(for: size))
                     }
+                    if let impact = todo.impact {
+                        Chip(text: "Impact \(impact)/5")
+                    }
                     if let minutes = todo.estimatedMinutes, minutes > 0 {
                         Chip(text: TimeMath.formatMinutes(minutes), background: Theme.surfaceContainerHigh)
                     }
                     if let due = todo.dueDate {
-                        Text(Self.dueFormatter.string(from: due))
-                            .font(Theme.font(size: 11))
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                            .padding(.vertical, 4)
+                        meta(Self.dueFormatter.string(from: due))
+                    }
+                    if let rule = todo.recurrence {
+                        meta(Recurrence.describeRecurrence(rule), symbol: "repeat")
+                    }
+                    if let reminder = todo.reminderAt {
+                        meta(Self.dueFormatter.string(from: reminder), symbol: "bell", color: Theme.primary.opacity(0.7))
+                    }
+                    if todo.noteId != nil {
+                        meta("Note", symbol: "note.text", color: Theme.primary.opacity(0.7))
                     }
                 }
             }
@@ -128,7 +137,20 @@ struct TodoRow: View {
 
     private var hasMetadata: Bool {
         (todo.project?.isEmpty == false) || (showEnergy && todo.energyLevel != nil) || todo.size != nil
-            || (todo.estimatedMinutes ?? 0) > 0 || todo.dueDate != nil
+            || todo.impact != nil || (todo.estimatedMinutes ?? 0) > 0 || todo.dueDate != nil
+            || todo.recurrence != nil || todo.reminderAt != nil || todo.noteId != nil
+    }
+
+    /// Plain trailing metadata (dates, repeat, reminder), quieter than the chips.
+    private func meta(_ text: String, symbol: String? = nil, color: Color = Theme.onSurfaceVariant) -> some View {
+        HStack(spacing: 3) {
+            if let symbol {
+                Image(systemName: symbol).font(.system(size: 9, weight: .semibold))
+            }
+            Text(text).font(Theme.font(size: 11))
+        }
+        .foregroundStyle(color)
+        .padding(.vertical, 4)
     }
 
     static func label(for energy: EnergyLevel) -> String {
