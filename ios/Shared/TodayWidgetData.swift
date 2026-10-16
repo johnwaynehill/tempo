@@ -26,8 +26,15 @@ enum TodayWidgetData {
             client: TempoClient(baseURL: baseURL(), apiKey: apiKey),
             directory: directory
         )
-        let snapshot = await store.snapshot
-        return snapshot.lastRefresh == nil ? nil : snapshot
+        var snapshot = await store.snapshot
+        guard snapshot.lastRefresh != nil else { return nil }
+        // Taps made in a widget, Control Center or a Shortcut while the app was closed sit in the
+        // inbox until the app imports them; preview them so the widget (and the next Start next)
+        // agree with what the user just did instead of resurrecting a finished task.
+        if let inbox = AppGroup.inboxURL {
+            for (op, _) in PendingOpInbox(directory: inbox).pending() { snapshot.apply(op) }
+        }
+        return snapshot
     }
 
     /// The timer the app (or `StartNextTaskIntent`) last saved; `.idle` when none or when it
@@ -72,6 +79,10 @@ enum TodayWidgetData {
 
         let todos = todayTodos(in: snapshot, now: now, calendar: calendar)
         guard !todos.isEmpty else {
+            let today = TodayResolution.todayDateString(now: now, calendar: calendar)
+            // No set for today means the app hasn't pulled this morning's plan yet, which is not
+            // the same as having nothing to do.
+            if snapshot.todaySets[today] == nil { return [TodayWidgetEntry(date: now, content: .notPlanned)] }
             return [TodayWidgetEntry(date: now, content: .empty(completedToday: completedTodayCount(in: snapshot, now: now, calendar: calendar)))]
         }
 
@@ -80,7 +91,11 @@ enum TodayWidgetData {
         let active = timer.activeTaskId.flatMap { id in todos.first { $0.id == id } }
         let tasks = todos.map(TodayWidgetTask.init)
 
-        return (0..<max(1, minutes)).map { offset in
+        // Entries never cross midnight: the list, the done count and "today" are all computed once
+        // from the snapshot, so a window straddling it would show yesterday's day.
+        let nextMidnight = DayMath.adding(days: 1, to: DayMath.startOfDay(now, calendar: calendar), calendar: calendar)
+        let minutesLeftToday = max(1, Int(nextMidnight.timeIntervalSince(now) / 60))
+        return (0..<max(1, min(minutes, minutesLeftToday))).map { offset in
             let date = now.addingTimeInterval(TimeInterval(offset * 60))
             let snapshotAtDate = active == nil ? nil : timer.snapshot(at: date)
             let clock = active.map { todo in
@@ -168,6 +183,8 @@ struct TodayWidgetEntry: TimelineEntry, Hashable, Sendable {
         /// Signed in, but the app hasn't cached a snapshot yet.
         case notLoaded
         case empty(completedToday: Int)
+        /// Signed in and loaded, but this morning's plan isn't in the cache yet.
+        case notPlanned
         case tasks(TodayWidgetTasks)
     }
 

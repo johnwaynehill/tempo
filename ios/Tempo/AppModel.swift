@@ -1,7 +1,9 @@
 import CryptoKit
 import Foundation
+import Network
 import Observation
 import TempoKit
+import UIKit
 import WidgetKit
 import os
 
@@ -46,6 +48,16 @@ final class AppModel {
     /// directly (a URL open always happens in-process), never from a standalone intent path.
     var captureRequested = false
 
+    /// The day a refresh last finished for. Until it matches `todayString`, an empty Today
+    /// means "not planned yet", not "nothing to do" — after midnight, or on a cold start before
+    /// the network answers, the morning set simply isn't in the cache yet.
+    private(set) var refreshedDay: String?
+    /// The day `todaySet` was last picked for, so a long-open app notices when it has changed.
+    private var lastAppliedDay: String?
+
+    /// True while Today's list can't be trusted yet — see `refreshedDay`.
+    var isResolvingToday: Bool { todaySet == nil && refreshedDay != todayString }
+
     let calendar: Calendar
     private let store: TempoStore
     private let reminders: ReminderScheduler
@@ -53,6 +65,16 @@ final class AppModel {
     private var loadTask: Task<Void, Never>?
     private var flushTask: Task<Void, Never>?
     private var tickTask: Task<Void, Never>?
+    /// Keeps `now` current while the app sits open, and reacts to midnight, clock and time zone
+    /// changes. Without it "done by ~4:30 PM" and the overcommit note go stale, and Today keeps
+    /// the previous day's set after midnight.
+    private var clockTask: Task<Void, Never>?
+    private var clockObservers: [NSObjectProtocol] = []
+    /// Retries a failed flush when the network returns or after a growing delay.
+    private let pathMonitor = NWPathMonitor()
+    private var retryTask: Task<Void, Never>?
+    private var retryAttempt = 0
+    private var wasOnline = true
     /// Live Activity calls run one after another so a start can't race an update.
     private var activityTask: Task<Void, Never>?
     /// The todo the current Live Activity was requested for; nil once ended.
@@ -66,7 +88,7 @@ final class AppModel {
         apiKey: String,
         reminders: ReminderScheduler = ReminderScheduler(),
         activity: TimerActivityController = TimerActivityController(),
-        calendar: Calendar = .current
+        calendar: Calendar = .autoupdatingCurrent
     ) {
         self.store = TempoStore(client: client, directory: Self.storeDirectory(for: apiKey), calendar: calendar)
         self.reminders = reminders
@@ -74,6 +96,64 @@ final class AppModel {
         self.calendar = calendar
         restoreTimer()
         consumeFocusRequest()
+        startClockWatch()
+        startPathWatch()
+    }
+
+    isolated deinit {
+        clockTask?.cancel()
+        retryTask?.cancel()
+        pathMonitor.cancel()
+        clockObservers.forEach(NotificationCenter.default.removeObserver)
+    }
+
+    // MARK: Clock and connectivity
+
+    private func startClockWatch() {
+        clockTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(60))
+                guard !Task.isCancelled, let self else { return }
+                self.minuteTick()
+            }
+        }
+        let center = NotificationCenter.default
+        let names: [Notification.Name] = [
+            .NSCalendarDayChanged, .NSSystemTimeZoneDidChange, UIApplication.significantTimeChangeNotification,
+        ]
+        clockObservers = names.map { name in
+            center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
+                Task { @MainActor in await self?.dayMayHaveChanged() }
+            }
+        }
+    }
+
+    private func minuteTick() {
+        // The timer's own 1 Hz tick already republishes `now` while it runs.
+        if !timer.isRunning { now = Date() }
+        if let day = lastAppliedDay, day != todayString { Task { await dayMayHaveChanged() } }
+    }
+
+    /// Midnight, a time zone change, or the clock being set: re-pick today's set from the cache
+    /// (it is nil for a new day until a refresh pulls or generates it) and go get it.
+    private func dayMayHaveChanged() async {
+        now = Date()
+        guard loadTask != nil else { return }
+        apply(await store.snapshot)
+        await refresh()
+    }
+
+    private func startPathWatch() {
+        pathMonitor.pathUpdateHandler = { [weak self] path in
+            let online = path.status == .satisfied
+            Task { @MainActor in
+                guard let self else { return }
+                let regained = online && !self.wasOnline
+                self.wasOnline = online
+                if regained, self.pendingCount > 0 { self.scheduleFlush() }
+            }
+        }
+        pathMonitor.start(queue: DispatchQueue(label: "com.johnwaynehill.Tempo.path"))
     }
 
     /// `<App Group>/Tempo/<account folder>` (`AppGroup.accountDirectory`) so the widget can read
@@ -201,7 +281,11 @@ final class AppModel {
     private func refresh() async {
         guard !isLoading else { return }
         isLoading = true
-        defer { isLoading = false }
+        let day = todayString
+        defer {
+            isLoading = false
+            refreshedDay = day
+        }
         do {
             let snapshot = try await store.refreshToday(now: Date())
             apply(snapshot)
@@ -229,6 +313,7 @@ final class AppModel {
         projects = snapshot.projects
         preferences = snapshot.preferences
         todaySet = snapshot.todaySets[todayString]
+        lastAppliedDay = todayString
         didChange()
         // The store has already written the snapshot to disk; let the widget re-read it.
         WidgetCenter.shared.reloadAllTimelines()
@@ -303,8 +388,18 @@ final class AppModel {
     func signOut() async {
         flushTask?.cancel()
         loadTask?.cancel()
+        retryTask?.cancel()
+        retryAttempt = 0
         setTimer(.idle)
         await store.signOut()
+        // This account's reminders must not keep firing, and writes the widget or share sheet
+        // dropped in the shared inbox belong to it, not to whoever signs in next.
+        reminders.sync(todos: [])
+        if let inbox = AppGroup.inboxURL {
+            try? FileManager.default.removeItem(at: inbox)
+        }
+        refreshedDay = nil
+        lastAppliedDay = nil
         todos = []
         events = []
         habits = []
@@ -506,6 +601,22 @@ final class AppModel {
         Task { await flush() }
     }
 
+    /// A flush that stopped early leaves its writes queued; without this they'd wait for the
+    /// next edit, foreground, or pull. Back off 5 s, 15 s, 45 s … up to 5 min. A rejected key
+    /// won't fix itself, so that case waits for a new sign-in instead.
+    private func scheduleRetry(after error: any Error) {
+        if let apiError = error as? TempoAPIError, case .unauthorized = apiError { return }
+        guard pendingCount > 0 else { return }
+        retryTask?.cancel()
+        let delay = min(300, 5 * pow(3, Double(retryAttempt)))
+        retryAttempt += 1
+        retryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(delay))
+            guard !Task.isCancelled, let self else { return }
+            await self.flush()
+        }
+    }
+
     /// Flushes run one at a time: `TempoStore.flush` is reentrant at its awaits, so two
     /// overlapping calls could send the same op twice.
     private func flush() async {
@@ -528,7 +639,10 @@ final class AppModel {
             } else {
                 error = Self.describe(flushError)
             }
+            scheduleRetry(after: flushError)
         } else if result.sent > 0 || result.dropped > 0 {
+            retryAttempt = 0
+            retryTask?.cancel()
             // Only a flush that actually reached the server says anything about being
             // online; an empty queue draining "successfully" must not clear the flag.
             isOffline = false
@@ -550,7 +664,7 @@ final class AppModel {
             return "Something went wrong talking to Tempo."
         }
         return switch apiError {
-        case .unauthorized: "Your API key was rejected. Sign out and paste a fresh one."
+        case .unauthorized: "Tempo rejected your sign-in. Your changes are kept — sign out and sign in again."
         case .transport: "Couldn't reach Tempo. Pull to try again."
         case .http(let status, _): "Tempo answered with an error (\(status))."
         case .decoding, .invalidResponse: "Tempo sent something unexpected."

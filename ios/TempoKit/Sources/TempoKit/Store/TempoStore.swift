@@ -218,35 +218,7 @@ public actor TempoStore {
     // MARK: Applying ops
 
     private func apply(_ op: WriteOp) {
-        let now = op.createdAt
-        switch op {
-        case .createTodo(_, _, let draft):
-            cache.upsert(Todo(draft: draft, userId: cache.preferences?.userId ?? "", createdAt: now))
-        case .updateTodo(_, _, let todoId, let patch):
-            if let todo = cache.todo(id: todoId) {
-                cache.upsert(todo.applying(patch, updatedAt: now))
-            }
-        case .completeTodo(_, _, let todoId, let actualMinutes):
-            if var todo = cache.todo(id: todoId) {
-                todo.status = .done
-                todo.completedAt = now
-                todo.updatedAt = now
-                if let actualMinutes { todo.actualMinutes = actualMinutes }
-                cache.upsert(todo)
-            }
-        case .deleteTodo(_, _, let todoId):
-            cache.todos.removeAll { $0.id == todoId }
-        case .toggleHabit(_, _, let habitId, let date, let completed):
-            if let i = cache.habits.firstIndex(where: { $0.id == habitId }) {
-                // The server deletes the key rather than writing false.
-                cache.habits[i].completions[date] = completed ? true : nil
-                cache.habits[i].updatedAt = now
-            }
-        case .setTodaySet(_, _, let date, let todoIds):
-            cache.todaySets[date] = TodaySet(userId: cache.preferences?.userId, date: date, todoIds: todoIds, exists: true)
-        case .updatePreferences(_, _, let update):
-            cache.preferences = (cache.preferences ?? UserPreferences()).applying(update)
-        }
+        cache.apply(op)
     }
 
     /// Every op is idempotent on the snapshot, so replaying the queue over fresh server

@@ -38,6 +38,14 @@ struct ToggleHabitWidgetIntent: AppIntent {
     func perform() async throws -> some IntentResult {
         guard let id = UUID(uuidString: habitId) else { return .result() }
 
+        // The widget bakes its day into each button when the timeline is built. Past midnight a
+        // stale render would otherwise toggle yesterday while showing yesterday's checkmarks as
+        // today's; skip the write and let the reload below redraw with the new day.
+        guard date == DayMath.isoDateString(Date()) else {
+            WidgetCenter.shared.reloadAllTimelines()
+            return .result()
+        }
+
         // Instant feedback: WidgetKit reloads this widget's own timeline once perform()
         // returns, so recording the override before doing anything else means that reload
         // already shows the new state, before the real write below even finishes.
@@ -70,17 +78,17 @@ enum ToggleHabitStandalone {
         defer { session.finishTasksAndInvalidate() }
 
         let client = TempoClient(baseURL: TodayWidgetData.baseURL(), apiKey: key, session: session)
-        do {
-            _ = try await client.toggleHabit(id: habitId, date: date, completed: completed)
-        } catch {
-            // No network, a timeout, or a server error: the app sends it next time it opens.
-            guard let inbox = AppGroup.inboxURL else { return }
+        // The inbox record is written whether or not the network call lands: it is what keeps the
+        // widget's view of the habit right until the app next syncs (the toggle is idempotent, so
+        // the app re-sending it on import is harmless), and it is the retry if the call fails.
+        if let inbox = AppGroup.inboxURL {
             do {
                 try PendingOpInbox(directory: inbox).write(.toggleHabit(habitId: habitId, date: date, completed: completed))
             } catch {
                 IntentLog.logger.error("toggleHabit: couldn't write to the inbox: \(String(describing: error), privacy: .public)")
             }
         }
+        _ = try? await client.toggleHabit(id: habitId, date: date, completed: completed)
     }
 }
 

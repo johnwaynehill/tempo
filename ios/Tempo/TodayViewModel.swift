@@ -19,6 +19,7 @@ final class TodayViewModel {
     var hasLoaded: Bool { model.hasLoaded }
     var error: String? { model.error }
     var completedTodayCount: Int { model.completedTodayCount }
+    var isResolvingToday: Bool { model.isResolvingToday }
 
     /// "Offline. Changes will sync when you're back." — only while something is
     /// actually waiting; a quiet offline read needs no banner.
