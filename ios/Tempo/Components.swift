@@ -166,6 +166,16 @@ extension View {
                 .accessibilityHidden(true)
         )
     }
+
+    /// The same chevron-free push, to an explicit destination (for rows that aren't todos, since
+    /// `UUID` values on these stacks already mean "todo detail").
+    func navigates<Destination: View>(@ViewBuilder to destination: @escaping () -> Destination) -> some View {
+        self.background(
+            NavigationLink(destination: destination) { EmptyView() }
+                .opacity(0)
+                .accessibilityHidden(true)
+        )
+    }
 }
 
 /// The web's defer presets: 9:00 local on the target morning.

@@ -420,6 +420,24 @@ final class AppModel {
         await enqueue(.toggleHabit(habitId: id, date: date, completed: completed))
     }
 
+    func habit(id: UUID) -> Habit? {
+        habits.first { $0.id == id }
+    }
+
+    func createHabit(name: String, description: String?) async {
+        await enqueue(.createHabit(draft: HabitDraft(name: name, description: description)))
+    }
+
+    func updateHabit(id: UUID, name: String, description: String?) async {
+        let trimmed = description?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let patch: Patch<String> = (trimmed?.isEmpty ?? true) ? .null : .set(trimmed!)
+        await enqueue(.updateHabit(habitId: id, update: HabitUpdate(name: name, description: patch)))
+    }
+
+    func deleteHabit(id: UUID) async {
+        await enqueue(.deleteHabit(habitId: id))
+    }
+
     // MARK: Session
 
     /// Drops the cache, the queue, the timer, and the Live Activity.

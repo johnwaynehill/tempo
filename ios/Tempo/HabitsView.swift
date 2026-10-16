@@ -5,6 +5,7 @@ import TempoKit
 /// the name, the streak, and the last seven days as dots (today rightmost).
 struct HabitsView: View {
     @Environment(AppModel.self) private var model
+    @State private var showNew = false
 
     private var habits: [Habit] { model.activeHabits }
     private var today: String { model.todayString }
@@ -29,13 +30,14 @@ struct HabitsView: View {
                 HStack { Spacer(); ProgressView().tint(Theme.onSurfaceVariant); Spacer() }
                     .plainRow(top: Theme.grid * 8)
             } else if habits.isEmpty {
-                EmptyState(symbol: "plus", title: "No habits yet", message: "Start small — even one is a win.")
+                EmptyState(symbol: "plus", title: "No habits yet", message: "Start small — even one is a win. Tap + to add one.")
                     .plainRow()
             } else {
                 ForEach(habits) { habit in
                     HabitRow(habit: habit, today: today, calendar: model.calendar) { completed in
                         Task { await model.toggleHabit(id: habit.id, date: today, completed: completed) }
                     }
+                    .navigates { HabitDetailView(habitId: habit.id) }
                     .cardRow()
                 }
 
@@ -50,6 +52,18 @@ struct HabitsView: View {
         .animation(.easeOut(duration: 0.3), value: completedToday)
         .sensoryFeedback(.success, trigger: completedToday) { old, new in new > old }
         .refreshable { await model.reload() }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showNew = true } label: {
+                    Image(systemName: "plus").foregroundStyle(Theme.onSurfaceVariant)
+                }
+                .accessibilityLabel("New habit")
+            }
+        }
+        .sheet(isPresented: $showNew) {
+            HabitEditorSheet()
+                .presentationDetents([.height(260)])
+        }
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
     }

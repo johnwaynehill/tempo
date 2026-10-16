@@ -112,6 +112,18 @@ public actor TempoClient {
         try await requestList("GET", "/api/habits")
     }
 
+    public func createHabit(_ draft: HabitDraft) async throws -> Habit {
+        try await request("POST", "/api/habits", body: draft)
+    }
+
+    public func updateHabit(id: UUID, _ update: HabitUpdate) async throws -> Habit {
+        try await request("PUT", "/api/habits/\(id.uuidString.lowercased())", body: update)
+    }
+
+    public func deleteHabit(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/habits/\(id.uuidString.lowercased())")
+    }
+
     /// `date` is `yyyy-MM-dd`; the server keys `completions` by that string.
     public func toggleHabit(id: UUID, date: String, completed: Bool) async throws -> Habit {
         struct Body: Encodable { var date: String; var completed: Bool }

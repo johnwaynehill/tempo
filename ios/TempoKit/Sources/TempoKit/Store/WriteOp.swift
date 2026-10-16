@@ -17,13 +17,17 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
     /// `date` is `yyyy-MM-dd`.
     case setTodaySet(id: UUID = UUID(), createdAt: Date = Date(), date: String, todoIds: [UUID])
     case updatePreferences(id: UUID = UUID(), createdAt: Date = Date(), update: UserPreferencesUpdate)
+    case createHabit(id: UUID = UUID(), createdAt: Date = Date(), draft: HabitDraft)
+    case updateHabit(id: UUID = UUID(), createdAt: Date = Date(), habitId: UUID, update: HabitUpdate)
+    case deleteHabit(id: UUID = UUID(), createdAt: Date = Date(), habitId: UUID)
 
     /// The op's own id, not the id of the row it touches.
     public var id: UUID {
         switch self {
         case .createTodo(let id, _, _), .updateTodo(let id, _, _, _), .completeTodo(let id, _, _, _),
              .deleteTodo(let id, _, _), .toggleHabit(let id, _, _, _, _), .setTodaySet(let id, _, _, _),
-             .updatePreferences(let id, _, _):
+             .updatePreferences(let id, _, _), .createHabit(let id, _, _), .updateHabit(let id, _, _, _),
+             .deleteHabit(let id, _, _):
             id
         }
     }
@@ -32,7 +36,8 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         switch self {
         case .createTodo(_, let at, _), .updateTodo(_, let at, _, _), .completeTodo(_, let at, _, _),
              .deleteTodo(_, let at, _), .toggleHabit(_, let at, _, _, _), .setTodaySet(_, let at, _, _),
-             .updatePreferences(_, let at, _):
+             .updatePreferences(_, let at, _), .createHabit(_, let at, _), .updateHabit(_, let at, _, _),
+             .deleteHabit(_, let at, _):
             at
         }
     }
@@ -42,7 +47,7 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         switch self {
         case .createTodo(_, _, let draft): draft.id
         case .updateTodo(_, _, let todoId, _), .completeTodo(_, _, let todoId, _), .deleteTodo(_, _, let todoId): todoId
-        case .toggleHabit, .setTodaySet, .updatePreferences: nil
+        case .toggleHabit, .setTodaySet, .updatePreferences, .createHabit, .updateHabit, .deleteHabit: nil
         }
     }
 }

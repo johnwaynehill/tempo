@@ -86,6 +86,23 @@ extension CacheSnapshot {
             todaySets[date] = TodaySet(userId: preferences?.userId, date: date, todoIds: todoIds, exists: true)
         case .updatePreferences(_, _, let update):
             preferences = (preferences ?? UserPreferences()).applying(update)
+        case .createHabit(_, _, let draft):
+            if !habits.contains(where: { $0.id == draft.id }) {
+                upsert(Habit(
+                    id: draft.id, userId: preferences?.userId ?? "", name: draft.name, description: draft.description,
+                    frequency: draft.frequency, archived: draft.archived, completions: draft.completions,
+                    createdAt: now, updatedAt: now
+                ))
+            }
+        case .updateHabit(_, _, let habitId, let update):
+            if let i = habits.firstIndex(where: { $0.id == habitId }) {
+                if let name = update.name { habits[i].name = name }
+                if let description = update.description { habits[i].description = description.value }
+                if let archived = update.archived { habits[i].archived = archived }
+                habits[i].updatedAt = now
+            }
+        case .deleteHabit(_, _, let habitId):
+            habits.removeAll { $0.id == habitId }
         }
     }
 }

@@ -12,6 +12,7 @@
 		0424E97754ACC8D38893F69D /* HabitsWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0940A215613386560E72B577 /* HabitsWidgetData.swift */; };
 		059FE307DB456E18777F2AD2 /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D702CD8C649D33D7F66640 /* Charts.swift */; };
 		065771C04C0A706889D796C1 /* TodoRow.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */; };
+		093806D35B30FAD448259F9E /* HabitEditorSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 875BE0DDE96C44E9355F311A /* HabitEditorSheet.swift */; };
 		14A476EDF9F71063E6609360 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		1527045DF48BD631C0B666C2 /* WhatsOnTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */; };
 		15A4A75096B2CBCA88C37474 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
@@ -79,6 +80,7 @@
 		8D6CE1946CAC5F44F4766838 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
 		90A5E72ADB0C47DAD7A31E40 /* TodayWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */; };
 		98FF94D5547599B3EF75C16E /* WeeklyReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90644EF8DE480FCBE11068D4 /* WeeklyReviewView.swift */; };
+		99831E3BD21FB4E871DC59B9 /* HabitDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BA8B0A318E3656634D8C3161 /* HabitDetailView.swift */; };
 		99EDE3220A4B6A7FDE3832AC /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		9F6E0D547D86B404EFB1B1DE /* StartNextTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 639D2C611797D3B60E6651BD /* StartNextTaskIntent.swift */; };
 		A3961A67F817D3CF3D7D8B49 /* TodayWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFADF7A7117BE4406A3AC01 /* TodayWidgetData.swift */; };
@@ -183,6 +185,7 @@
 		74371ED08F71EA13BDC933C1 /* TempoWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoWidgetsBundle.swift; sourceTree = "<group>"; };
 		751BA7C01657B3A2B0E73F7F /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
 		82C928AB7903F692851CD131 /* CompletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedView.swift; sourceTree = "<group>"; };
+		875BE0DDE96C44E9355F311A /* HabitEditorSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitEditorSheet.swift; sourceTree = "<group>"; };
 		90644EF8DE480FCBE11068D4 /* WeeklyReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewView.swift; sourceTree = "<group>"; };
 		90A098D118D78BA3A0265147 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		95A0449A5BBE528B535297D6 /* DebugLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLaunch.swift; sourceTree = "<group>"; };
@@ -202,6 +205,7 @@
 		B2C33A1F9FAE0C6C59205915 /* TempoControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoControls.swift; sourceTree = "<group>"; };
 		B539B6AA9E4A6FD8CFCABD32 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWidgetViews.swift; sourceTree = "<group>"; };
+		BA8B0A318E3656634D8C3161 /* HabitDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDetailView.swift; sourceTree = "<group>"; };
 		BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Inter.txt"; sourceTree = "<group>"; };
 		BCFADF7A7117BE4406A3AC01 /* TodayWidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWidgetData.swift; sourceTree = "<group>"; };
 		BE9A0D1585591DE3E5153935 /* TempoKit */ = {isa = PBXFileReference; lastKnownFileType = folder; name = TempoKit; path = TempoKit; sourceTree = SOURCE_ROOT; };
@@ -345,6 +349,8 @@
 				AD4143A9116E71B967F64B9E /* DebugShareHook.swift */,
 				426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */,
 				38F2793FD244757EE9832938 /* GoogleService-Info.plist */,
+				BA8B0A318E3656634D8C3161 /* HabitDetailView.swift */,
+				875BE0DDE96C44E9355F311A /* HabitEditorSheet.swift */,
 				D08F9555222BA9FC6A779A05 /* HabitsView.swift */,
 				EFBEC45DD7202363CB7A808F /* HealthMoodWriter.swift */,
 				1720DA0DCE4697825E4EBAA6 /* InboxView.swift */,
@@ -610,6 +616,8 @@
 				439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */,
 				8247FD316B905169DE7773BF /* DebugShareHook.swift in Sources */,
 				612204B4C806B8211D94E8FC /* FocusModeView.swift in Sources */,
+				99831E3BD21FB4E871DC59B9 /* HabitDetailView.swift in Sources */,
+				093806D35B30FAD448259F9E /* HabitEditorSheet.swift in Sources */,
 				28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */,
 				49BE77B9856AA29D533741D2 /* HabitsWidgetData.swift in Sources */,
 				F9AE817B38921A9FB679642B /* HabitsWidgetViews.swift in Sources */,

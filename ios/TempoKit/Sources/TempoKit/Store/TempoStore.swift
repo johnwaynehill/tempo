@@ -249,6 +249,13 @@ public actor TempoStore {
             cache.todaySets[date] = try await client.updateTodaySet(date: date, todoIds: todoIds)
         case .updatePreferences(_, _, let update):
             cache.preferences = try await client.updatePreferences(update)
+        case .createHabit(_, _, let draft):
+            cache.upsert(try await client.createHabit(draft))
+        case .updateHabit(_, _, let habitId, let update):
+            cache.upsert(try await client.updateHabit(id: habitId, update))
+        case .deleteHabit(_, _, let habitId):
+            try await client.deleteHabit(id: habitId)
+            cache.habits.removeAll { $0.id == habitId }
         }
     }
 
@@ -328,6 +335,9 @@ extension WriteOp {
         case .toggleHabit: "toggleHabit"
         case .setTodaySet: "setTodaySet"
         case .updatePreferences: "updatePreferences"
+        case .createHabit: "createHabit"
+        case .updateHabit: "updateHabit"
+        case .deleteHabit: "deleteHabit"
         }
     }
 }
