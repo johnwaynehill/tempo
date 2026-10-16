@@ -11,6 +11,9 @@ struct TempoApp: App {
             RootView()
                 .environment(session)
         }
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) {
+            await BackgroundRefresh.run(session: session)
+        }
     }
 }
 
@@ -39,6 +42,8 @@ private struct RootView: View {
             }
         }
         .tint(Theme.primary)
+        // The theme preference is shared with the web; System (or no account yet) follows the phone.
+        .preferredColorScheme(model?.preferences?.theme.colorScheme)
         .animation(.easeOut(duration: 0.3), value: session.isSignedIn)
         .onChange(of: session.apiKey, initial: true) { _, _ in
             // One model per signed-in key; signing out drops it and its data.
@@ -46,11 +51,14 @@ private struct RootView: View {
                 let created = AppModel(client: client, apiKey: key)
                 model = created
                 registerIntentHost(created)
+                BackgroundRefresh.model = created
             } else {
                 model = nil
             }
         }
         .onChange(of: scenePhase) { _, phase in
+            // Leaving: ask for a background refresh so the widgets don't go stale.
+            if phase == .background, session.isSignedIn { BackgroundRefresh.schedule() }
             // Back in the foreground: send what's queued, then pull what changed.
             guard phase == .active, let model else { return }
             Task { await model.activate() }
@@ -81,6 +89,16 @@ private struct RootView: View {
         if IntentDebugLaunch.holdsHost { return }
         #endif
         TempoIntentBridge.host = model
+    }
+}
+
+private extension ThemePreference {
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: nil
+        }
     }
 }
 

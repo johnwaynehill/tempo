@@ -316,6 +316,56 @@ extension StoreURLProtocol.Recorded: @unchecked Sendable {}
         #expect(await store.pendingCount == 1)
     }
 
+    /// A write the server keeps failing on is set aside, with the later edits to the same row,
+    /// so it stops holding up everything queued behind it.
+    @Test func aWriteTheServerKeepsFailingOnIsParkedAndTheRestCarryOn() async throws {
+        serve(pullRoutes)
+        let store = makeStore()
+        _ = try await store.refresh()
+        offline()
+        await store.enqueue(.updateTodo(createdAt: now, todoId: Self.todoA, patch: TodoPatch(progress: .set(60))))
+        await store.enqueue(.updateTodo(createdAt: now, todoId: Self.todoA, patch: TodoPatch(progress: .set(70))))
+        await store.enqueue(.toggleHabit(createdAt: now, habitId: Self.habitId, date: "2026-09-14", completed: true))
+        let habitPath = "/api/habits/\(Self.habitId.uuidString.lowercased())/completions"
+        StoreURLProtocol.handler.withLock {
+            $0 = { r in r.path == habitPath ? (200, Self.habitJSON) : (500, #"{"error":"Internal error"}"#) }
+        }
+
+        for minute in [0, 2, 5, 8] {
+            let result = await store.flush(now: now.addingTimeInterval(Double(minute) * 60))
+            #expect(result.parked == 0)
+            #expect(result.remaining == 3)
+        }
+        let result = await store.flush(now: now.addingTimeInterval(11 * 60))
+        #expect(result.parked == 2)
+        #expect(result.sent == 1)
+        #expect(result.remaining == 0)
+        #expect(await store.parkedOps.count == 2)
+
+        let reloaded = makeStore()
+        #expect(await reloaded.parkedOps.count == 2, "parked writes survive a relaunch")
+        await reloaded.retryParked()
+        #expect(await reloaded.pendingCount == 2)
+        #expect(await reloaded.parkedOps.isEmpty)
+    }
+
+    /// A deploy or restart can answer 500 many times in a minute; that alone never parks a write.
+    @Test func aBurstOfServerErrorsDoesNotPark() async throws {
+        serve(pullRoutes)
+        let store = makeStore()
+        _ = try await store.refresh()
+        offline()
+        await store.enqueue(.updateTodo(createdAt: now, todoId: Self.todoA, patch: TodoPatch(progress: .set(60))))
+        StoreURLProtocol.handler.withLock { $0 = { _ in (503, "Service Unavailable") } }
+
+        for second in 0..<10 {
+            let result = await store.flush(now: now.addingTimeInterval(Double(second) * 5))
+            #expect(result.parked == 0)
+        }
+        #expect(await store.pendingCount == 1)
+        #expect(await store.parkedOps.isEmpty)
+    }
+
     @Test func aWriteFlushedDuringARefreshIsNotRevertedByIt() async throws {
         serve(pullRoutes)
         let store = makeStore()

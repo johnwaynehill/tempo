@@ -16,9 +16,20 @@ router.get('/:id', async (req, res) => {
   res.json(row)
 })
 
+// Idempotent on a client-supplied id, like todos: the iOS app queues creates offline and may
+// resend one whose first response was lost. Same user → 200 with the existing row.
 router.post('/', async (req, res) => {
-  const [row] = await db.insert(schema.habits).values({ ...req.body, userId: req.userId! }).returning()
-  res.status(201).json(row)
+  const [row] = await db.insert(schema.habits)
+    .values({ ...req.body, userId: req.userId! })
+    .onConflictDoNothing({ target: schema.habits.id })
+    .returning()
+  if (row) { res.status(201).json(row); return }
+  const id = (req.body as { id?: unknown } | undefined)?.id
+  if (typeof id === 'string') {
+    const [existing] = await db.select().from(schema.habits).where(eq(schema.habits.id, id))
+    if (existing && existing.userId === req.userId) { res.status(200).json(existing); return }
+  }
+  res.status(409).json({ error: 'A habit with that id already exists' })
 })
 
 router.put('/:id', async (req, res) => {

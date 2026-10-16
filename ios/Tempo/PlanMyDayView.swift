@@ -518,8 +518,8 @@ struct PlanMyDayView: View {
 
     private func goNext() {
         guard step != Step.allCases.last else { return }
-        if step == .checkin, let mood = selectedMood, let client = session.client {
-            Task { try? await client.logMood(value: mood.centerValue) }
+        if step == .checkin, let mood = selectedMood {
+            Task { await model.logMood(value: mood.centerValue, note: nil) }
         }
         step = Step(rawValue: step.rawValue + 1) ?? step
     }

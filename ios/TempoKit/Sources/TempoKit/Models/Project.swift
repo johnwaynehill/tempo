@@ -15,3 +15,15 @@ public struct Project: Codable, Identifiable, Hashable, Sendable {
         self.updatedAt = updatedAt
     }
 }
+
+/// Body for `POST /api/projects`. The id is client-generated so a queued create can be retried
+/// and later ops can refer to the project before the server has seen it.
+public struct ProjectDraft: Codable, Hashable, Sendable {
+    public var id: UUID
+    public var name: String
+
+    public init(id: UUID = UUID(), name: String) {
+        self.id = id
+        self.name = name
+    }
+}

@@ -70,6 +70,11 @@ targets:
         UILaunchScreen: {}
         ITSAppUsesNonExemptEncryption: false
         NSSupportsLiveActivities: true
+        # BackgroundRefresh: an app-refresh task that keeps the widgets' data current.
+        UIBackgroundModes:
+          - fetch
+        BGTaskSchedulerPermittedIdentifiers:
+          - com.johnwaynehill.Tempo.refresh
         # Bundled variable fonts (SIL OFL; licences alongside them in Tempo/Fonts).
         UIAppFonts:
           - "Manrope[wght].ttf"

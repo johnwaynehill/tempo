@@ -166,6 +166,44 @@ extension View {
                 .accessibilityHidden(true)
         )
     }
+
+    /// The same chevron-free push, to an explicit destination (for rows that aren't todos, since
+    /// `UUID` values on these stacks already mean "todo detail").
+    func navigates<Destination: View>(@ViewBuilder to destination: @escaping () -> Destination) -> some View {
+        self.background(
+            NavigationLink(destination: destination) { EmptyView() }
+                .opacity(0)
+                .accessibilityHidden(true)
+        )
+    }
+}
+
+/// Shown while the server keeps failing on some writes (`AppModel.parkedCount`): they're set
+/// aside so everything else syncs, and wait here to be retried or let go.
+struct ParkedWritesBanner: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.parkedCount > 0 {
+            let n = model.parkedCount
+            VStack(alignment: .leading, spacing: Theme.grid) {
+                Text("\(n) change\(n == 1 ? "" : "s") couldn't be saved. The server kept failing on \(n == 1 ? "it" : "them"), so \(n == 1 ? "it's" : "they're") set aside while everything else syncs.")
+                    .font(Theme.font(.footnote))
+                    .foregroundStyle(Theme.onSurface)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: Theme.grid) {
+                    Button("Try again") { Task { await model.retryParked() } }
+                        .buttonStyle(SecondaryButtonStyle())
+                    Button("Discard", role: .destructive) { Task { await model.discardParked() } }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding(Theme.grid * 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.error.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
 }
 
 /// The web's defer presets: 9:00 local on the target morning.
@@ -176,6 +214,17 @@ enum DeferDates {
 
     static func nextWeek(from now: Date = Date(), calendar: Calendar = .current) -> Date {
         morning(of: DayMath.adding(days: 7, to: now, calendar: calendar), calendar: calendar)
+    }
+
+    static func nextMonth(from now: Date = Date(), calendar: Calendar = .current) -> Date {
+        morning(of: calendar.date(byAdding: .month, value: 1, to: now) ?? now, calendar: calendar)
+    }
+
+    /// 9:00 on the coming Monday (a week out if today is Monday), as `ReminderPicker.tsx` does.
+    static func nextMonday(from now: Date = Date(), calendar: Calendar = .current) -> Date {
+        let weekday = calendar.component(.weekday, from: now)  // 1 = Sunday
+        let days = weekday == 1 ? 1 : 9 - weekday
+        return morning(of: DayMath.adding(days: days, to: now, calendar: calendar), calendar: calendar)
     }
 
     private static func morning(of date: Date, calendar: Calendar) -> Date {

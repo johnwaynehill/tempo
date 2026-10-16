@@ -34,6 +34,8 @@ final class AppModel {
 
     /// Writes waiting for the server.
     private(set) var pendingCount = 0
+    /// Writes the server kept failing on, set aside so the rest could sync (`TempoStore.parkedOps`).
+    private(set) var parkedCount = 0
     /// The last flush or refresh could not reach the server.
     private(set) var isOffline = false
 
@@ -43,6 +45,9 @@ final class AppModel {
     private(set) var now = Date()
     /// Set when the Start focus App Intent asks for Focus Mode; Today presents it and clears this.
     var focusRequested = false
+    /// What that Focus Mode should walk instead of Today, in order: the todos a playlist just
+    /// pinned. Today takes it along with `focusRequested`.
+    var focusQueue: [UUID]?
     /// Set when the Add to Tempo widget's `tempo://capture` link opens the app; Inbox focuses
     /// its capture field and clears this. Unlike `focusRequested` this comes from `onOpenURL`
     /// directly (a URL open always happens in-process), never from a standalone intent path.
@@ -63,6 +68,9 @@ final class AppModel {
 
     let calendar: Calendar
     private let store: TempoStore
+    /// The last notes list seen, so the notes screens open offline (read-only: note edits
+    /// aren't in the write queue). Lives beside the store's files for this account.
+    private let notesCacheURL: URL
     private let reminders: ReminderScheduler
     private let activity: TimerActivityController
     private var loadTask: Task<Void, Never>?
@@ -93,7 +101,9 @@ final class AppModel {
         activity: TimerActivityController = TimerActivityController(),
         calendar: Calendar = .autoupdatingCurrent
     ) {
-        self.store = TempoStore(client: client, directory: Self.storeDirectory(for: apiKey), calendar: calendar)
+        let directory = Self.storeDirectory(for: apiKey)
+        self.store = TempoStore(client: client, directory: directory, calendar: calendar)
+        self.notesCacheURL = directory.appendingPathComponent("notes.json")
         self.reminders = reminders
         self.activity = activity
         self.calendar = calendar
@@ -255,6 +265,7 @@ final class AppModel {
     private func initialLoad() async {
         let cached = await store.load()
         pendingCount = await store.pendingCount
+        parkedCount = await store.parkedOps.count
         Self.log.info("load: cached todos=\(cached.todos.count) lastRefresh=\(cached.lastRefresh?.description ?? "nil", privacy: .public) pending=\(self.pendingCount)")
         if cached.lastRefresh != nil {
             apply(cached)
@@ -341,8 +352,10 @@ final class AppModel {
     // MARK: Todo mutations
 
     @discardableResult
-    func createTodo(title: String, status: TodoStatus = .inbox) async -> Todo? {
-        let draft = TodoDraft(id: UUID(), title: title, status: status)
+    func createTodo(
+        title: String, status: TodoStatus = .inbox, project: String? = nil, energyLevel: EnergyLevel? = nil
+    ) async -> Todo? {
+        let draft = TodoDraft(id: UUID(), title: title, status: status, project: project, energyLevel: energyLevel)
         await enqueue(.createTodo(draft: draft))
         return todo(id: draft.id)
     }
@@ -418,6 +431,96 @@ final class AppModel {
         await enqueue(.toggleHabit(habitId: id, date: date, completed: completed))
     }
 
+    func habit(id: UUID) -> Habit? {
+        habits.first { $0.id == id }
+    }
+
+    func createHabit(name: String, description: String?) async {
+        await enqueue(.createHabit(draft: HabitDraft(name: name, description: description)))
+    }
+
+    func updateHabit(id: UUID, name: String, description: String?) async {
+        let trimmed = description?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let patch: Patch<String> = (trimmed?.isEmpty ?? true) ? .null : .set(trimmed!)
+        await enqueue(.updateHabit(habitId: id, update: HabitUpdate(name: name, description: patch)))
+    }
+
+    func deleteHabit(id: UUID) async {
+        await enqueue(.deleteHabit(habitId: id))
+    }
+
+    // MARK: Projects
+
+    var sortedProjects: [Project] {
+        projects.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    func project(id: UUID) -> Project? {
+        projects.first { $0.id == id }
+    }
+
+    func project(named name: String) -> Project? {
+        projects.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Names are unique per user, so an existing name hands back that project instead of a copy.
+    @discardableResult
+    func createProject(name: String) async -> UUID {
+        if let existing = project(named: name) { return existing.id }
+        let draft = ProjectDraft(name: name)
+        await enqueue(.createProject(draft: draft))
+        return draft.id
+    }
+
+    /// Renames the project and every todo carrying it, as the server does.
+    func renameProject(id: UUID, to name: String) async {
+        await enqueue(.renameProject(projectId: id, name: name))
+    }
+
+    /// Clears the project from its todos; the todos themselves stay.
+    func deleteProject(id: UUID) async {
+        await enqueue(.deleteProject(projectId: id))
+    }
+
+    // MARK: Notes
+
+    func cachedNotes() -> [Note]? {
+        guard let data = try? Data(contentsOf: notesCacheURL) else { return nil }
+        return try? TempoJSON.decoder.decode([Note].self, from: data)
+    }
+
+    func cacheNotes(_ notes: [Note]) {
+        guard let data = try? TempoJSON.encoder.encode(notes) else { return }
+        try? FileManager.default.createDirectory(at: notesCacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: notesCacheURL, options: .atomic)
+    }
+
+    /// The server's notes when reachable (refreshing the copy on the phone), otherwise that copy.
+    func loadNotes(client: TempoClient?) async -> (notes: [Note], fromCache: Bool) {
+        if let client, let fresh = try? await client.notes() {
+            cacheNotes(fresh)
+            return (fresh, false)
+        }
+        return (cachedNotes() ?? [], true)
+    }
+
+    // MARK: Mood
+
+    /// A check-in through the write queue, so it's kept when offline and sent once, logged at the
+    /// moment it was made. Returns the entry as the server will store it.
+    @discardableResult
+    func logMood(value: Int, note: String?) async -> MoodEntry {
+        let draft = MoodDraft(value: min(100, max(1, value)), note: note, createdAt: Date(), date: todayString)
+        await enqueue(.logMood(draft: draft))
+        return MoodEntry(draft: draft, userId: preferences?.userId ?? "")
+    }
+
+    // MARK: Preferences
+
+    func updatePreferences(_ update: UserPreferencesUpdate) async {
+        await enqueue(.updatePreferences(update: update))
+    }
+
     // MARK: Session
 
     /// Drops the cache, the queue, the timer, and the Live Activity.
@@ -428,6 +531,7 @@ final class AppModel {
         retryAttempt = 0
         setTimer(.idle)
         await store.signOut()
+        try? FileManager.default.removeItem(at: notesCacheURL)
         // This account's reminders must not keep firing, and writes the widget or share sheet
         // dropped in the shared inbox belong to it, not to whoever signs in next.
         reminders.sync(todos: [])
@@ -443,7 +547,24 @@ final class AppModel {
         preferences = nil
         todaySet = nil
         pendingCount = 0
+        parkedCount = 0
         hasLoaded = false
+    }
+
+    /// Sends the parked writes again, ahead of anything queued since.
+    func retryParked() async {
+        apply(await store.retryParked())
+        pendingCount = await store.pendingCount
+        parkedCount = 0
+        retryAttempt = 0
+        scheduleFlush()
+    }
+
+    /// Gives up on the parked writes; a refresh puts the server's rows back on screen.
+    func discardParked() async {
+        await store.discardParked()
+        parkedCount = 0
+        await reload()
     }
 
     // MARK: Timer
@@ -655,22 +776,29 @@ final class AppModel {
         }
     }
 
-    /// Flushes run one at a time: `TempoStore.flush` is reentrant at its awaits, so two
-    /// overlapping calls could send the same op twice.
+    /// Flushes run one at a time, each chained after the one before it.
+    ///
+    /// This used to be `while let running = flushTask { await running.value }`, clearing the
+    /// task once the caller that started it resumed. When a second caller arrived after the task
+    /// finished but before that first caller got the main actor back, awaiting the finished task
+    /// returned without suspending, so the loop spun on the main actor forever and the first
+    /// caller never ran to clear it: the app froze at 100% CPU. Chaining never waits on anything
+    /// but a strictly earlier task, so it can't spin.
     private func flush() async {
-        while let running = flushTask {
-            await running.value
+        let previous = flushTask
+        let task = Task {
+            await previous?.value
+            await performFlush()
         }
-        let task = Task { await performFlush() }
         flushTask = task
         await task.value
-        if flushTask == task { flushTask = nil }
     }
 
     private func performFlush() async {
         let result = await store.flush()
         pendingCount = await store.pendingCount
-        Self.log.info("flush: sent=\(result.sent) dropped=\(result.dropped) remaining=\(result.remaining) error=\(result.error.map { String(describing: $0) } ?? "none", privacy: .public)")
+        parkedCount = await store.parkedOps.count
+        Self.log.info("flush: sent=\(result.sent) dropped=\(result.dropped) parked=\(result.parked) remaining=\(result.remaining) error=\(result.error.map { String(describing: $0) } ?? "none", privacy: .public)")
         if let flushError = result.error {
             if let apiError = flushError as? TempoAPIError, case .transport = apiError {
                 isOffline = true
@@ -678,7 +806,7 @@ final class AppModel {
                 error = Self.describe(flushError)
             }
             scheduleRetry(after: flushError)
-        } else if result.sent > 0 || result.dropped > 0 {
+        } else if result.sent > 0 || result.dropped > 0 || result.parked > 0 {
             retryAttempt = 0
             retryTask?.cancel()
             // Only a flush that actually reached the server says anything about being

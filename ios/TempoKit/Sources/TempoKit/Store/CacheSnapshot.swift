@@ -86,6 +86,46 @@ extension CacheSnapshot {
             todaySets[date] = TodaySet(userId: preferences?.userId, date: date, todoIds: todoIds, exists: true)
         case .updatePreferences(_, _, let update):
             preferences = (preferences ?? UserPreferences()).applying(update)
+        case .createHabit(_, _, let draft):
+            if !habits.contains(where: { $0.id == draft.id }) {
+                upsert(Habit(
+                    id: draft.id, userId: preferences?.userId ?? "", name: draft.name, description: draft.description,
+                    frequency: draft.frequency, archived: draft.archived, completions: draft.completions,
+                    createdAt: now, updatedAt: now
+                ))
+            }
+        case .updateHabit(_, _, let habitId, let update):
+            if let i = habits.firstIndex(where: { $0.id == habitId }) {
+                if let name = update.name { habits[i].name = name }
+                if let description = update.description { habits[i].description = description.value }
+                if let archived = update.archived { habits[i].archived = archived }
+                habits[i].updatedAt = now
+            }
+        case .deleteHabit(_, _, let habitId):
+            habits.removeAll { $0.id == habitId }
+        case .createProject(_, _, let draft):
+            // Names are unique per user; the server hands back the existing project for a repeat.
+            if !projects.contains(where: { $0.id == draft.id || $0.name == draft.name }) {
+                projects.append(Project(id: draft.id, userId: preferences?.userId ?? "", name: draft.name, createdAt: now, updatedAt: now))
+            }
+        case .renameProject(_, _, let projectId, let name):
+            if let i = projects.firstIndex(where: { $0.id == projectId }) {
+                let old = projects[i].name
+                projects[i].name = name
+                projects[i].updatedAt = now
+                for j in todos.indices where todos[j].project == old { todos[j].project = name }
+            }
+        case .deleteProject(_, _, let projectId):
+            if let i = projects.firstIndex(where: { $0.id == projectId }) {
+                let old = projects[i].name
+                projects.remove(at: i)
+                for j in todos.indices where todos[j].project == old { todos[j].project = nil }
+            }
+        case .logMood(_, _, let draft):
+            // Mood entries aren't cached; the side effect the server applies to habits is.
+            for i in habits.indices where !habits[i].archived && habits[i].name.localizedCaseInsensitiveContains("mood") {
+                habits[i].completions[draft.date] = true
+            }
         }
     }
 }

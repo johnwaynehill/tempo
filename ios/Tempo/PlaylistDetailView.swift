@@ -297,8 +297,10 @@ struct PlaylistDetailView: View {
         starting = .focus
         confirmation = nil
         do {
-            _ = try await client.startPlaylist(id: playlistId)
+            let result = try await client.startPlaylist(id: playlistId)
             await model.reload()
+            // Walk exactly this playlist's steps, in order, not everything on Today.
+            model.focusQueue = result.todoIds
             model.focusRequested = true
         } catch {
             loadError = "Couldn't start that playlist. Try again."

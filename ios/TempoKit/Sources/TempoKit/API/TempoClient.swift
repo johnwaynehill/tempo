@@ -69,6 +69,11 @@ public actor TempoClient {
         return try await request("POST", "/api/mood", body: Body(value: value, note: note))
     }
 
+    /// The queued form: idempotent on `draft.id`, logged at `draft.createdAt`.
+    public func logMood(_ draft: MoodDraft) async throws -> MoodEntry {
+        try await request("POST", "/api/mood", body: draft)
+    }
+
     /// `GET /api/mood?days=N` — entries from the last `days` days, newest first.
     public func moodHistory(days: Int = 7) async throws -> [MoodEntry] {
         try await request("GET", "/api/mood", query: [URLQueryItem(name: "days", value: String(days))])
@@ -112,6 +117,18 @@ public actor TempoClient {
         try await requestList("GET", "/api/habits")
     }
 
+    public func createHabit(_ draft: HabitDraft) async throws -> Habit {
+        try await request("POST", "/api/habits", body: draft)
+    }
+
+    public func updateHabit(id: UUID, _ update: HabitUpdate) async throws -> Habit {
+        try await request("PUT", "/api/habits/\(id.uuidString.lowercased())", body: update)
+    }
+
+    public func deleteHabit(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/habits/\(id.uuidString.lowercased())")
+    }
+
     /// `date` is `yyyy-MM-dd`; the server keys `completions` by that string.
     public func toggleHabit(id: UUID, date: String, completed: Bool) async throws -> Habit {
         struct Body: Encodable { var date: String; var completed: Bool }
@@ -120,6 +137,22 @@ public actor TempoClient {
 
     public func projects() async throws -> [Project] {
         try await requestList("GET", "/api/projects")
+    }
+
+    /// Returns the existing project when one with this name already exists.
+    public func createProject(_ draft: ProjectDraft) async throws -> Project {
+        try await request("POST", "/api/projects", body: draft)
+    }
+
+    /// Renames the todos that carry the old name too.
+    public func renameProject(id: UUID, name: String) async throws -> Project {
+        struct Body: Encodable { var name: String }
+        return try await request("PUT", "/api/projects/\(id.uuidString.lowercased())", body: Body(name: name))
+    }
+
+    /// Clears the project from its todos (they aren't deleted).
+    public func deleteProject(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/projects/\(id.uuidString.lowercased())")
     }
 
     public func playlists() async throws -> [Playlist] {

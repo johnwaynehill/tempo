@@ -25,6 +25,8 @@ final class TodayViewModel {
     /// actually waiting; a quiet offline read needs no banner.
     var showsOfflineBanner: Bool { model.isOffline && model.pendingCount > 0 }
 
+    var parkedCount: Int { model.parkedCount }
+
     // MARK: Timer
 
     var timer: TimerState { model.timer }
