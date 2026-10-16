@@ -438,6 +438,12 @@ final class AppModel {
         await enqueue(.deleteHabit(habitId: id))
     }
 
+    // MARK: Preferences
+
+    func updatePreferences(_ update: UserPreferencesUpdate) async {
+        await enqueue(.updatePreferences(update: update))
+    }
+
     // MARK: Session
 
     /// Drops the cache, the queue, the timer, and the Live Activity.

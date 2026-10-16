@@ -39,6 +39,8 @@ private struct RootView: View {
             }
         }
         .tint(Theme.primary)
+        // The theme preference is shared with the web; System (or no account yet) follows the phone.
+        .preferredColorScheme(model?.preferences?.theme.colorScheme)
         .animation(.easeOut(duration: 0.3), value: session.isSignedIn)
         .onChange(of: session.apiKey, initial: true) { _, _ in
             // One model per signed-in key; signing out drops it and its data.
@@ -81,6 +83,16 @@ private struct RootView: View {
         if IntentDebugLaunch.holdsHost { return }
         #endif
         TempoIntentBridge.host = model
+    }
+}
+
+private extension ThemePreference {
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .light: .light
+        case .dark: .dark
+        case .system: nil
+        }
     }
 }
 
