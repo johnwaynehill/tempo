@@ -1,0 +1,37 @@
+name: Server
+
+# Typecheck the API and the remote MCP server, each only when its own folder changes.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "api/**"
+      - "mcp/**"
+      - ".github/workflows/server.yml"
+  pull_request:
+    paths: *paths
+
+concurrency:
+  group: server-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: [api, mcp]
+    defaults:
+      run:
+        working-directory: ${{ matrix.package }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: ${{ matrix.package }}/package-lock.json
+      - run: npm ci
+      - run: npx tsc --noEmit

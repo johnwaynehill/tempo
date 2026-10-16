@@ -1,0 +1,28 @@
+name: iOS
+
+# TempoKit's tests (models, client, the offline store and sync queue, the logic ports).
+# TempoKit targets macOS 26, so this needs a macOS 26 runner and a Swift 6 toolchain.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "ios/TempoKit/**"
+      - ".github/workflows/ios.yml"
+  pull_request:
+    paths: *paths
+
+concurrency:
+  group: ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tempokit:
+    runs-on: macos-26
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: ios/TempoKit
+    steps:
+      - uses: actions/checkout@v4
+      - run: swift --version
+      - run: swift test
