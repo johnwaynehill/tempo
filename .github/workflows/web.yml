@@ -1,0 +1,35 @@
+name: Web
+
+# Typecheck and build the web app (`tsc -b && vite build`). Lint isn't run yet: the
+# codebase has ~90 existing lint errors to clear first.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "src/**"
+      - "public/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig*.json"
+      - "vite.config.ts"
+      - ".github/workflows/web.yml"
+  pull_request:
+    paths: *paths
+
+concurrency:
+  group: web-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
