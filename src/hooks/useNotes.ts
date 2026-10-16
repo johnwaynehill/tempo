@@ -22,24 +22,24 @@ export function useNotes() {
     [rawNotes],
   )
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['notes'] })
+  const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ['notes'] }), [qc])
 
   const addNote = useCallback(async (title: string, content: string = ''): Promise<string> => {
     const id = uuid()
     await api.notes.create({ id, title, content } as unknown as Record<string, unknown>)
     await invalidate()
     return id
-  }, [])
+  }, [invalidate])
 
   const updateNote = useCallback(async (id: string, updates: Partial<Note>) => {
     await api.notes.update(id, updates as unknown as Record<string, unknown>)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const removeNote = useCallback(async (id: string) => {
     await api.notes.delete(id)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const getNoteById = useCallback((id: string) => notes.find((n) => n.id === id), [notes])
 

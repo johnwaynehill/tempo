@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useEvents } from '@/hooks/useEvents'
 import { useTodos } from '@/hooks/useTodos'
 import {
@@ -22,7 +22,7 @@ export function CalendarPage() {
   const loading = eventsLoading || todosLoading
 
   const [viewDate, setViewDate] = useState(() => new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => new Date())
   const [showEventForm, setShowEventForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
@@ -76,11 +76,6 @@ export function CalendarPage() {
     const key = toISODateString(selectedDate)
     return dayItemsMap[key] ?? { events: [], todos: [] }
   }, [selectedDate, dayItemsMap])
-
-  // Auto-select today on first load
-  useEffect(() => {
-    if (!selectedDate) setSelectedDate(new Date())
-  }, [])
 
   return (
     <div>

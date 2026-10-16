@@ -28,7 +28,7 @@ export function useHabits() {
     [habits],
   )
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['habits'] })
+  const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ['habits'] }), [qc])
 
   const addHabit = useCallback(async (input: AddHabitInput): Promise<string> => {
     const id = uuid()
@@ -38,12 +38,12 @@ export function useHabits() {
     } as unknown as Record<string, unknown>)
     await invalidate()
     return id
-  }, [])
+  }, [invalidate])
 
   const updateHabit = useCallback(async (id: string, updates: Partial<Pick<Habit, 'name' | 'description'>>) => {
     await api.habits.update(id, updates as Record<string, unknown>)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const toggleCompletion = useCallback(async (habitId: string, dateString: string) => {
     const habit = habits.find((h) => h.id === habitId)
@@ -51,17 +51,17 @@ export function useHabits() {
     const isCompleted = habit.completions[dateString]
     await api.habits.toggleCompletion(habitId, dateString, !isCompleted)
     await invalidate()
-  }, [habits])
+  }, [habits, invalidate])
 
   const archiveHabit = useCallback(async (id: string) => {
     await api.habits.update(id, { archived: true })
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const deleteHabit = useCallback(async (id: string) => {
     await api.habits.delete(id)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   return { habits, activeHabits, loading, addHabit, updateHabit, toggleCompletion, archiveHabit, deleteHabit }
 }

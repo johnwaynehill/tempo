@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface DeleteHabitConfirmProps {
   habitName: string
@@ -13,18 +13,19 @@ export function DeleteHabitConfirm({ habitName, onConfirm, onClose }: DeleteHabi
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
+  const handleClose = useCallback(() => {
+    setVisible(false)
+    setTimeout(onClose, 200)
+  }, [onClose])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [handleClose])
 
-  const handleClose = () => {
-    setVisible(false)
-    setTimeout(onClose, 200)
-  }
 
   const handleConfirm = () => {
     onConfirm()

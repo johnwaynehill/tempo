@@ -4,21 +4,18 @@ import { useEffect, useState } from 'react'
 export function OfflineBanner() {
   const online = useOnlineStatus()
   const [showReconnected, setShowReconnected] = useState(false)
-  const [wasOffline, setWasOffline] = useState(false)
+  // Flash "reconnected" when we come back online; going offline hides it.
+  const [prevOnline, setPrevOnline] = useState(online)
+  if (online !== prevOnline) {
+    setPrevOnline(online)
+    setShowReconnected(online)
+  }
 
   useEffect(() => {
-    if (!online) {
-      setWasOffline(true)
-    } else if (wasOffline) {
-      // Just came back online — flash a "reconnected" message
-      setShowReconnected(true)
-      const timer = setTimeout(() => {
-        setShowReconnected(false)
-        setWasOffline(false)
-      }, 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [online, wasOffline])
+    if (!showReconnected) return
+    const timer = setTimeout(() => setShowReconnected(false), 3000)
+    return () => clearTimeout(timer)
+  }, [showReconnected])
 
   if (!online) {
     return (

@@ -52,7 +52,7 @@ export function useTodaySet(
       generatingRef.current = false
       qc.invalidateQueries({ queryKey: ['today-set'] })
     })
-  }, [user, loading, todaySet, todayStr])
+  }, [user, loading, todaySet, todayStr, qc])
 
   // Resolve the daily set IDs to actual todos
   const todayTodos = useMemo(() => {
@@ -86,7 +86,7 @@ export function useTodaySet(
     api.todaySet.update({ date: todaySet.date, todoIds: updatedIds }).then(() => {
       qc.invalidateQueries({ queryKey: ['today-set'] })
     })
-  }, [user, todaySet])
+  }, [user, todaySet, qc])
 
   return { todayTodos, loading, dismissFromSet }
 }

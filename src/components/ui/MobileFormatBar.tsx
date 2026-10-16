@@ -126,6 +126,8 @@ export function MobileFormatBar() {
 
     // Check if already focused
     if (editorRoot.contains(document.activeElement)) {
+      // Syncing with the DOM's focus state as we subscribe, which is what effects are for.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(true)
     }
 

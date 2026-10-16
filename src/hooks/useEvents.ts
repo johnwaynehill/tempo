@@ -26,7 +26,7 @@ export function useEvents() {
     staleTime: 30_000,
   })
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['events'] })
+  const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ['events'] }), [qc])
 
   const addEvent = useCallback(async (input: AddEventInput): Promise<string> => {
     const id = uuid()
@@ -37,7 +37,7 @@ export function useEvents() {
     } as unknown as Record<string, unknown>)
     await invalidate()
     return id
-  }, [])
+  }, [invalidate])
 
   const updateEvent = useCallback(async (id: string, updates: Partial<CalendarEvent>) => {
     const data: Record<string, unknown> = { ...updates }
@@ -46,12 +46,12 @@ export function useEvents() {
     }
     await api.events.update(id, data)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const removeEvent = useCallback(async (id: string) => {
     await api.events.delete(id)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   return { events, loading, addEvent, updateEvent, removeEvent }
 }

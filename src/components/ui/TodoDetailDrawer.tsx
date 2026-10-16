@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import type { Todo } from '@/types'
 import { useTodos } from '@/hooks/useTodos'
 import { useProjects } from '@/hooks/useProjects'
@@ -60,6 +60,12 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
     return () => { document.body.style.overflow = prev }
   }, [])
 
+  const handleClose = useCallback(() => {
+    titleRef.current?.blur()
+    setVisible(false)
+    setTimeout(onClose, 200)
+  }, [onClose])
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -67,13 +73,8 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [handleClose])
 
-  const handleClose = () => {
-    titleRef.current?.blur()
-    setVisible(false)
-    setTimeout(onClose, 200)
-  }
 
   const handleDiscard = () => {
     removeTodo(todo.id)

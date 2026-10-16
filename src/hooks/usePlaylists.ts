@@ -21,9 +21,9 @@ export function usePlaylists() {
     staleTime: 30_000,
   })
 
-  const invalidate = () => {
+  const invalidate = useCallback(() => {
     qc.invalidateQueries({ queryKey: ['playlists'] })
-  }
+  }, [qc])
 
   const addPlaylist = useCallback(async (input: CreatePlaylistInput): Promise<string> => {
     const result = await api.playlists.create(input as unknown as Record<string, unknown>)
@@ -35,17 +35,17 @@ export function usePlaylists() {
     )
     invalidate()
     return created.id
-  }, [qc, user?.uid])
+  }, [qc, user?.uid, invalidate])
 
-  const updatePlaylist = useCallback(async (id: string, data: Partial<Playlist> & { items?: Omit<PlaylistItem, 'id' | 'playlist_id'>[] }) => {
+  const updatePlaylist = useCallback(async (id: string, data: Partial<Omit<Playlist, 'items'>> & { items?: Omit<PlaylistItem, 'id' | 'playlist_id'>[] }) => {
     await api.playlists.update(id, data as unknown as Record<string, unknown>)
     invalidate()
-  }, [])
+  }, [invalidate])
 
   const deletePlaylist = useCallback(async (id: string) => {
     await api.playlists.delete(id)
     invalidate()
-  }, [])
+  }, [invalidate])
 
   /** Pins the playlist's steps to Today, in order. Returns the new todo ids. */
   const startPlaylist = useCallback(async (id: string): Promise<{ todoIds: string[]; count: number }> => {
@@ -53,7 +53,7 @@ export function usePlaylists() {
     qc.invalidateQueries({ queryKey: ['todos'] })
     qc.invalidateQueries({ queryKey: ['today-set'] })
     return result
-  }, [])
+  }, [qc])
 
   return { playlists, loading, addPlaylist, updatePlaylist, deletePlaylist, startPlaylist }
 }

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useTodos, type AddTodoInput } from '@/hooks/useTodos'
 import type { TodoStatus } from '@/types'
 
@@ -10,11 +10,13 @@ export function useNewTodo(defaultStatus: TodoStatus = 'inbox', defaults?: Parti
   const { todos, addTodo, removeTodo } = useTodos()
   const [newTodoId, setNewTodoId] = useState<string | null>(null)
 
-  // Keep refs so callbacks always have fresh data
+  // Keep refs so callbacks always have fresh data (updated after each render commits).
   const todosRef = useRef(todos)
-  todosRef.current = todos
   const defaultsRef = useRef(defaults)
-  defaultsRef.current = defaults
+  useEffect(() => {
+    todosRef.current = todos
+    defaultsRef.current = defaults
+  })
 
   const createTodo = async () => {
     const clean: Record<string, unknown> = {}
