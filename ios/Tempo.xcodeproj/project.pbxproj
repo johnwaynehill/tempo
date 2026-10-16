@@ -54,6 +54,7 @@
 		60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */; };
 		612204B4C806B8211D94E8FC /* FocusModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */; };
 		6330B3C94FECA796E5EC7396 /* TodoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */; };
+		64BAF174B3CA9C32F0C27317 /* BackgroundRefresh.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC293CCEC874826FAF365063 /* BackgroundRefresh.swift */; };
 		65A5BB67D09C48F3D65BAABC /* WhatsOnTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */; };
 		673426200374D1F112C740B3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 38F2793FD244757EE9832938 /* GoogleService-Info.plist */; };
 		676BBA23F84AE161CAC37919 /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
@@ -234,6 +235,7 @@
 		F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareCardView.swift; sourceTree = "<group>"; };
 		F8485AE943E1734EF6FFA512 /* PlaylistsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistsView.swift; sourceTree = "<group>"; };
 		FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = "OFL-Manrope.txt"; sourceTree = "<group>"; };
+		FC293CCEC874826FAF365063 /* BackgroundRefresh.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundRefresh.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -340,6 +342,7 @@
 				7071F5775E773B1CD69A5F52 /* Fonts */,
 				CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */,
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
+				FC293CCEC874826FAF365063 /* BackgroundRefresh.swift */,
 				F36FD1BD076D3B37332369F5 /* BacklogView.swift */,
 				AA0B030392610BC40D148A04 /* BrainDumpView.swift */,
 				48D702CD8C649D33D7F66640 /* Charts.swift */,
@@ -608,6 +611,7 @@
 				27F60790CFCFBC38AB072CDE /* AddTodoIntent.swift in Sources */,
 				3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */,
 				60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */,
+				64BAF174B3CA9C32F0C27317 /* BackgroundRefresh.swift in Sources */,
 				F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */,
 				7A0BC3A6E36F3EF4EC85219E /* BrainDumpView.swift in Sources */,
 				059FE307DB456E18777F2AD2 /* Charts.swift in Sources */,

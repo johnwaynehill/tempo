@@ -11,6 +11,9 @@ struct TempoApp: App {
             RootView()
                 .environment(session)
         }
+        .backgroundTask(.appRefresh(BackgroundRefresh.identifier)) {
+            await BackgroundRefresh.run(session: session)
+        }
     }
 }
 
@@ -48,11 +51,14 @@ private struct RootView: View {
                 let created = AppModel(client: client, apiKey: key)
                 model = created
                 registerIntentHost(created)
+                BackgroundRefresh.model = created
             } else {
                 model = nil
             }
         }
         .onChange(of: scenePhase) { _, phase in
+            // Leaving: ask for a background refresh so the widgets don't go stale.
+            if phase == .background, session.isSignedIn { BackgroundRefresh.schedule() }
             // Back in the foreground: send what's queued, then pull what changed.
             guard phase == .active, let model else { return }
             Task { await model.activate() }
