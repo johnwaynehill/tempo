@@ -99,6 +99,11 @@ private struct TodayContent: View {
                         .transition(.opacity)
                 }
 
+                if model.parkedCount > 0 {
+                    ParkedWritesBanner()
+                        .padding(.bottom, Theme.grid * 2)
+                }
+
                 MoodRow()
                     .padding(.bottom, Theme.grid * 2)
 

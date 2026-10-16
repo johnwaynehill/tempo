@@ -34,6 +34,8 @@ final class AppModel {
 
     /// Writes waiting for the server.
     private(set) var pendingCount = 0
+    /// Writes the server kept failing on, set aside so the rest could sync (`TempoStore.parkedOps`).
+    private(set) var parkedCount = 0
     /// The last flush or refresh could not reach the server.
     private(set) var isOffline = false
 
@@ -255,6 +257,7 @@ final class AppModel {
     private func initialLoad() async {
         let cached = await store.load()
         pendingCount = await store.pendingCount
+        parkedCount = await store.parkedOps.count
         Self.log.info("load: cached todos=\(cached.todos.count) lastRefresh=\(cached.lastRefresh?.description ?? "nil", privacy: .public) pending=\(self.pendingCount)")
         if cached.lastRefresh != nil {
             apply(cached)
@@ -502,7 +505,24 @@ final class AppModel {
         preferences = nil
         todaySet = nil
         pendingCount = 0
+        parkedCount = 0
         hasLoaded = false
+    }
+
+    /// Sends the parked writes again, ahead of anything queued since.
+    func retryParked() async {
+        apply(await store.retryParked())
+        pendingCount = await store.pendingCount
+        parkedCount = 0
+        retryAttempt = 0
+        scheduleFlush()
+    }
+
+    /// Gives up on the parked writes; a refresh puts the server's rows back on screen.
+    func discardParked() async {
+        await store.discardParked()
+        parkedCount = 0
+        await reload()
     }
 
     // MARK: Timer
@@ -735,7 +755,8 @@ final class AppModel {
     private func performFlush() async {
         let result = await store.flush()
         pendingCount = await store.pendingCount
-        Self.log.info("flush: sent=\(result.sent) dropped=\(result.dropped) remaining=\(result.remaining) error=\(result.error.map { String(describing: $0) } ?? "none", privacy: .public)")
+        parkedCount = await store.parkedOps.count
+        Self.log.info("flush: sent=\(result.sent) dropped=\(result.dropped) parked=\(result.parked) remaining=\(result.remaining) error=\(result.error.map { String(describing: $0) } ?? "none", privacy: .public)")
         if let flushError = result.error {
             if let apiError = flushError as? TempoAPIError, case .transport = apiError {
                 isOffline = true
@@ -743,7 +764,7 @@ final class AppModel {
                 error = Self.describe(flushError)
             }
             scheduleRetry(after: flushError)
-        } else if result.sent > 0 || result.dropped > 0 {
+        } else if result.sent > 0 || result.dropped > 0 || result.parked > 0 {
             retryAttempt = 0
             retryTask?.cancel()
             // Only a flush that actually reached the server says anything about being

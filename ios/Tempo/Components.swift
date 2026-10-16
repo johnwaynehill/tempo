@@ -178,6 +178,34 @@ extension View {
     }
 }
 
+/// Shown while the server keeps failing on some writes (`AppModel.parkedCount`): they're set
+/// aside so everything else syncs, and wait here to be retried or let go.
+struct ParkedWritesBanner: View {
+    @Environment(AppModel.self) private var model
+
+    var body: some View {
+        if model.parkedCount > 0 {
+            let n = model.parkedCount
+            VStack(alignment: .leading, spacing: Theme.grid) {
+                Text("\(n) change\(n == 1 ? "" : "s") couldn't be saved. The server kept failing on \(n == 1 ? "it" : "them"), so \(n == 1 ? "it's" : "they're") set aside while everything else syncs.")
+                    .font(Theme.font(.footnote))
+                    .foregroundStyle(Theme.onSurface)
+                    .fixedSize(horizontal: false, vertical: true)
+                HStack(spacing: Theme.grid) {
+                    Button("Try again") { Task { await model.retryParked() } }
+                        .buttonStyle(SecondaryButtonStyle())
+                    Button("Discard", role: .destructive) { Task { await model.discardParked() } }
+                        .buttonStyle(SecondaryButtonStyle())
+                }
+                .buttonStyle(.borderless)
+            }
+            .padding(Theme.grid * 2)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.error.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+    }
+}
+
 /// The web's defer presets: 9:00 local on the target morning.
 enum DeferDates {
     static func tomorrow(from now: Date = Date(), calendar: Calendar = .current) -> Date {

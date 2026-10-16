@@ -49,6 +49,18 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         }
     }
 
+    /// The row this op writes (todo, habit or project), if it writes a single row.
+    public var rowId: UUID? {
+        switch self {
+        case .createHabit(_, _, let draft): draft.id
+        case .toggleHabit(_, _, let habitId, _, _), .updateHabit(_, _, let habitId, _), .deleteHabit(_, _, let habitId): habitId
+        case .createProject(_, _, let draft): draft.id
+        case .renameProject(_, _, let projectId, _), .deleteProject(_, _, let projectId): projectId
+        case .setTodaySet, .updatePreferences: nil
+        default: todoId
+        }
+    }
+
     /// The todo this op touches, if any (a `createTodo` reports the draft's id).
     public var todoId: UUID? {
         switch self {

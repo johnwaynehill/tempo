@@ -16,14 +16,17 @@ public actor TempoStore {
         public var sent: Int
         /// Ops the server rejected (4xx) and that were discarded.
         public var dropped: Int
+        /// Ops set aside this flush because the server kept failing on them (see `parkedOps`).
+        public var parked: Int
         /// Ops still queued, because the flush stopped early.
         public var remaining: Int
         /// Why the flush stopped early (transport or server failure), nil when it ran through.
         public var error: (any Error)?
 
-        public init(sent: Int = 0, dropped: Int = 0, remaining: Int = 0, error: (any Error)? = nil) {
+        public init(sent: Int = 0, dropped: Int = 0, parked: Int = 0, remaining: Int = 0, error: (any Error)? = nil) {
             self.sent = sent
             self.dropped = dropped
+            self.parked = parked
             self.remaining = remaining
             self.error = error
         }
@@ -34,7 +37,22 @@ public actor TempoStore {
     private let calendar: Calendar
     private var cache: CacheSnapshot = .empty
     private var queue: [WriteOp] = []
+    /// Writes the server kept failing on (5xx), set aside so they stop blocking the rest. Kept
+    /// on disk until `retryParked()` or `discardParked()`; their effect is no longer re-applied.
+    private var parked: [WriteOp] = []
+    /// Server failures in a row for the op at the head of the queue, by op id.
+    private var failures: [UUID: FailureRecord] = [:]
     private var loaded = false
+
+    struct FailureRecord: Codable, Hashable {
+        var attempts: Int
+        var since: Date
+    }
+
+    /// An op is parked only after this many 5xx answers in a row…
+    static let parkAfterAttempts = 5
+    /// …spread over at least this long, so a brief outage (a deploy, a restart) never parks anything.
+    static let parkAfterInterval: TimeInterval = 10 * 60
     /// Refresh and flush are mutually exclusive. Both await the network while the actor is free
     /// to run other calls, so without this a refresh whose reads were issued before a write
     /// landed could finish *after* that write's flush, replacing the cache with older server rows
@@ -44,6 +62,8 @@ public actor TempoStore {
 
     private var cacheURL: URL { directory.appendingPathComponent("cache.json") }
     private var queueURL: URL { directory.appendingPathComponent("queue.json") }
+    private var parkedURL: URL { directory.appendingPathComponent("parked.json") }
+    private var failuresURL: URL { directory.appendingPathComponent("failures.json") }
 
     /// - Parameters:
     ///   - directory: Where `cache.json` and `queue.json` live; created on first write.
@@ -80,6 +100,8 @@ public actor TempoStore {
     public func load() -> CacheSnapshot {
         cache = read(CacheSnapshot.self, from: cacheURL) ?? .empty
         queue = readQueue()
+        parked = read([WriteOp].self, from: parkedURL) ?? []
+        failures = read([UUID: FailureRecord].self, from: failuresURL) ?? [:]
         loaded = true
         return cache
     }
@@ -97,6 +119,11 @@ public actor TempoStore {
     public var pendingOps: [WriteOp] {
         loadIfNeeded()
         return queue
+    }
+
+    public var parkedOps: [WriteOp] {
+        loadIfNeeded()
+        return parked
     }
 
     // MARK: Refreshing
@@ -172,9 +199,12 @@ public actor TempoStore {
     /// invalid body) means the server will never take that op, so it is dropped and the rest
     /// continue. Anything that could pass on a retry stops the flush and keeps every op for next
     /// time: no network, 5xx, rate limiting (429/408/425), and 401/403 — a bad or revoked key
-    /// must not wipe unsent work, it should wait for a fresh sign-in. Rows the server returns replace the optimistic ones, and the ops
-    /// still queued are re-applied on top so their effect isn't lost.
-    public func flush() async -> FlushResult {
+    /// must not wipe unsent work, it should wait for a fresh sign-in. The one exception is an op
+    /// the server keeps failing on (5xx at least `parkAfterAttempts` times over at least
+    /// `parkAfterInterval`): it is parked with any later ops on the same row, and the rest carry on.
+    /// Rows the server returns replace the optimistic ones, and the ops still queued are
+    /// re-applied on top so their effect isn't lost.
+    public func flush(now: Date = Date()) async -> FlushResult {
         await acquireGate()
         defer { releaseGate() }
         loadIfNeeded()
@@ -183,11 +213,24 @@ public actor TempoStore {
             do {
                 try await send(op)
                 queue.removeFirst()
+                failures[op.id] = nil
                 result.sent += 1
             } catch let error as TempoAPIError where error.isPermanentRejection {
                 print("TempoStore: dropping \(op.kind) \(op.id) after \(error)")
                 queue.removeFirst()
+                failures[op.id] = nil
                 result.dropped += 1
+            } catch let error as TempoAPIError where error.isServerFailure {
+                var record = failures[op.id] ?? FailureRecord(attempts: 0, since: now)
+                record.attempts += 1
+                failures[op.id] = record
+                guard record.attempts >= Self.parkAfterAttempts,
+                      now.timeIntervalSince(record.since) >= Self.parkAfterInterval else {
+                    result.error = error
+                    break
+                }
+                print("TempoStore: parking \(op.kind) \(op.id) after \(record.attempts) server failures: \(error)")
+                result.parked += parkHead()
             } catch let error as TempoAPIError where error.isDecoding {
                 // The server applied the write and answered with something we can't read;
                 // resending would not help. Drop it and let the next refresh pick up the row.
@@ -205,14 +248,52 @@ public actor TempoStore {
         return result
     }
 
+    /// Sets the head op aside, with every later op on the same row: they were written on top
+    /// of it, and sending them without it would only fail or apply half an edit.
+    private func parkHead() -> Int {
+        let head = queue.removeFirst()
+        var moved = [head]
+        if let row = head.rowId {
+            moved += queue.filter { $0.rowId == row }
+            queue.removeAll { $0.rowId == row }
+        }
+        parked += moved
+        for op in moved { failures[op.id] = nil }
+        return moved.count
+    }
+
+    /// Puts parked writes back at the front of the queue (they're older than anything queued)
+    /// for the next flush, with a clean failure count.
+    @discardableResult
+    public func retryParked() -> CacheSnapshot {
+        loadIfNeeded()
+        queue = parked + queue
+        parked = []
+        reapplyQueue()
+        persist()
+        return cache
+    }
+
+    /// Gives up on parked writes. Their optimistic effect lingers in the cache until the next
+    /// refresh replaces it with the server's rows.
+    public func discardParked() {
+        loadIfNeeded()
+        parked = []
+        persist()
+    }
+
     /// Forgets everything on disk and in memory. Queued writes are lost, so the app
     /// should `flush()` first when it can.
     public func signOut() {
         cache = .empty
         queue = []
+        parked = []
+        failures = [:]
         loaded = true
         try? FileManager.default.removeItem(at: cacheURL)
         try? FileManager.default.removeItem(at: queueURL)
+        try? FileManager.default.removeItem(at: parkedURL)
+        try? FileManager.default.removeItem(at: failuresURL)
     }
 
     // MARK: Applying ops
@@ -301,6 +382,8 @@ public actor TempoStore {
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             try TempoJSON.encoder.encode(cache).write(to: cacheURL, options: .atomic)
             try TempoJSON.encoder.encode(queue).write(to: queueURL, options: .atomic)
+            try TempoJSON.encoder.encode(parked).write(to: parkedURL, options: .atomic)
+            try TempoJSON.encoder.encode(failures).write(to: failuresURL, options: .atomic)
         } catch {
             print("TempoStore: could not persist to \(directory.path): \(error)")
         }
@@ -313,6 +396,12 @@ extension TempoAPIError {
     /// 429) clear up on their own or after a sign-in, and a 404 only counts when it came from the
     /// API itself (`{"error": …}`) — a hosting-layer 404 during a deploy gap says nothing about
     /// the row.
+    /// The server failed on its side (5xx). Usually passes on a retry; see `parkAfterAttempts`.
+    var isServerFailure: Bool {
+        guard case .http(let status, _) = self else { return false }
+        return status >= 500
+    }
+
     var isPermanentRejection: Bool {
         guard case .http(let status, let body) = self else { return false }
         switch status {

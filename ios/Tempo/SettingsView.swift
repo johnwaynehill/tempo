@@ -46,6 +46,11 @@ struct SettingsView: View {
                 .cardRow()
             }
 
+            if model.parkedCount > 0 {
+                ParkedWritesBanner()
+                    .cardRow()
+            }
+
             SectionLabel(text: "Planning")
                 .plainRow(top: Theme.grid * 2, bottom: Theme.grid)
             planningCard
