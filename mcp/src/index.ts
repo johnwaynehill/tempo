@@ -92,6 +92,25 @@ if (STDIO_MODE) {
   // Session management
   const transports: Record<string, StreamableHTTPServerTransport> = {}
 
+  // Claude.ai never sends DELETE to end a session, so without eviction every
+  // connection stays in memory (~2 MB each) until the next deploy. Sessions idle
+  // longer than this are closed; a client that comes back gets the 404 below
+  // and starts a new session.
+  const SESSION_IDLE_MS = parseInt(process.env.MCP_SESSION_IDLE_MINUTES || '1440', 10) * 60_000
+  const lastSeen = new Map<string, number>()
+  const touch = (sid: string) => lastSeen.set(sid, Date.now())
+
+  setInterval(() => {
+    const cutoff = Date.now() - SESSION_IDLE_MS
+    for (const [sid, seen] of lastSeen) {
+      if (seen < cutoff) {
+        lastSeen.delete(sid)
+        // close() fires the transport's onclose, which removes it from transports
+        transports[sid]?.close().catch(() => {})
+      }
+    }
+  }, Math.min(SESSION_IDLE_MS, 15 * 60_000)).unref()
+
   // Sessions live in memory, so a restart or redeploy forgets them. The MCP
   // spec says an unknown session ID gets 404, which tells the client to start
   // a new session instead of treating the connection as broken.
@@ -112,18 +131,21 @@ if (STDIO_MODE) {
 
       if (sessionId && transports[sessionId]) {
         transport = transports[sessionId]
+        touch(sessionId)
       } else if (!sessionId && isInitializeRequest(req.body)) {
         transport = new StreamableHTTPServerTransport({
           sessionIdGenerator: () => randomUUID(),
           onsessioninitialized: (id) => {
             transports[id] = transport
+            touch(id)
           },
         })
 
         transport.onclose = () => {
           const sid = transport.sessionId
-          if (sid && transports[sid]) {
+          if (sid) {
             delete transports[sid]
+            lastSeen.delete(sid)
           }
         }
 
@@ -167,6 +189,7 @@ if (STDIO_MODE) {
       sessionNotFound(res)
       return
     }
+    touch(sessionId)
     await transports[sessionId].handleRequest(req, res)
   })
 
