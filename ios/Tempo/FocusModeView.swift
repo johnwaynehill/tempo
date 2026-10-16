@@ -169,8 +169,7 @@ struct FocusModeView: View {
                         showNext.toggle()
                     } label: {
                         if showNext {
-                            (Text("Up next: ").foregroundStyle(Theme.onSurfaceVariant.opacity(0.4))
-                             + Text(next.title).foregroundStyle(Theme.onSurfaceVariant))
+                            Text("\(Text("Up next: ").foregroundStyle(Theme.onSurfaceVariant.opacity(0.4)))\(Text(next.title).foregroundStyle(Theme.onSurfaceVariant))")
                         } else {
                             Text("Peek at what's next")
                                 .foregroundStyle(Theme.onSurfaceVariant.opacity(0.4))

@@ -45,10 +45,11 @@ struct NowCard: View {
                 }
                 .buttonStyle(.plain)
 
-                (Text(TimeMath.formatElapsed(elapsedSeconds))
+                let elapsed = Text(TimeMath.formatElapsed(elapsedSeconds))
                     .foregroundStyle(isOvertime ? Theme.primary : Theme.onSurfaceVariant)
-                 + Text(" / \(TimeMath.formatMinutes(estimateMinutes))")
-                    .foregroundStyle(Theme.onSurfaceVariant.opacity(0.5)))
+                let estimate = Text(" / \(TimeMath.formatMinutes(estimateMinutes))")
+                    .foregroundStyle(Theme.onSurfaceVariant.opacity(0.5))
+                Text("\(elapsed)\(estimate)")
                     .font(Theme.mono(size: 14))
                     .monospacedDigit()
                     .lineLimit(1)
