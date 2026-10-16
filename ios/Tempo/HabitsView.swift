@@ -46,6 +46,27 @@ struct HabitsView: View {
                         .padding(.vertical, -Theme.grid * 6)
                         .plainRow(top: Theme.grid * 2)
                 }
+
+                SectionLabel(text: "Activity")
+                    .plainRow(top: Theme.grid * 3, bottom: Theme.grid)
+                VStack(alignment: .trailing, spacing: Theme.grid * 1.5) {
+                    HabitActivityGrid(habits: habits, calendar: model.calendar)
+                    HStack(spacing: 4) {
+                        Text("Less")
+                        ForEach(0..<4, id: \.self) { level in
+                            RoundedRectangle(cornerRadius: 2, style: .continuous)
+                                .fill(HabitActivityGrid.levelColor(level))
+                                .frame(width: 10, height: 10)
+                        }
+                        Text("More")
+                    }
+                    .font(Theme.font(size: 10))
+                    .foregroundStyle(Theme.onSurfaceVariant.opacity(0.6))
+                    .accessibilityHidden(true)
+                }
+                .padding(Theme.grid * 2)
+                .background(Theme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
+                .cardRow()
             }
         }
         .tempoList()

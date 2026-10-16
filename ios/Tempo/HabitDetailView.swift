@@ -158,8 +158,19 @@ struct HabitDetailView: View {
 
 /// 16 weeks of check-ins, oldest column first, Monday at the top — `ContributionGrid.tsx` for one habit.
 struct HabitActivityGrid: View {
-    let habit: Habit
+    let habits: [Habit]
     let calendar: Calendar
+
+    init(habit: Habit, calendar: Calendar) {
+        self.habits = [habit]
+        self.calendar = calendar
+    }
+
+    /// Every habit at once, shaded by the share done each day, as `useAllHabitsGrid` does.
+    init(habits: [Habit], calendar: Calendar) {
+        self.habits = habits
+        self.calendar = calendar
+    }
 
     private var weeks: [[Date?]] {
         let today = DayMath.startOfDay(Date(), calendar: calendar)
@@ -189,7 +200,22 @@ struct HabitActivityGrid: View {
     }
 
     private func color(for date: Date?) -> Color {
-        guard let date else { return .clear }
-        return habit.isCompleted(on: DayMath.isoDateString(date, calendar: calendar)) ? Theme.primary : Theme.surfaceContainerHigh
+        guard let date, !habits.isEmpty else { return .clear }
+        let key = DayMath.isoDateString(date, calendar: calendar)
+        let done = habits.filter { $0.isCompleted(on: key) }.count
+        guard done > 0 else { return Theme.surfaceContainerHigh }
+        if habits.count == 1 { return Theme.primary }
+        let ratio = Double(done) / Double(habits.count)
+        return Self.levelColor(ratio <= 0.33 ? 1 : ratio <= 0.66 ? 2 : 3)
+    }
+
+    /// `ContributionGrid.tsx`'s four steps: empty, then primary at 25%, 50%, 80%.
+    static func levelColor(_ level: Int) -> Color {
+        switch level {
+        case 1: Theme.primary.opacity(0.25)
+        case 2: Theme.primary.opacity(0.5)
+        case 3: Theme.primary.opacity(0.8)
+        default: Theme.surfaceContainerHigh
+        }
     }
 }
