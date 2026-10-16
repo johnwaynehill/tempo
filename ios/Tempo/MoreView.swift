@@ -13,6 +13,16 @@ struct MoreView: View {
             }
             .cardRow()
 
+            NavigationLink { BrainDumpView() } label: {
+                MoreRow(symbol: "brain", title: "Brain Dump")
+            }
+            .cardRow()
+
+            NavigationLink { CompletedView() } label: {
+                MoreRow(symbol: "checkmark.circle", title: "Completed")
+            }
+            .cardRow()
+
             NavigationLink { PlaylistsView() } label: {
                 MoreRow(symbol: "list.bullet.rectangle", title: "Playlists")
             }
@@ -57,9 +67,6 @@ private struct MoreRow: View {
                 .font(Theme.font(.subheadline, weight: .medium))
                 .foregroundStyle(Theme.onSurface)
             Spacer()
-            Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Theme.onSurfaceVariant.opacity(0.5))
         }
     }
 }

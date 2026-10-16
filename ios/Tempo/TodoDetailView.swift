@@ -279,7 +279,12 @@ struct TodoDetailView: View {
                     .buttonStyle(SecondaryButtonStyle())
                 Button("Add to Today") { finish { await model.pin(id: id) } }
                     .buttonStyle(BarPrimaryButtonStyle())
-            case .backlog, .deferred:
+            case .backlog:
+                Button("Add to Today") { finish { await model.pin(id: id) } }
+                    .buttonStyle(BarPrimaryButtonStyle())
+            case .deferred:
+                Button("Back to Backlog") { Task { await model.restoreFromDefer(id: id) } }
+                    .buttonStyle(SecondaryButtonStyle())
                 Button("Add to Today") { finish { await model.pin(id: id) } }
                     .buttonStyle(BarPrimaryButtonStyle())
             case .todayPinned:
@@ -291,10 +296,12 @@ struct TodoDetailView: View {
                 }
                 .buttonStyle(BarPrimaryButtonStyle())
             case .done:
-                Text("Completed\(todo.completedAt.map { " " + TimeMath.formatClock($0) } ?? "")")
+                Text("Completed \(completedLabel(todo.completedAt))")
                     .font(Theme.font(.subheadline))
                     .foregroundStyle(Theme.onSurfaceVariant)
                     .frame(maxWidth: .infinity, minHeight: 44)
+                Button("Not done") { Task { await model.uncomplete(id: id) } }
+                    .buttonStyle(SecondaryButtonStyle())
             }
         }
         .padding(.horizontal, Theme.grid * 2)
@@ -302,6 +309,16 @@ struct TodoDetailView: View {
         .frame(maxWidth: .infinity)
         .background(.ultraThinMaterial)
         .background(Theme.surface.opacity(0.9))
+    }
+
+    /// "3:14 PM" today, "yesterday 3:14 PM", otherwise "Oct 3, 3:14 PM" — a bare time for a
+    /// completion weeks ago reads as if it happened today.
+    private func completedLabel(_ date: Date?) -> String {
+        guard let date else { return "" }
+        let time = TimeMath.formatClock(date)
+        if model.calendar.isDateInToday(date) { return time }
+        if model.calendar.isDateInYesterday(date) { return "yesterday \(time)" }
+        return "\(date.formatted(.dateTime.month(.abbreviated).day())), \(time)"
     }
 
     private func overflowMenu(_ todo: Todo) -> some View {

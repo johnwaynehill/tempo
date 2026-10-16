@@ -655,16 +655,22 @@ final class AppModel {
         }
     }
 
-    /// Flushes run one at a time: `TempoStore.flush` is reentrant at its awaits, so two
-    /// overlapping calls could send the same op twice.
+    /// Flushes run one at a time, each chained after the one before it.
+    ///
+    /// This used to be `while let running = flushTask { await running.value }`, clearing the
+    /// task once the caller that started it resumed. When a second caller arrived after the task
+    /// finished but before that first caller got the main actor back, awaiting the finished task
+    /// returned without suspending, so the loop spun on the main actor forever and the first
+    /// caller never ran to clear it: the app froze at 100% CPU. Chaining never waits on anything
+    /// but a strictly earlier task, so it can't spin.
     private func flush() async {
-        while let running = flushTask {
-            await running.value
+        let previous = flushTask
+        let task = Task {
+            await previous?.value
+            await performFlush()
         }
-        let task = Task { await performFlush() }
         flushTask = task
         await task.value
-        if flushTask == task { flushTask = nil }
     }
 
     private func performFlush() async {

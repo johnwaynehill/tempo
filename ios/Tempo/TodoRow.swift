@@ -93,7 +93,7 @@ struct TodoRow: View {
 
     private var content: some View {
         VStack(alignment: .leading, spacing: Theme.grid) {
-            Text(todo.title)
+            Text(todo.title.isEmpty ? "Untitled" : todo.title)
                 .font(Theme.font(size: 15))
                 .foregroundStyle(Theme.onSurface)
                 .lineSpacing(3)

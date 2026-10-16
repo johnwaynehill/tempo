@@ -27,6 +27,7 @@
 		28CE6DE00FCF6E4E9945E0EB /* HabitsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D08F9555222BA9FC6A779A05 /* HabitsView.swift */; };
 		2A519594247308AB32A1864D /* Manrope[wght].ttf in Resources */ = {isa = PBXBuildFile; fileRef = 70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */; };
 		2C84E35A2C5CB3973639154F /* HabitsWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = A260F95B8FD0A7E4D1194F98 /* HabitsWidget.swift */; };
+		2E2A27DEA1D7B6B1D643D58D /* CompletedView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82C928AB7903F692851CD131 /* CompletedView.swift */; };
 		30C7A54DAD3F6BC5ACBED8A5 /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		342D1C6FCD8C01DC5047FF55 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
 		38A283033C3D6D54AAD3277E /* TodayViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */; };
@@ -63,6 +64,7 @@
 		715CE20C03A552AC53300B7D /* CompleteActiveTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */; };
 		73E6ABA3094A8D9395B5C909 /* IntentDebugLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C20C14CB884F051584D8475 /* IntentDebugLaunch.swift */; };
 		78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */; };
+		7A0BC3A6E36F3EF4EC85219E /* BrainDumpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0B030392610BC40D148A04 /* BrainDumpView.swift */; };
 		7A96F839E8E755DDDB6C8708 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C145AFC84C18B35767AD25F0 /* PlaylistDetailView.swift */; };
 		7ADFCDA89BF3E229E8E716A8 /* AddTodoIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0C35486C97A88D0AE072700 /* AddTodoIntent.swift */; };
 		7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */ = {isa = PBXBuildFile; fileRef = BB769A084D8E5EDBEEC2949C /* OFL-Inter.txt */; };
@@ -178,6 +180,7 @@
 		70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope[wght].ttf"; sourceTree = "<group>"; };
 		74371ED08F71EA13BDC933C1 /* TempoWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoWidgetsBundle.swift; sourceTree = "<group>"; };
 		751BA7C01657B3A2B0E73F7F /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
+		82C928AB7903F692851CD131 /* CompletedView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletedView.swift; sourceTree = "<group>"; };
 		90644EF8DE480FCBE11068D4 /* WeeklyReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeeklyReviewView.swift; sourceTree = "<group>"; };
 		90A098D118D78BA3A0265147 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		95A0449A5BBE528B535297D6 /* DebugLaunch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugLaunch.swift; sourceTree = "<group>"; };
@@ -187,6 +190,7 @@
 		A260F95B8FD0A7E4D1194F98 /* HabitsWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsWidget.swift; sourceTree = "<group>"; };
 		A7342C30EFD4C6AA621E7EB4 /* TodoRow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoRow.swift; sourceTree = "<group>"; };
 		A8B74A8A4B9456EBA805DF86 /* Inter[opsz,wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Inter[opsz,wght].ttf"; sourceTree = "<group>"; };
+		AA0B030392610BC40D148A04 /* BrainDumpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BrainDumpView.swift; sourceTree = "<group>"; };
 		AD4143A9116E71B967F64B9E /* DebugShareHook.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DebugShareHook.swift; sourceTree = "<group>"; };
 		AE6263597B3354C508BBC7D4 /* Tempo.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Tempo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoDetailView.swift; sourceTree = "<group>"; };
@@ -329,8 +333,10 @@
 				CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */,
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
 				F36FD1BD076D3B37332369F5 /* BacklogView.swift */,
+				AA0B030392610BC40D148A04 /* BrainDumpView.swift */,
 				48D702CD8C649D33D7F66640 /* Charts.swift */,
 				D333CBB10B80C4E808007F90 /* Chip.swift */,
+				82C928AB7903F692851CD131 /* CompletedView.swift */,
 				CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */,
 				F4D130652D396BC200072A61 /* Components.swift */,
 				95A0449A5BBE528B535297D6 /* DebugLaunch.swift */,
@@ -591,9 +597,11 @@
 				3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */,
 				60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */,
 				F3AD16458F42F32D0BD4F1D3 /* BacklogView.swift in Sources */,
+				7A0BC3A6E36F3EF4EC85219E /* BrainDumpView.swift in Sources */,
 				059FE307DB456E18777F2AD2 /* Charts.swift in Sources */,
 				B215D3F82F435885BF6B00AC /* Chip.swift in Sources */,
 				715CE20C03A552AC53300B7D /* CompleteActiveTaskIntent.swift in Sources */,
+				2E2A27DEA1D7B6B1D643D58D /* CompletedView.swift in Sources */,
 				1EF0A65FE16EF6465AA0B1A2 /* CompletionSparkle.swift in Sources */,
 				81B6B74291999DB49918A787 /* Components.swift in Sources */,
 				439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */,
