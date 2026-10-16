@@ -70,7 +70,7 @@ struct InboxView: View {
         .scrollDismissesKeyboard(.interactively)
         .animation(.easeOut(duration: 0.3), value: inbox.map(\.id))
         .refreshable { await model.reload() }
-        .toolbarTitleDisplayMode(.inline)
+        .tabRootChrome()
         .task { await model.loadIfNeeded() }
         .confirmationDialog(
             "Delete \"\(pendingDelete?.title ?? "")\"?",

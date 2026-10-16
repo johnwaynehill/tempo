@@ -2,55 +2,29 @@ import SwiftUI
 import TempoKit
 
 struct TodayView: View {
-    @Environment(Session.self) private var session
     @Environment(AppModel.self) private var model
 
     @State private var showFocus = false
     /// A started playlist's steps, when that's what Focus Mode should walk.
     @State private var focusQueue: [UUID]?
     @State private var showPlan = false
+    @State private var showNew = false
 
     var body: some View {
-        TodayContent(model: TodayViewModel(model: model))
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showPlan = true
-                    } label: {
-                        Image(systemName: "sunrise")
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                    }
-                    .accessibilityLabel("Plan my day")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        focusQueue = nil
-                        showFocus = true
-                    } label: {
-                        Image(systemName: "target")
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                    }
-                    .accessibilityLabel("Focus mode")
-                }
-                ToolbarItem(placement: .topBarTrailing) {
-                    Menu {
-                        if let email = session.me?.email {
-                            Text(email)
-                        }
-                        Button("Sign out", role: .destructive) {
-                            Task {
-                                await model.signOut()
-                                session.signOut()
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "ellipsis")
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                    }
-                    .accessibilityLabel("Menu")
-                }
+        TodayContent(
+            model: TodayViewModel(model: model),
+            onPlan: { showPlan = true },
+            onFocus: {
+                focusQueue = nil
+                showFocus = true
+            },
+            onAdd: { showNew = true }
+        )
+            .tabRootChrome()
+            .sheet(isPresented: $showNew) {
+                NewTodoSheet(status: .todayPinned)
+                    .presentationDetents([.height(220)])
             }
-            .toolbarTitleDisplayMode(.inline)
             .fullScreenCover(isPresented: $showPlan) {
                 PlanMyDayView()
                     .environment(model)
@@ -78,6 +52,9 @@ struct TodayView: View {
 
 private struct TodayContent: View {
     let model: TodayViewModel
+    var onPlan: () -> Void
+    var onFocus: () -> Void
+    var onAdd: () -> Void
 
     /// Light tap when a timer starts from this screen; success when the context menu completes.
     @State private var timerStarts = 0
@@ -93,7 +70,13 @@ private struct TodayContent: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                PageHeader(title: "Today", subtitle: Self.dateFormatter.string(from: Date()))
+                PageHeader(title: "Today", subtitle: Self.dateFormatter.string(from: Date())) {
+                    HeaderActions {
+                        HeaderIconButton(symbol: "sunrise", label: "Plan my day", action: onPlan)
+                        HeaderIconButton(symbol: "target", label: "Focus mode", action: onFocus)
+                        HeaderIconButton(symbol: "plus", label: "New todo for Today", action: onAdd)
+                    }
+                }
                     .padding(.bottom, model.showsOfflineBanner ? Theme.grid : Theme.grid * 3)
 
                 if model.showsOfflineBanner {

@@ -88,15 +88,6 @@ struct SettingsView: View {
                 .settingsCard()
                 .cardRow()
 
-            Button("Sign out", role: .destructive) {
-                Task {
-                    await model.signOut()
-                    session.signOut()
-                }
-            }
-            .font(Theme.font(.subheadline, weight: .medium))
-            .plainRow(top: Theme.grid * 3)
-
             Text(versionLine)
                 .font(Theme.font(.footnote))
                 .foregroundStyle(Theme.onSurfaceVariant)

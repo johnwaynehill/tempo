@@ -53,7 +53,7 @@ struct NewTodoSheet: View {
             }
             .padding(Theme.grid * 2)
             .background(Theme.surface)
-            .navigationTitle(status == .backlog ? "New in Backlog" : "New todo")
+            .navigationTitle(status == .backlog ? "New in Backlog" : status == .todayPinned ? "New for Today" : "New todo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
