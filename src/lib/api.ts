@@ -1,5 +1,6 @@
 import type { AiUsageSummary } from '@/types'
 import { auth } from '@/lib/firebase'
+import { toISODateString } from '@/lib/dateUtils'
 
 // In dev, always go same-origin so requests route through Vite's proxy
 // (see vite.config.ts). The proxy's target is read from VITE_API_URL there.
@@ -155,9 +156,11 @@ export const api = {
     delete: (id: string) => apiFetch<void>(`/api/events/${id}`, { method: 'DELETE' }),
   },
   mood: {
+    // `date` is the local day the server checks off "mood" habits for (its own UTC date
+    // is the wrong day in a US evening).
     log: (data: { value: number; note?: string }) =>
       apiFetch<Record<string, unknown>>('/api/mood', {
-        method: 'POST', body: JSON.stringify(data),
+        method: 'POST', body: JSON.stringify({ ...data, date: toISODateString(new Date()) }),
       }).then(r => fromApi(r, TIMESTAMP_DATES)),
     history: (days = 7) =>
       apiFetch<Record<string, unknown>[]>(`/api/mood?days=${days}`)
