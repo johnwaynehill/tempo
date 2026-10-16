@@ -51,3 +51,41 @@ public struct CacheSnapshot: Codable, Hashable, Sendable {
         }
     }
 }
+
+extension CacheSnapshot {
+    /// Applies a write to the snapshot as if the server had accepted it: the optimistic effect
+    /// the app shows the moment you act. Idempotent, so replaying a queue over rows that already
+    /// carry an op's effect is safe. Also how the widget previews writes still waiting in the
+    /// App Group inbox, so a tap there shows even before the app has been opened to import it.
+    public mutating func apply(_ op: WriteOp) {
+        let now = op.createdAt
+        switch op {
+        case .createTodo(_, _, let draft):
+            upsert(Todo(draft: draft, userId: preferences?.userId ?? "", createdAt: now))
+        case .updateTodo(_, _, let todoId, let patch):
+            if let todo = todo(id: todoId) {
+                upsert(todo.applying(patch, updatedAt: now))
+            }
+        case .completeTodo(_, _, let todoId, let actualMinutes):
+            if var todo = todo(id: todoId) {
+                todo.status = .done
+                todo.completedAt = now
+                todo.updatedAt = now
+                if let actualMinutes { todo.actualMinutes = actualMinutes }
+                upsert(todo)
+            }
+        case .deleteTodo(_, _, let todoId):
+            todos.removeAll { $0.id == todoId }
+        case .toggleHabit(_, _, let habitId, let date, let completed):
+            if let i = habits.firstIndex(where: { $0.id == habitId }) {
+                // The server deletes the key rather than writing false.
+                habits[i].completions[date] = completed ? true : nil
+                habits[i].updatedAt = now
+            }
+        case .setTodaySet(_, _, let date, let todoIds):
+            todaySets[date] = TodaySet(userId: preferences?.userId, date: date, todoIds: todoIds, exists: true)
+        case .updatePreferences(_, _, let update):
+            preferences = (preferences ?? UserPreferences()).applying(update)
+        }
+    }
+}

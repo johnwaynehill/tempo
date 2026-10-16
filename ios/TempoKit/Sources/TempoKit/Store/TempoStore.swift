@@ -35,6 +35,12 @@ public actor TempoStore {
     private var cache: CacheSnapshot = .empty
     private var queue: [WriteOp] = []
     private var loaded = false
+    /// Refresh and flush are mutually exclusive. Both await the network while the actor is free
+    /// to run other calls, so without this a refresh whose reads were issued before a write
+    /// landed could finish *after* that write's flush, replacing the cache with older server rows
+    /// at a moment when the queue (already drained) can no longer reapply it.
+    private var gateHeld = false
+    private var gateWaiters: [CheckedContinuation<Void, Never>] = []
 
     private var cacheURL: URL { directory.appendingPathComponent("cache.json") }
     private var queueURL: URL { directory.appendingPathComponent("queue.json") }
@@ -50,6 +56,22 @@ public actor TempoStore {
         self.calendar = calendar
     }
 
+    private func acquireGate() async {
+        if gateHeld {
+            await withCheckedContinuation { gateWaiters.append($0) }
+        } else {
+            gateHeld = true
+        }
+    }
+
+    private func releaseGate() {
+        if gateWaiters.isEmpty {
+            gateHeld = false
+        } else {
+            gateWaiters.removeFirst().resume()
+        }
+    }
+
     // MARK: Reading
 
     /// Reads both files from disk. `.empty` (and an empty queue) when there is nothing
@@ -57,7 +79,7 @@ public actor TempoStore {
     @discardableResult
     public func load() -> CacheSnapshot {
         cache = read(CacheSnapshot.self, from: cacheURL) ?? .empty
-        queue = read([WriteOp].self, from: queueURL) ?? []
+        queue = readQueue()
         loaded = true
         return cache
     }
@@ -99,6 +121,8 @@ public actor TempoStore {
     }
 
     private func refresh(todayDate: String?) async throws -> CacheSnapshot {
+        await acquireGate()
+        defer { releaseGate() }
         loadIfNeeded()
         async let todos = client.todos()
         async let events = client.events()
@@ -144,12 +168,15 @@ public actor TempoStore {
         return cache
     }
 
-    /// Replays the queue in order. A 4xx means the server will never take that op
-    /// (row gone, bad key, invalid body) so it is dropped and the rest continue; any
-    /// other failure — usually no network — stops the flush and keeps the rest for
-    /// next time. Rows the server returns replace the optimistic ones, and the ops
+    /// Replays the queue in order. A 4xx that says the request itself is wrong (row gone,
+    /// invalid body) means the server will never take that op, so it is dropped and the rest
+    /// continue. Anything that could pass on a retry stops the flush and keeps every op for next
+    /// time: no network, 5xx, rate limiting (429/408/425), and 401/403 — a bad or revoked key
+    /// must not wipe unsent work, it should wait for a fresh sign-in. Rows the server returns replace the optimistic ones, and the ops
     /// still queued are re-applied on top so their effect isn't lost.
     public func flush() async -> FlushResult {
+        await acquireGate()
+        defer { releaseGate() }
         loadIfNeeded()
         var result = FlushResult()
         while let op = queue.first {
@@ -157,7 +184,7 @@ public actor TempoStore {
                 try await send(op)
                 queue.removeFirst()
                 result.sent += 1
-            } catch let error as TempoAPIError where error.isClientError {
+            } catch let error as TempoAPIError where error.isPermanentRejection {
                 print("TempoStore: dropping \(op.kind) \(op.id) after \(error)")
                 queue.removeFirst()
                 result.dropped += 1
@@ -191,35 +218,7 @@ public actor TempoStore {
     // MARK: Applying ops
 
     private func apply(_ op: WriteOp) {
-        let now = op.createdAt
-        switch op {
-        case .createTodo(_, _, let draft):
-            cache.upsert(Todo(draft: draft, userId: cache.preferences?.userId ?? "", createdAt: now))
-        case .updateTodo(_, _, let todoId, let patch):
-            if let todo = cache.todo(id: todoId) {
-                cache.upsert(todo.applying(patch, updatedAt: now))
-            }
-        case .completeTodo(_, _, let todoId, let actualMinutes):
-            if var todo = cache.todo(id: todoId) {
-                todo.status = .done
-                todo.completedAt = now
-                todo.updatedAt = now
-                if let actualMinutes { todo.actualMinutes = actualMinutes }
-                cache.upsert(todo)
-            }
-        case .deleteTodo(_, _, let todoId):
-            cache.todos.removeAll { $0.id == todoId }
-        case .toggleHabit(_, _, let habitId, let date, let completed):
-            if let i = cache.habits.firstIndex(where: { $0.id == habitId }) {
-                // The server deletes the key rather than writing false.
-                cache.habits[i].completions[date] = completed ? true : nil
-                cache.habits[i].updatedAt = now
-            }
-        case .setTodaySet(_, _, let date, let todoIds):
-            cache.todaySets[date] = TodaySet(userId: cache.preferences?.userId, date: date, todoIds: todoIds, exists: true)
-        case .updatePreferences(_, _, let update):
-            cache.preferences = (cache.preferences ?? UserPreferences()).applying(update)
-        }
+        cache.apply(op)
     }
 
     /// Every op is idempotent on the snapshot, so replaying the queue over fresh server
@@ -264,6 +263,18 @@ public actor TempoStore {
         return try? TempoJSON.decoder.decode(type, from: data)
     }
 
+    /// An unreadable `queue.json` holds unsent writes, so it is moved aside rather than treated as
+    /// an empty queue; a schema change or partial write shouldn't silently destroy them.
+    private func readQueue() -> [WriteOp] {
+        guard FileManager.default.fileExists(atPath: queueURL.path) else { return [] }
+        if let ops = read([WriteOp].self, from: queueURL) { return ops }
+        let stamp = Int(Date().timeIntervalSince1970)
+        let aside = directory.appendingPathComponent("queue.unreadable-\(stamp).json")
+        try? FileManager.default.moveItem(at: queueURL, to: aside)
+        print("TempoStore: queue.json was unreadable; kept as \(aside.lastPathComponent)")
+        return []
+    }
+
     /// Best effort: a failed write leaves the in-memory state authoritative and the
     /// previous file intact (`.atomic` writes a temp file and renames it into place).
     private func persist() {
@@ -278,13 +289,26 @@ public actor TempoStore {
 }
 
 extension TempoAPIError {
-    /// The server understood the request and said no; retrying can't change that.
-    var isClientError: Bool {
-        switch self {
-        case .unauthorized: true
-        case .http(let status, _): (400..<500).contains(status)
-        default: false
+    /// The server understood this exact request and refused it; resending it unchanged can't
+    /// help. Deliberately narrow: auth failures (401/403), timeouts and rate limits (408, 425,
+    /// 429) clear up on their own or after a sign-in, and a 404 only counts when it came from the
+    /// API itself (`{"error": …}`) — a hosting-layer 404 during a deploy gap says nothing about
+    /// the row.
+    var isPermanentRejection: Bool {
+        guard case .http(let status, let body) = self else { return false }
+        switch status {
+        case 401, 403, 408, 425, 429: return false
+        case 404: return Self.isAPIErrorBody(body)
+        case 400..<500: return true
+        default: return false
         }
+    }
+
+    private static func isAPIErrorBody(_ body: String) -> Bool {
+        guard let data = body.data(using: .utf8),
+              let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+        else { return false }
+        return object["error"] != nil
     }
 
     var isDecoding: Bool {

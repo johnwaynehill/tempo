@@ -391,6 +391,8 @@ struct TodayWidgetView<StartButton: View, CompleteButton: View>: View {
             ("Tempo", "Open Tempo to sign in.")
         case .notLoaded:
             ("Almost ready", "Open Tempo to load Today.")
+        case .notPlanned:
+            ("Plan your day", "Open Tempo to build today's list.")
         case .empty(let done) where done > 0:
             ("All done", "You knocked out \(done) task\(done == 1 ? "" : "s") today.")
         default:

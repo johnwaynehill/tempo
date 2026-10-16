@@ -34,7 +34,7 @@ public actor TempoClient {
         var query: [URLQueryItem] = []
         if let status { query.append(URLQueryItem(name: "status", value: status.rawValue)) }
         if let since { query.append(URLQueryItem(name: "since", value: TempoJSON.formatDate(since))) }
-        return try await request("GET", "/api/todos", query: query)
+        return try await requestList("GET", "/api/todos", query: query)
     }
 
     public func todo(id: UUID) async throws -> Todo {
@@ -105,11 +105,11 @@ public actor TempoClient {
     // MARK: Events, habits, projects, playlists
 
     public func events() async throws -> [CalendarEvent] {
-        try await request("GET", "/api/events")
+        try await requestList("GET", "/api/events")
     }
 
     public func habits() async throws -> [Habit] {
-        try await request("GET", "/api/habits")
+        try await requestList("GET", "/api/habits")
     }
 
     /// `date` is `yyyy-MM-dd`; the server keys `completions` by that string.
@@ -119,11 +119,11 @@ public actor TempoClient {
     }
 
     public func projects() async throws -> [Project] {
-        try await request("GET", "/api/projects")
+        try await requestList("GET", "/api/projects")
     }
 
     public func playlists() async throws -> [Playlist] {
-        try await request("GET", "/api/playlists")
+        try await requestList("GET", "/api/playlists")
     }
 
     public func createPlaylist(_ draft: PlaylistDraft) async throws -> Playlist {
@@ -259,6 +259,29 @@ public actor TempoClient {
         }
     }
 
+
+    /// A list endpoint, decoded row by row: one row the client can't read (a new enum value, a
+    /// malformed recurrence) is skipped and logged instead of failing the whole response, which
+    /// would freeze the cache on stale data. If rows came back but *none* were readable it still
+    /// throws, since an empty result there would wipe the cache.
+    private func requestList<T: Decodable>(
+        _ method: String, _ path: String, query: [URLQueryItem] = []
+    ) async throws -> [T] {
+        let (data, _) = try await send(try makeRequest(method, path, query: query, body: nil))
+        do {
+            let list = try TempoJSON.decoder.decode(LossyArray<T>.self, from: data)
+            if list.skipped > 0 {
+                print("TempoClient: skipped \(list.skipped) unreadable row(s) from \(path)")
+                if list.elements.isEmpty { throw TempoAPIError.decoding(LossyArray<T>.AllRowsUnreadable()) }
+            }
+            return list.elements
+        } catch let error as TempoAPIError {
+            throw error
+        } catch {
+            throw TempoAPIError.decoding(error)
+        }
+    }
+
     private func requestVoid(_ method: String, _ path: String, query: [URLQueryItem] = [], body: (any Encodable)? = nil) async throws {
         _ = try await send(try makeRequest(method, path, query: query, body: body))
     }
@@ -268,4 +291,26 @@ private struct AnyEncodable: Encodable {
     let value: any Encodable
     init(_ value: any Encodable) { self.value = value }
     func encode(to encoder: Encoder) throws { try value.encode(to: encoder) }
+}
+
+/// Decodes a JSON array, dropping elements that fail instead of failing the array.
+struct LossyArray<Element: Decodable>: Decodable {
+    struct AllRowsUnreadable: Error {}
+    private struct Discard: Decodable { init(from decoder: Decoder) throws {} }
+
+    var elements: [Element] = []
+    var skipped = 0
+
+    init(from decoder: Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        while !container.isAtEnd {
+            if let element = try? container.decode(Element.self) {
+                elements.append(element)
+            } else {
+                skipped += 1
+                // A failed decode doesn't advance the container; consume the bad element.
+                _ = try container.decode(Discard.self)
+            }
+        }
+    }
 }

@@ -37,7 +37,8 @@ struct HabitsWidgetProvider: TimelineProvider {
         Task {
             let now = Date()
             let entry = await HabitsWidgetData.entry(now: now)
-            completion(Timeline(entries: [entry], policy: .after(now.addingTimeInterval(30 * 60))))
+            let nextMidnight = DayMath.adding(days: 1, to: DayMath.startOfDay(now))
+            completion(Timeline(entries: [entry], policy: .after(min(now.addingTimeInterval(30 * 60), nextMidnight))))
         }
     }
 }

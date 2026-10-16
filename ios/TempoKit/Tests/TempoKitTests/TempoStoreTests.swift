@@ -16,6 +16,9 @@ final class StoreURLProtocol: URLProtocol, @unchecked Sendable {
 
     static let handler = Mutex<Handler?>(nil)
     static let requests = Mutex<[Recorded]>([])
+    /// Seconds to hold a response back (without blocking the other requests): lets a test keep one
+    /// read in flight while later writes complete.
+    static let delay = Mutex<@Sendable (Recorded) -> TimeInterval>({ _ in 0 })
 
     override class func canInit(with request: URLRequest) -> Bool { true }
     override class func canonicalRequest(for request: URLRequest) -> URLRequest { request }
@@ -33,10 +36,19 @@ final class StoreURLProtocol: URLProtocol, @unchecked Sendable {
         }
         do {
             let (status, json) = try handler(recorded)
-            let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
-            client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
-            client?.urlProtocol(self, didLoad: Data(json.utf8))
-            client?.urlProtocolDidFinishLoading(self)
+            let deliver = { [self] in
+                let response = HTTPURLResponse(url: request.url!, statusCode: status, httpVersion: "HTTP/1.1", headerFields: ["Content-Type": "application/json"])!
+                client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+                client?.urlProtocol(self, didLoad: Data(json.utf8))
+                client?.urlProtocolDidFinishLoading(self)
+            }
+            let wait = Self.delay.withLock { $0 }(recorded)
+            if wait > 0 {
+                nonisolated(unsafe) let held = deliver
+                DispatchQueue.global().asyncAfter(deadline: .now() + wait) { held() }
+            } else {
+                deliver()
+            }
         } catch {
             client?.urlProtocol(self, didFailWithError: error)
         }
@@ -78,6 +90,7 @@ extension StoreURLProtocol.Recorded: @unchecked Sendable {}
         client = TempoClient(baseURL: URL(string: "https://example.test")!, apiKey: "tk_secret", session: URLSession(configuration: config))
         directory = FileManager.default.temporaryDirectory.appendingPathComponent("TempoStoreTests-\(UUID().uuidString)")
         StoreURLProtocol.requests.withLock { $0 = [] }
+        StoreURLProtocol.delay.withLock { $0 = { _ in 0 } }
         offline()
     }
 
@@ -274,12 +287,90 @@ extension StoreURLProtocol.Recorded: @unchecked Sendable {}
         #expect(requests().map(\.method) == ["DELETE", "PUT"])
         #expect(await store.pendingCount == 0)
 
-        // 401 counts as a client error too.
+    }
+
+    /// Anything that could pass on a retry must keep the queue: a revoked key waits for a new
+    /// sign-in, rate limits and timeouts clear on their own, and a hosting-layer 404 (a deploy
+    /// gap) says nothing about the row. Only the API's own refusals drop an op.
+    @Test(arguments: [
+        (401, #"{"error":"bad key"}"#),
+        (403, #"{"error":"forbidden"}"#),
+        (408, "timeout"),
+        (425, "too early"),
+        (429, #"{"error":"Too many requests"}"#),
+        (404, #"{"status":"error","code":404,"message":"Application not found"}"#),
+    ])
+    func retryableFailuresKeepTheQueue(status: Int, body: String) async throws {
+        serve(pullRoutes)
+        let store = makeStore()
+        _ = try await store.refresh()
+        offline()
         await store.enqueue(.updateTodo(createdAt: now, todoId: Self.todoA, patch: TodoPatch(progress: .set(60))))
-        StoreURLProtocol.handler.withLock { $0 = { _ in (401, #"{"error":"bad key"}"#) } }
-        let unauthorized = await store.flush()
-        #expect(unauthorized.dropped == 1)
+        StoreURLProtocol.handler.withLock { $0 = { _ in (status, body) } }
+
+        let result = await store.flush()
+        #expect(result.dropped == 0)
+        #expect(result.sent == 0)
+        #expect(result.remaining == 1)
+        #expect(result.error != nil)
+        #expect(await store.pendingCount == 1)
+    }
+
+    @Test func aWriteFlushedDuringARefreshIsNotRevertedByIt() async throws {
+        serve(pullRoutes)
+        let store = makeStore()
+        _ = try await store.refresh()
+
+        // The next refresh's todo read is slow and answers with the row as it was before the edit.
+        let routes = pullRoutes
+        let editedRow = todoJSON(id: Self.todoA, title: "Local")
+        StoreURLProtocol.handler.withLock {
+            $0 = { r in
+                if r.method == "PUT" { return (200, editedRow) }
+                return routes["\(r.method) \(r.path)"] ?? (404, #"{"error":"Not found"}"#)
+            }
+        }
+
+        StoreURLProtocol.delay.withLock { $0 = { $0.method == "GET" && $0.path == "/api/todos" ? 0.4 : 0 } }
+        async let refreshed = store.refresh()
+        try await Task.sleep(for: .milliseconds(100))
+        await store.enqueue(.updateTodo(createdAt: now, todoId: Self.todoA, patch: TodoPatch(title: .set("Local"))))
+        async let flushed = store.flush()
+        _ = try await refreshed
+        let result = await flushed
+
+        #expect(result.sent == 1)
         #expect(await store.pendingCount == 0)
+        #expect(await store.snapshot.todo(id: Self.todoA)?.title == "Local")
+    }
+
+    @Test func oneUnreadableRowDoesNotFreezeTheRefresh() async throws {
+        let other = UUID()
+        let bad = todoJSON(id: other, title: "Bad row")
+            .replacingOccurrences(of: #"(?<="status": ")[a-z_]+"#, with: "not_a_status", options: .regularExpression)
+        var routes = pullRoutes
+        routes["GET /api/todos"] = (200, "[\(JSONTests.todoJSON),\(bad)]")
+        serve(routes)
+        let store = makeStore()
+        let snapshot = try await store.refresh()
+        #expect(snapshot.todos.count == 1)
+        #expect(snapshot.todo(id: Self.todoA) != nil)
+
+        // If nothing at all is readable, that is an error, not an empty list to cache.
+        routes["GET /api/todos"] = (200, "[\(bad)]")
+        serve(routes)
+        await #expect(throws: TempoAPIError.self) { _ = try await store.refresh() }
+        #expect(await store.snapshot.todos.count == 1)
+    }
+
+    @Test func anUnreadableQueueFileIsKeptNotDiscarded() async throws {
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try Data("not json".utf8).write(to: directory.appendingPathComponent("queue.json"))
+        let store = makeStore()
+        _ = await store.load()
+        #expect(await store.pendingCount == 0)
+        let kept = try FileManager.default.contentsOfDirectory(atPath: directory.path)
+        #expect(kept.contains { $0.hasPrefix("queue.unreadable-") })
     }
 
     @Test func transportErrorStopsMidQueue() async throws {

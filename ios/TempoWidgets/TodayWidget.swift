@@ -1,4 +1,5 @@
 import SwiftUI
+import TempoKit
 import WidgetKit
 
 /// Home Screen and Lock Screen widget: what's left on Today, or the task on the clock.
@@ -36,7 +37,8 @@ struct TodayWidgetProvider: TimelineProvider {
         Task {
             let now = Date()
             let entries = await TodayWidgetData.timeline(now: now, minutes: 15)
-            completion(Timeline(entries: entries, policy: .after(now.addingTimeInterval(15 * 60))))
+            let nextMidnight = DayMath.adding(days: 1, to: DayMath.startOfDay(now))
+            completion(Timeline(entries: entries, policy: .after(min(now.addingTimeInterval(15 * 60), nextMidnight))))
         }
     }
 }

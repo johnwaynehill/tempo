@@ -162,7 +162,17 @@ private struct TodayContent: View {
             .transition(.opacity)
         }
 
-        if model.todayTodos.isEmpty {
+        if model.todayTodos.isEmpty, model.isResolvingToday {
+            // Cold start or a new day: the morning set hasn't arrived, so "Clear skies" would be a lie.
+            VStack(spacing: Theme.grid * 2) {
+                ProgressView().tint(Theme.onSurfaceVariant)
+                Text("Planning your day…")
+                    .font(Theme.font(.subheadline))
+                    .foregroundStyle(Theme.onSurfaceVariant)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.top, Theme.grid * 8)
+        } else if model.todayTodos.isEmpty {
             let done = model.completedTodayCount
             EmptyState(
                 symbol: "checkmark",
