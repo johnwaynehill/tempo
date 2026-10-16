@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router'
 import { usePlaylists } from '@/hooks/usePlaylists'
 import { formatMinutes, getEstimate } from '@/lib/time'
@@ -20,22 +20,23 @@ export function PlaylistDetailPage() {
   const [saving, setSaving] = useState(false)
   const [starting, setStarting] = useState<'today' | 'focus' | null>(null)
 
-  // Sync from playlist data
-  useEffect(() => {
-    if (playlist && !dirty) {
-      setName(playlist.name)
-      setItems(
-        playlist.items.map((item) => ({
-          title: item.title,
-          sort_order: item.sort_order,
-          size: item.size,
-          energy_level: item.energy_level,
-          estimated_minutes: item.estimated_minutes,
-          project: item.project,
-        })),
-      )
-    }
-  }, [playlist, dirty])
+  // Sync from playlist data whenever a new copy arrives and there are no unsaved edits
+  // (during render, so the form never paints with the previous playlist's values).
+  const [syncedFrom, setSyncedFrom] = useState<typeof playlist>(undefined)
+  if (playlist && !dirty && playlist !== syncedFrom) {
+    setSyncedFrom(playlist)
+    setName(playlist.name)
+    setItems(
+      playlist.items.map((item) => ({
+        title: item.title,
+        sort_order: item.sort_order,
+        size: item.size,
+        energy_level: item.energy_level,
+        estimated_minutes: item.estimated_minutes,
+        project: item.project,
+      })),
+    )
+  }
 
   const handleSave = async () => {
     if (!id || !name.trim()) return
@@ -43,7 +44,7 @@ export function PlaylistDetailPage() {
     await updatePlaylist(id, {
       name: name.trim(),
       items: items.map((item, i) => ({ ...item, sort_order: i })),
-    } as any)
+    })
     setDirty(false)
     setSaving(false)
   }

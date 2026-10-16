@@ -14,8 +14,6 @@ function settle(req: Request, usage: TokenUsage | null): void {
   const charged = usage ?? { input_tokens: estimateInputTokens(req.body), output_tokens: 0 }
   void recordUsage(req.userId, req.aiUsage.date, req.aiUsage.model, charged)
 }
-const ALLOWED_PATHS = ['/v1/messages']
-
 // POST /api/anthropic/v1/messages
 // Proxies to Anthropic API, injecting the API key server-side.
 // Supports streaming (SSE) responses.
@@ -72,7 +70,9 @@ router.post('/v1/messages', async (req: Request, res: Response) => {
         let usage: TokenUsage | null = null
         try {
           usage = (JSON.parse(data) as { usage?: TokenUsage }).usage ?? null
-        } catch {}
+        } catch {
+          // Not JSON: settle() falls back to an input-token estimate.
+        }
         settle(req, usage)
       }
     }

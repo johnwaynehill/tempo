@@ -1,0 +1,34 @@
+name: Lint
+
+# ESLint over the web app, API and MCP sources (one config at the root). Warnings are
+# allowed; errors fail the check.
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - "src/**"
+      - "api/src/**"
+      - "mcp/src/**"
+      - "eslint.config.js"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/lint.yml"
+  pull_request:
+    paths: *paths
+
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint

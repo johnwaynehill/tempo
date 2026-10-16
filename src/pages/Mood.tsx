@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from 'react'
 import { MoodSlider } from '@/components/ui/MoodSlider'
-import { MoodBlob, moodFromValue, MOOD_LABELS } from '@/components/ui/MoodBlob'
+import { MoodBlob } from '@/components/ui/MoodBlob'
+import { moodFromValue, MOOD_LABELS } from '@/lib/mood'
 import { useMood } from '@/hooks/useMood'
 import { MenuButton } from '@/components/ui/MenuButton'
 

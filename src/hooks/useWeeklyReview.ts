@@ -40,7 +40,7 @@ export function useWeeklyReview(weekId: string): UseWeeklyReviewResult {
         })
       }, 500)
     },
-    [user, weekId],
+    [user, weekId, qc],
   )
 
   return { review, loading, saveReflection }

@@ -1,7 +1,6 @@
 name: Web
 
-# Typecheck and build the web app (`tsc -b && vite build`). Lint isn't run yet: the
-# codebase has ~90 existing lint errors to clear first.
+# Typecheck and build the web app (`tsc -b && vite build`). Lint runs in lint.yml.
 on:
   push:
     branches: [main]

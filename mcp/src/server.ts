@@ -499,7 +499,7 @@ export function createServer(apiKey?: string): McpServer {
       })).optional().describe('Replace all items with this list'),
     },
     async ({ id, ...updates }) => {
-      const data: Record<string, unknown> = {}
+      const data: Parameters<typeof api.playlists.update>[1] = {}
       if (updates.name !== undefined) data.name = updates.name
       if (updates.description !== undefined) data.description = updates.description
       if (updates.items !== undefined) {
@@ -512,7 +512,7 @@ export function createServer(apiKey?: string): McpServer {
           sortOrder: i,
         }))
       }
-      const playlist = await api.playlists.update(id, data as any)
+      const playlist = await api.playlists.update(id, data)
       return {
         content: [{ type: 'text', text: `Updated playlist: ${playlist.name} (${playlist.items.length} items)` }],
       }
@@ -558,7 +558,7 @@ export function createServer(apiKey?: string): McpServer {
       note: z.string().optional().describe('Optional short note (max 140 chars)'),
     },
     async ({ value, note }) => {
-      const entry = await api.mood.log({ value: Math.round(value), note })
+      await api.mood.log({ value: Math.round(value), note })
       return {
         content: [{ type: 'text', text: `Logged mood: ${value}/100${note ? ` — "${note}"` : ''}` }],
       }

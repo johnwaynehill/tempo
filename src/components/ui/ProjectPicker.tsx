@@ -30,16 +30,18 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
   const [highlightIndex, setHighlightIndex] = useState(-1)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Reset query + focus the search input when opening
+  // Focus the search input once the sheet has rendered + transitioned in
   useEffect(() => {
-    if (open) {
-      setQuery('')
-      setHighlightIndex(-1)
-      // Defer focus until after the sheet has rendered + transitioned in
-      const t = setTimeout(() => searchInputRef.current?.focus(), 50)
-      return () => clearTimeout(t)
-    }
+    if (!open) return
+    const t = setTimeout(() => searchInputRef.current?.focus(), 50)
+    return () => clearTimeout(t)
   }, [open])
+
+  const openSheet = () => {
+    setQuery('')
+    setHighlightIndex(-1)
+    setOpen(true)
+  }
 
   // Lock body scroll while open
   useEffect(() => {
@@ -120,7 +122,7 @@ export function ProjectPicker({ value, projects, onChange }: ProjectPickerProps)
       <div className="relative w-full">
         <button
           type="button"
-          onClick={() => setOpen(true)}
+          onClick={openSheet}
           className={`w-full bg-surface-container rounded-lg px-3 py-2.5 text-sm min-h-[44px] flex items-center justify-between gap-2 cursor-pointer hover:bg-surface-container-high transition-colors text-left ${
             value ? 'pr-10' : ''
           }`}

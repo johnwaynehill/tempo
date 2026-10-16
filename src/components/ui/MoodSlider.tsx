@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { MoodBlob, moodFromValue, MOOD_LABELS, BLOB_COLORS, type MoodKey } from './MoodBlob'
+import { MoodBlob } from './MoodBlob'
+import { moodFromValue, MOOD_LABELS, BLOB_COLORS, type MoodKey } from '@/lib/mood'
 
 interface MoodSliderProps {
   initialValue?: number

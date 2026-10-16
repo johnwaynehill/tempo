@@ -49,9 +49,12 @@ export function useInsightsData(
   done: Todo[],
   range: { start: Date; end: Date },
 ): InsightsData {
+  // Callers build a fresh range object each render; key the memo on the instants instead.
+  const startMs = range.start.getTime()
+  const endMs = range.end.getTime()
   return useMemo(() => {
-    const rangeStart = startOfDay(range.start)
-    const rangeEnd = endOfDay(range.end)
+    const rangeStart = startOfDay(new Date(startMs))
+    const rangeEnd = endOfDay(new Date(endMs))
 
     // Filter completed todos within range (must have completed_at)
     const inRange = done.filter(
@@ -152,7 +155,7 @@ export function useInsightsData(
 
     let currentStreak = 0
     let bestStreak = 0
-    let streakDay = new Date(today)
+    const streakDay = new Date(today)
 
     // Allow current streak to start from today or yesterday
     if (!completionDays.has(toISODateString(streakDay))) {
@@ -221,5 +224,5 @@ export function useInsightsData(
       topProject,
       calibration,
     }
-  }, [done, range.start.getTime(), range.end.getTime()])
+  }, [done, startMs, endMs])
 }

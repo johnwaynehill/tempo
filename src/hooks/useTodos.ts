@@ -39,7 +39,7 @@ export function useTodos() {
   )
   const done = useMemo(() => todos.filter((t) => t.status === 'done'), [todos])
 
-  const invalidate = () => qc.invalidateQueries({ queryKey: ['todos'] })
+  const invalidate = useCallback(() => qc.invalidateQueries({ queryKey: ['todos'] }), [qc])
 
   // --- Mutations ---
 
@@ -60,7 +60,7 @@ export function useTodos() {
     await api.todos.create(todo as unknown as Record<string, unknown>)
     await invalidate()
     return id
-  }, [])
+  }, [invalidate])
 
   const updateTodo = useCallback(async (id: string, updates: Partial<Todo>) => {
     // Convert undefined values to null for the API
@@ -70,7 +70,7 @@ export function useTodos() {
     }
     await api.todos.update(id, data)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   // Completion is server-side (POST /todos/:id/complete) so the next occurrence
   // of a recurring todo is created the same way for web, iOS and the MCP server.
@@ -79,7 +79,7 @@ export function useTodos() {
     if (extra?.actual_minutes) data.actual_minutes = extra.actual_minutes
     await api.todos.complete(id, data)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const deferTodo = useCallback(async (id: string, until?: Date) => {
     await updateTodo(id, {
@@ -103,7 +103,7 @@ export function useTodos() {
   const removeTodo = useCallback(async (id: string) => {
     await api.todos.delete(id)
     await invalidate()
-  }, [])
+  }, [invalidate])
 
   const uncompleteTodo = useCallback(async (id: string) => {
     await updateTodo(id, { status: 'backlog', completed_at: undefined })

@@ -20,5 +20,17 @@ export default defineConfig([
       ecmaVersion: 2020,
       globals: globals.browser,
     },
+    rules: {
+      // Routes strip client-owned fields with `const { id, userId, ...rest } = req.body`;
+      // an underscore marks a parameter kept for its position.
+      '@typescript-eslint/no-unused-vars': ['error', {
+        ignoreRestSiblings: true,
+        argsIgnorePattern: '^_',
+        varsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_',
+      }],
+      // `declare global { namespace Express { … } }` is how Express's Request is augmented.
+      '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
+    },
   },
 ])

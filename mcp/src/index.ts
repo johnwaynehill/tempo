@@ -2,6 +2,15 @@
 import { randomUUID } from 'node:crypto'
 import cors from 'cors'
 import type { Response } from 'express'
+
+// The key a Claude Code client authenticated with, handed to its MCP server.
+declare global {
+  namespace Express {
+    interface Request {
+      tempoApiKey?: string
+    }
+  }
+}
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js'
@@ -77,7 +86,7 @@ if (STDIO_MODE) {
           headers: { 'X-API-Key': apiKey },
         })
         if (resp.ok) {
-          ;(req as any).tempoApiKey = apiKey
+          req.tempoApiKey = apiKey
           return next()
         }
       } catch { /* fall through to bearer auth */ }
@@ -149,7 +158,7 @@ if (STDIO_MODE) {
           }
         }
 
-        const server = createServer((req as any).tempoApiKey)
+        const server = createServer(req.tempoApiKey)
         await server.connect(transport)
         await transport.handleRequest(req, res, req.body)
         return

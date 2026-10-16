@@ -42,10 +42,9 @@ export function FilterDropdown<T extends string>({
   // Flip horizontally so the menu stays inside the viewport when the trigger
   // is near the right edge.
   useLayoutEffect(() => {
-    if (!open || !buttonRef.current) {
-      setPos(null)
-      return
-    }
+    // Closed: nothing to measure. A stale position is never shown, since the menu only
+    // renders while open and this re-measures before paint on the next open.
+    if (!open || !buttonRef.current) return
     const update = () => {
       const rect = buttonRef.current!.getBoundingClientRect()
       const menuWidth = menuRef.current?.offsetWidth ?? 140

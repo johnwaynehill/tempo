@@ -60,19 +60,17 @@ export function AIChatPage() {
   // Active conversation state + key for re-mounting the chat session
   const [activeConv, setActiveConv] = useState<Conversation | null>(null)
   const [chatKey, setChatKey] = useState(0)
-  const autoLoadedRef = useRef(false)
+  const [autoLoaded, setAutoLoaded] = useState(false)
 
-  // Auto-load most recent today conversation on first load
-  useEffect(() => {
-    if (autoLoadedRef.current || historyLoading) return
+  // Auto-load the most recent today conversation once history arrives (during render, so
+  // the first paint already shows it).
+  if (!autoLoaded && !historyLoading) {
+    setAutoLoaded(true)
     if (mode === 'today' && !initialQuery) {
       const recent = findRecent('today', true)
-      if (recent) {
-        setActiveConv(recent)
-      }
+      if (recent) setActiveConv(recent)
     }
-    autoLoadedRef.current = true
-  }, [historyLoading, mode, initialQuery, findRecent])
+  }
 
   // Build the tool context
   const toolContext: ToolContext = useMemo(

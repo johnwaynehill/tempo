@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 
 interface AddHabitModalProps {
   onSave: (name: string, description?: string) => void
@@ -26,6 +26,11 @@ export function AddHabitModal({
     nameRef.current?.focus()
   }, [])
 
+  const handleClose = useCallback(() => {
+    setVisible(false)
+    setTimeout(onClose, 200)
+  }, [onClose])
+
   // Close on Escape
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -33,12 +38,8 @@ export function AddHabitModal({
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [handleClose])
 
-  const handleClose = () => {
-    setVisible(false)
-    setTimeout(onClose, 200)
-  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

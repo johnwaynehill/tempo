@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { CalendarEvent } from '@/types'
 import type { AddEventInput } from '@/hooks/useEvents'
 
@@ -34,18 +34,19 @@ export function EventFormModal({ date, event, onSave, onClose }: EventFormModalP
     requestAnimationFrame(() => setVisible(true))
   }, [])
 
+  const handleClose = useCallback(() => {
+    setVisible(false)
+    setTimeout(onClose, 200)
+  }, [onClose])
+
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') handleClose()
     }
     window.addEventListener('keydown', handler)
     return () => window.removeEventListener('keydown', handler)
-  }, [])
+  }, [handleClose])
 
-  const handleClose = () => {
-    setVisible(false)
-    setTimeout(onClose, 200)
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -5,22 +5,17 @@ import { db, schema } from '../db/index.js'
 
 const router = Router()
 
+/** A step as clients send it: the row minus what the server fills in. */
+type PlaylistItemInput = Omit<typeof schema.playlistItems.$inferInsert, 'id' | 'playlistId'>
+
 // List all playlists with items
 router.get('/', async (req, res) => {
   const rows = await db.select().from(schema.playlists)
     .where(eq(schema.playlists.userId, req.userId!))
     .orderBy(asc(schema.playlists.name))
 
-  // Fetch items for all playlists
-  const playlistIds = rows.map((r) => r.id)
-  const allItems = playlistIds.length > 0
-    ? await db.select().from(schema.playlistItems)
-        .where(eq(schema.playlistItems.playlistId, rows[0]?.id ?? ''))
-        .orderBy(asc(schema.playlistItems.sortOrder))
-    : []
-
-  // Actually fetch all items for all playlists
-  const itemsByPlaylist: Record<string, typeof allItems> = {}
+  // Items for each playlist, in order
+  const itemsByPlaylist: Record<string, (typeof schema.playlistItems.$inferSelect)[]> = {}
   for (const row of rows) {
     const items = await db.select().from(schema.playlistItems)
       .where(eq(schema.playlistItems.playlistId, row.id))
@@ -62,7 +57,7 @@ router.post('/', async (req, res) => {
   // Insert items if provided
   if (items && Array.isArray(items) && items.length > 0) {
     await db.insert(schema.playlistItems).values(
-      items.map((item: any, i: number) => ({
+      items.map((item: PlaylistItemInput, i: number) => ({
         id: randomUUID(),
         ...item,
         playlistId: row.id,
@@ -96,7 +91,7 @@ router.put('/:id', async (req, res) => {
 
     if (items.length > 0) {
       await db.insert(schema.playlistItems).values(
-        items.map((item: any, i: number) => ({
+        items.map((item: PlaylistItemInput, i: number) => ({
           id: randomUUID(),
           title: item.title,
           size: item.size || null,

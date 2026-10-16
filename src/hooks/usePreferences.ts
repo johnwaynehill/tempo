@@ -44,7 +44,7 @@ export function usePreferences() {
     const merged = { ...preferences, ...updates }
     await api.preferences.update(merged as unknown as Record<string, unknown>)
     qc.invalidateQueries({ queryKey: ['preferences'] })
-  }, [preferences])
+  }, [preferences, qc])
 
   return { preferences, loading, updatePreferences }
 }

@@ -23,7 +23,9 @@ interface MilkdownEditorProps {
 
 function MilkdownInner({ defaultValue, onChange, onCheckboxToggle }: MilkdownEditorProps) {
   const onCheckboxToggleRef = useRef(onCheckboxToggle)
-  onCheckboxToggleRef.current = onCheckboxToggle
+  useEffect(() => {
+    onCheckboxToggleRef.current = onCheckboxToggle
+  })
 
   useEditor((root) => {
     return Editor.make()

@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo } from 'react'
 import { useEvents } from '@/hooks/useEvents'
 import {
   getCalendarGridDays,
@@ -27,7 +27,17 @@ export function CalendarView({ todos, onCompleteTodo, onDeferTodo, initialDate }
   const { events, addEvent, updateEvent, removeEvent } = useEvents()
 
   const [viewDate, setViewDate] = useState(() => initialDate ?? new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(() => initialDate ?? null)
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => initialDate ?? new Date())
+  // Re-focus when deep-linked to a new day while already mounted (adjusted during render,
+  // so there's no extra pass with the old day). `initialDate` is memoized by the caller.
+  const [focusedDate, setFocusedDate] = useState(initialDate)
+  if (initialDate !== focusedDate) {
+    setFocusedDate(initialDate)
+    if (initialDate) {
+      setViewDate(initialDate)
+      setSelectedDate(initialDate)
+    }
+  }
   const [showEventForm, setShowEventForm] = useState(false)
   const [editingEvent, setEditingEvent] = useState<CalendarEvent | null>(null)
 
@@ -81,19 +91,6 @@ export function CalendarView({ todos, onCompleteTodo, onDeferTodo, initialDate }
     const key = toISODateString(selectedDate)
     return dayItemsMap[key] ?? { events: [], todos: [] }
   }, [selectedDate, dayItemsMap])
-
-  // Auto-select today on first load
-  useEffect(() => {
-    if (!selectedDate) setSelectedDate(new Date())
-  }, [])
-
-  // Re-focus when deep-linked to a new day while already mounted.
-  useEffect(() => {
-    if (initialDate) {
-      setViewDate(initialDate)
-      setSelectedDate(initialDate)
-    }
-  }, [initialDate])
 
   return (
     <div>
