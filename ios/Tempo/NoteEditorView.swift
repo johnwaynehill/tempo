@@ -236,10 +236,11 @@ struct NoteEditorView: View {
 
     private func save(_ patch: NotePatch) {
         Task {
-            guard let client = session.client, let idx = notes.firstIndex(where: { $0.id == id }) else { return }
+            guard let client = session.client else { return }
             do {
                 let updated = try await client.updateNote(id: id, patch)
-                notes[idx] = updated
+                // Find the row now: the list may have reloaded (or lost this note) during the await.
+                if let idx = notes.firstIndex(where: { $0.id == id }) { notes[idx] = updated }
                 errorMessage = nil
             } catch {
                 errorMessage = "Couldn't save. Check your connection."
@@ -262,10 +263,10 @@ struct NoteEditorView: View {
 
     private func link(todoId: UUID) async {
         showTodoPicker = false
-        guard let client = session.client, let idx = notes.firstIndex(where: { $0.id == id }) else { return }
+        guard let client = session.client else { return }
         do {
             let updated = try await client.updateNote(id: id, NotePatch(linkedTodoId: .set(todoId)))
-            notes[idx] = updated
+            if let idx = notes.firstIndex(where: { $0.id == id }) { notes[idx] = updated }
             await model.update(todo: todoId, patch: TodoPatch(noteId: .set(id)))
         } catch {
             errorMessage = "Couldn't link that todo."

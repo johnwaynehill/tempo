@@ -8,6 +8,10 @@ struct InboxView: View {
 
     @State private var draft = ""
     @State private var processed = 0
+    @State private var pendingDelete: Todo?
+    /// The field grabs the keyboard when you first land here, not every time you pop back from a
+    /// todo or switch tabs — then it covers the list and its swipe actions.
+    @State private var focusedOnce = false
     @FocusState private var captureFocused: Bool
 
     private var inbox: [Todo] { model.inbox }
@@ -41,7 +45,7 @@ struct InboxView: View {
                 .plainRow()
             } else {
                 ForEach(inbox) { todo in
-                    TodoRow(todo: todo, showEnergy: false)
+                    TodoRow(todo: todo, showEnergy: false, onComplete: { Task { await model.complete(id: todo.id) } })
                         .navigates(to: todo.id)
                         .cardRow()
                         .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -52,7 +56,7 @@ struct InboxView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button("Delete", systemImage: "trash", role: .destructive) {
-                                Task { await model.delete(id: todo.id) }
+                                pendingDelete = todo
                             }
                             .tint(Theme.error)
                             Button("Backlog", systemImage: "list.bullet") {
@@ -68,7 +72,21 @@ struct InboxView: View {
         .refreshable { await model.reload() }
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
-        .onAppear { captureFocused = true }
+        .onAppear {
+            guard !focusedOnce else { return }
+            focusedOnce = true
+            captureFocused = true
+        }
+        .confirmationDialog(
+            "Delete \"\(pendingDelete?.title ?? "")\"?",
+            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let todo = pendingDelete { Task { await model.delete(id: todo.id) } }
+                pendingDelete = nil
+            }
+        }
         .onChange(of: model.captureRequested, initial: true) { _, requested in
             // The Add to Tempo widget asked for capture — refocus even if this tab (and so
             // this view) was already alive and past its one-time onAppear.

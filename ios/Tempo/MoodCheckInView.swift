@@ -6,6 +6,7 @@ import TempoKit
 /// opens the check-in sheet. Refreshes on appear, after a save and when the scene is active.
 struct MoodRow: View {
     @Environment(Session.self) private var session
+    @Environment(AppModel.self) private var model
     @Environment(\.scenePhase) private var scenePhase
 
     @State private var today = MoodTodayModel()
@@ -28,7 +29,11 @@ struct MoodRow: View {
             MoodCheckInSheet(initialValue: today.entry?.value ?? 50) { entry in
                 today.show(entry)
                 saves += 1
-                Task { await today.refresh(client: session.client) }
+                Task {
+                    await today.refresh(client: session.client)
+                    // The server checks off any habit with "mood" in its name; pull that in.
+                    await model.reload()
+                }
             }
             .environment(session)
         }

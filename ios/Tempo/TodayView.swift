@@ -6,10 +6,20 @@ struct TodayView: View {
     @Environment(AppModel.self) private var model
 
     @State private var showFocus = false
+    @State private var showPlan = false
 
     var body: some View {
         TodayContent(model: TodayViewModel(model: model))
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        showPlan = true
+                    } label: {
+                        Image(systemName: "sunrise")
+                            .foregroundStyle(Theme.onSurfaceVariant)
+                    }
+                    .accessibilityLabel("Plan my day")
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         showFocus = true
@@ -38,6 +48,10 @@ struct TodayView: View {
                 }
             }
             .toolbarTitleDisplayMode(.inline)
+            .fullScreenCover(isPresented: $showPlan) {
+                PlanMyDayView()
+                    .environment(model)
+            }
             .fullScreenCover(isPresented: $showFocus) {
                 FocusModeView()
                     .environment(model)
@@ -187,7 +201,8 @@ private struct TodayContent: View {
                     NavigationLink(value: todo.id) {
                         TodoRow(
                             todo: todo,
-                            onStart: model.timer.isActive ? nil : {
+                            // Always offered: starting another task banks the one on the clock.
+                            onStart: {
                                 timerStarts += 1
                                 model.start(id: todo.id)
                             },

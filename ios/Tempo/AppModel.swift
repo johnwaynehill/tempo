@@ -47,6 +47,9 @@ final class AppModel {
     /// its capture field and clears this. Unlike `focusRequested` this comes from `onOpenURL`
     /// directly (a URL open always happens in-process), never from a standalone intent path.
     var captureRequested = false
+    /// Set by screens pushed on another tab (Plan My Day from More) that finish by sending you
+    /// to Today; the tab bar switches and clears it.
+    var todayRequested = false
 
     /// The day a refresh last finished for. Until it matches `todayString`, an empty Today
     /// means "not planned yet", not "nothing to do" — after midnight, or on a cold start before
@@ -188,9 +191,25 @@ final class AppModel {
     }
 
     var inbox: [Todo] { todos.filter { $0.status == .inbox } }
-    var backlog: [Todo] { todos.filter { $0.status == .backlog } }
+    /// Backlog proper, plus anything deferred whose date has passed — it is a candidate again, as
+    /// in the scorer and on the web, so it must be somewhere you can see it.
+    var backlog: [Todo] {
+        let now = Date()
+        return todos.filter { $0.isBacklogCandidate(at: now) }
+    }
+    /// Deferred to a future date: out of every other list until then.
+    var deferredLater: [Todo] {
+        let now = Date()
+        return todos
+            .filter { $0.isDeferred(at: now) }
+            .sorted { ($0.deferUntil ?? .distantFuture) < ($1.deferUntil ?? .distantFuture) }
+    }
+
     var pinned: [Todo] { todos.filter { $0.status == .todayPinned } }
-    var activeHabits: [Habit] { habits.filter { !$0.archived } }
+
+    /// Oldest first, like the web. The API returns habits in no particular order, and each toggle
+    /// rewrites a row, so without a sort the list can reshuffle under your thumb.
+    var activeHabits: [Habit] { habits.filter { !$0.archived }.sorted { $0.createdAt < $1.createdAt } }
     var projectNames: [String] { projects.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending } }
 
     func todo(id: UUID) -> Todo? {
@@ -335,8 +354,25 @@ final class AppModel {
         return todo(id: id)
     }
 
+    /// Completing the task that's on the clock stops the clock and banks the run's minutes, from
+    /// wherever it is completed (a list circle, detail, Focus Mode) — not only from the Now card.
     func complete(id: UUID, actualMinutes: Int? = nil) async {
+        if actualMinutes == nil, timer.activeTaskId == id {
+            await completeActive()
+            return
+        }
         await enqueue(.completeTodo(todoId: id, actualMinutes: actualMinutes))
+    }
+
+    /// Undo for a completion: back to the Backlog with no completion time. (A recurring todo's next
+    /// occurrence, already created by the server, is left alone.)
+    func uncomplete(id: UUID) async {
+        await update(todo: id, patch: TodoPatch(status: .set(.backlog), completedAt: .null))
+    }
+
+    /// A deferred todo, back in the Backlog now.
+    func restoreFromDefer(id: UUID) async {
+        await update(todo: id, patch: TodoPatch(status: .set(.backlog), deferUntil: .null))
     }
 
     func delete(id: UUID) async {
@@ -424,6 +460,8 @@ final class AppModel {
     /// Starts a fresh run on `todoId`, stamping `startedAt` the first time.
     func startTimer(_ todoId: UUID) {
         guard let todo = todo(id: todoId) else { return }
+        // Switching tasks mid-run: record what the outgoing one has so far instead of discarding it.
+        if timer.isActive, timer.activeTaskId != todoId { stopTimer() }
         let start = Date()
         if let patch = TaskTimer.startPatch(for: todo, at: start) {
             Task { await enqueue(.updateTodo(todoId: todoId, patch: patch)) }

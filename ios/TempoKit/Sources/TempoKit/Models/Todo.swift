@@ -346,3 +346,16 @@ extension Todo {
         }
     }
 }
+
+extension Todo {
+    /// Deferred to a date that hasn't arrived yet: kept out of every list until then.
+    public func isDeferred(at now: Date) -> Bool {
+        status == .deferred && (deferUntil.map { $0 > now } ?? false)
+    }
+
+    /// Belongs in the Backlog: the Backlog proper, or a deferral whose date has passed (or that
+    /// never had one) — the scorer treats those as candidates again, so they can't stay hidden.
+    public func isBacklogCandidate(at now: Date) -> Bool {
+        status == .backlog || (status == .deferred && !isDeferred(at: now))
+    }
+}
