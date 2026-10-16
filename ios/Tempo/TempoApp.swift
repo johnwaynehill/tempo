@@ -1,3 +1,4 @@
+import GoogleSignIn
 import SwiftUI
 import TempoKit
 
@@ -55,6 +56,9 @@ private struct RootView: View {
             Task { await model.activate() }
         }
         .onOpenURL { url in
+            // Google Sign-In's redirect back into the app (its own reversed-client-id scheme,
+            // registered alongside `tempo` in Info.plist).
+            if GIDSignIn.sharedInstance.handle(url) { return }
             // The Add to Tempo widget's Home Screen and Lock Screen links, and its own
             // `.widgetURL`. Google Calendar's callback shares the `tempo` scheme but is
             // intercepted by `ASWebAuthenticationSession` before it ever reaches here.

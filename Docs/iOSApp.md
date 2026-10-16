@@ -7,7 +7,7 @@ widget, Siri and Shortcuts capture, and offline that actually works.
 
 **Status:** planned 2026-09-14; decisions confirmed the same day (native SwiftUI,
 pasted API key for v1, own device via Xcode). Phase 0 built 2026-09-14 (PR #125). Phase 1 shipped 2026-09-14 (PR #127). Phase 2 built 2026-09-15: timer as a Live Activity, Now card, Focus Mode, Inbox, Backlog, todo detail, Habits, local notifications, offline cache + write queue (TempoKit at 73 tests).
-Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 shipped 2026-09-18 (PR #131): Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect. The user signed up for the paid Apple Developer Program on 2026-09-18; while it processes, more widgets built 2026-09-18: a large Today widget, a Lock Screen circular complication, an interactive Complete button, and Start Next / Complete Task as Control Center controls (PR #132), then a Habits widget and an Add to Tempo capture widget the same day.
+Decisions originally marked **[you]** are now settled as written. Phase 3 shipped 2026-09-15 (PR #130): share extension, Today widget, App Intents and App Shortcuts, mood check-ins with Apple Health, haptics and sparkle. Phase 4 shipped 2026-09-18 (PR #131): Notes, Playlists, Plan My Day, Insights, Weekly Review, and Google Calendar connect. The user signed up for the paid Apple Developer Program on 2026-09-18; while it processes, more widgets built 2026-09-18: a large Today widget, a Lock Screen circular complication, an interactive Complete button, and Start Next / Complete Task as Control Center controls (PR #132), then a Habits widget and an Add to Tempo capture widget the same day (PR #133). Phase 5 (real accounts, Google Sign-In) built 2026-09-18.
 
 ## Why native, and why now
 
@@ -240,9 +240,34 @@ Effort: L, but every screen is independent and shipped in parallel.
 
 ### Phase 5: real accounts, more screens
 
-Firebase iOS SDK with Google Sign-In, or Better Auth if that migration
-happens first. iPad layout with a sidebar. A Mac build via SwiftUI
-multiplatform, which is mostly free once iPad works.
+**Real accounts built 2026-09-18.** The web app is still on Firebase (no
+Better Auth migration happened), so this is the Firebase iOS SDK with Google
+Sign-In as planned. A new iOS app was registered in the same Firebase
+project (`tempo-b11a9`) via `firebase apps:create`, and its
+`GoogleService-Info.plist` — a client config file, not a secret; Google's own
+docs say it's fine to commit — is checked in at `ios/Tempo/`.
+
+Rather than using a Firebase ID token as the app's day-to-day credential,
+sign-in mints a plain Tempo API key server-side and hands the rest of the app
+exactly what it already knew how to do with one. Concretely: Google Sign-In →
+a Firebase credential → `Auth.auth().signIn(with:)` → that user's Firebase ID
+token authenticates one call to `POST /api/api-keys` (the `authenticate`
+middleware already accepted a Firebase token there, for the web app) → the
+returned key goes through the existing `Session.signIn(apiKey:)` path,
+Keychain and all. The payoff: the widget, share extension and every App
+Intent stay exactly as they were — none of them link Firebase or
+GoogleSignIn, none of them need to refresh an hourly-expiring ID token from a
+few-second background execution budget, and nothing about the offline write
+queue changes. `SignInView` now offers Sign in with Google as the primary
+path, with the pasted-key flow demoted to "Use an API key instead" rather
+than removed — it's still useful for debugging, and it's now the only path
+`TEMPO_DEBUG_STORE_KEY` needs. `Session.signOut()` also signs out of Firebase
+and Google, so a later sign-in offers the account picker again rather than
+silently reusing the session.
+
+iPad layout with a sidebar, and a Mac build via SwiftUI multiplatform (mostly
+free once iPad works), remain unbuilt — real accounts turned out to be worth
+doing on its own first.
 
 ## What this costs
 

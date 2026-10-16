@@ -11,6 +11,15 @@ options:
 packages:
   TempoKit:
     path: TempoKit
+  # Phase 5: real accounts. Only the app target links these — sign-in mints a plain Tempo
+  # API key server-side, so the widget/share extensions and App Intents never need Firebase
+  # or Google Sign-In themselves; they keep reading the shared Keychain exactly as before.
+  Firebase:
+    url: https://github.com/firebase/firebase-ios-sdk
+    from: "11.0.0"
+  GoogleSignIn:
+    url: https://github.com/google/GoogleSignIn-iOS
+    from: "7.1.0"
 
 settings:
   base:
@@ -33,6 +42,10 @@ targets:
       - path: Intents
     dependencies:
       - package: TempoKit
+      - package: Firebase
+        product: FirebaseAuth
+      - package: GoogleSignIn
+        product: GoogleSignIn
       - target: TempoWidgets
       - target: TempoShare
     entitlements:
@@ -73,6 +86,11 @@ targets:
           - CFBundleURLSchemes:
               - tempo
             CFBundleURLName: com.johnwaynehill.Tempo
+          # Google Sign-In's redirect back into the app. Must match GoogleService-Info.plist's
+          # REVERSED_CLIENT_ID exactly — if that file is ever regenerated, update this too.
+          - CFBundleURLSchemes:
+              - com.googleusercontent.apps.346826953536-onn461ejbh918v6n3d8ruj9c9r970dmt
+            CFBundleURLName: com.johnwaynehill.Tempo.google
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.johnwaynehill.Tempo

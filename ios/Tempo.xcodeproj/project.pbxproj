@@ -52,6 +52,7 @@
 		612204B4C806B8211D94E8FC /* FocusModeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */; };
 		6330B3C94FECA796E5EC7396 /* TodoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */; };
 		65A5BB67D09C48F3D65BAABC /* WhatsOnTodayIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */; };
+		673426200374D1F112C740B3 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 38F2793FD244757EE9832938 /* GoogleService-Info.plist */; };
 		676BBA23F84AE161CAC37919 /* WidgetTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37879D7066A981F5542A7570 /* WidgetTheme.swift */; };
 		67FF880C8B7631E10ACB4A96 /* PlaylistsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8485AE943E1734EF6FFA512 /* PlaylistsView.swift */; };
 		680F5CF364C9F8D2A88A02A9 /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A6246B31BA2F1224264AD02 /* Session.swift */; };
@@ -81,6 +82,7 @@
 		A52C8FC7FDF8E563B80C4C86 /* TempoWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 59C09C83F2476D5A09CAA82A /* TempoWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		A7277FBA509E14D51409F377 /* TodayWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFADF7A7117BE4406A3AC01 /* TodayWidgetData.swift */; };
 		ACB4B2F53F75E5139851E818 /* QuickAddWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7BED9FDEE79B17CF0736C24 /* QuickAddWidget.swift */; };
+		AE5314C5233C71D9AC698677 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 1C3A464828B79BB7EAADA0FA /* FirebaseAuth */; };
 		AFC33BF04587985D51B9EF13 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
 		B215D3F82F435885BF6B00AC /* Chip.swift in Sources */ = {isa = PBXBuildFile; fileRef = D333CBB10B80C4E808007F90 /* Chip.swift */; };
 		B26D4CAEE8DF489D3BDA8AC9 /* ShareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5C71775352D4383D2544089 /* ShareViewController.swift */; };
@@ -90,6 +92,7 @@
 		BDA55B7A3D6F37529738901B /* OFL-Manrope.txt in Resources */ = {isa = PBXBuildFile; fileRef = FBE7AE2F0C73A4AD3B8E55BE /* OFL-Manrope.txt */; };
 		C21FAE117A0CD61CE52B196E /* ShareCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F81E589FA987292BE9F6E0C1 /* ShareCardView.swift */; };
 		C4679302F9397F2ACD715070 /* TodayWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC78966D75B91A9E71D0B68 /* TodayWidget.swift */; };
+		C67FE1C0A497FA70E1F5D90C /* GoogleSignIn in Frameworks */ = {isa = PBXBuildFile; productRef = 9B720F2FE247802DD0D79F34 /* GoogleSignIn */; };
 		C6E7FB7242572972CEC89FD2 /* CompleteActiveTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */; };
 		C774856B6C84D2C25404B958 /* TodayWidgetViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = B670F173380610B6BC1FD9D0 /* TodayWidgetViews.swift */; };
 		CAD6AFEF4EA4D90FDC000776 /* AppGroup.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24B7BB8F4F5E8DD3BE17B829 /* AppGroup.swift */; };
@@ -156,6 +159,7 @@
 		270B87214C8958180521CF6C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		37879D7066A981F5542A7570 /* WidgetTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WidgetTheme.swift; sourceTree = "<group>"; };
 		37A7ECCB4658931900F1D758 /* MoodModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoodModel.swift; sourceTree = "<group>"; };
+		38F2793FD244757EE9832938 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		3DC78966D75B91A9E71D0B68 /* TodayWidget.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayWidget.swift; sourceTree = "<group>"; };
 		410E1C43D2E3E7174D34A175 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		4149D5C97800ACA2B665ADA4 /* WhatsOnTodayIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WhatsOnTodayIntent.swift; sourceTree = "<group>"; };
@@ -226,6 +230,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C3624309BEDFA2D7F6E2FCF /* TempoKit in Frameworks */,
+				AE5314C5233C71D9AC698677 /* FirebaseAuth in Frameworks */,
+				C67FE1C0A497FA70E1F5D90C /* GoogleSignIn in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -330,6 +336,7 @@
 				95A0449A5BBE528B535297D6 /* DebugLaunch.swift */,
 				AD4143A9116E71B967F64B9E /* DebugShareHook.swift */,
 				426C4F7D83B2197D9A30C3F2 /* FocusModeView.swift */,
+				38F2793FD244757EE9832938 /* GoogleService-Info.plist */,
 				D08F9555222BA9FC6A779A05 /* HabitsView.swift */,
 				EFBEC45DD7202363CB7A808F /* HealthMoodWriter.swift */,
 				1720DA0DCE4697825E4EBAA6 /* InboxView.swift */,
@@ -415,6 +422,8 @@
 			name = Tempo;
 			packageProductDependencies = (
 				9E8A9F2018543CA0905879C7 /* TempoKit */,
+				1C3A464828B79BB7EAADA0FA /* FirebaseAuth */,
+				9B720F2FE247802DD0D79F34 /* GoogleSignIn */,
 			);
 			productName = Tempo;
 			productReference = AE6263597B3354C508BBC7D4 /* Tempo.app */;
@@ -491,6 +500,8 @@
 			mainGroup = 93935E517C8A0946CFCF7B9D;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
+				9E28DD26F273AA51C8F9C344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+				72008655C0CB12B2F8259835 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */,
 				604807B45F28F35B24B305F7 /* XCLocalSwiftPackageReference "TempoKit" */,
 			);
 			preferredProjectObjectVersion = 77;
@@ -511,6 +522,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */,
+				673426200374D1F112C740B3 /* GoogleService-Info.plist in Resources */,
 				CAFCAD89BA4019D9A6029E60 /* Inter[opsz,wght].ttf in Resources */,
 				2A519594247308AB32A1864D /* Manrope[wght].ttf in Resources */,
 				7C976827DE11AE5955C1FDFB /* OFL-Inter.txt in Resources */,
@@ -941,10 +953,39 @@
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCRemoteSwiftPackageReference section */
+		72008655C0CB12B2F8259835 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/google/GoogleSignIn-iOS";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 7.1.0;
+			};
+		};
+		9E28DD26F273AA51C8F9C344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
 /* Begin XCSwiftPackageProductDependency section */
 		0F2B287CDB50455F97B74F9D /* TempoKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = TempoKit;
+		};
+		1C3A464828B79BB7EAADA0FA /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 9E28DD26F273AA51C8F9C344 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		9B720F2FE247802DD0D79F34 /* GoogleSignIn */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 72008655C0CB12B2F8259835 /* XCRemoteSwiftPackageReference "GoogleSignIn-iOS" */;
+			productName = GoogleSignIn;
 		};
 		9E8A9F2018543CA0905879C7 /* TempoKit */ = {
 			isa = XCSwiftPackageProductDependency;
