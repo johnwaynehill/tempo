@@ -68,6 +68,9 @@ final class AppModel {
 
     let calendar: Calendar
     private let store: TempoStore
+    /// The last notes list seen, so the notes screens open offline (read-only: note edits
+    /// aren't in the write queue). Lives beside the store's files for this account.
+    private let notesCacheURL: URL
     private let reminders: ReminderScheduler
     private let activity: TimerActivityController
     private var loadTask: Task<Void, Never>?
@@ -98,7 +101,9 @@ final class AppModel {
         activity: TimerActivityController = TimerActivityController(),
         calendar: Calendar = .autoupdatingCurrent
     ) {
-        self.store = TempoStore(client: client, directory: Self.storeDirectory(for: apiKey), calendar: calendar)
+        let directory = Self.storeDirectory(for: apiKey)
+        self.store = TempoStore(client: client, directory: directory, calendar: calendar)
+        self.notesCacheURL = directory.appendingPathComponent("notes.json")
         self.reminders = reminders
         self.activity = activity
         self.calendar = calendar
@@ -477,6 +482,28 @@ final class AppModel {
         await enqueue(.deleteProject(projectId: id))
     }
 
+    // MARK: Notes
+
+    func cachedNotes() -> [Note]? {
+        guard let data = try? Data(contentsOf: notesCacheURL) else { return nil }
+        return try? TempoJSON.decoder.decode([Note].self, from: data)
+    }
+
+    func cacheNotes(_ notes: [Note]) {
+        guard let data = try? TempoJSON.encoder.encode(notes) else { return }
+        try? FileManager.default.createDirectory(at: notesCacheURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try? data.write(to: notesCacheURL, options: .atomic)
+    }
+
+    /// The server's notes when reachable (refreshing the copy on the phone), otherwise that copy.
+    func loadNotes(client: TempoClient?) async -> (notes: [Note], fromCache: Bool) {
+        if let client, let fresh = try? await client.notes() {
+            cacheNotes(fresh)
+            return (fresh, false)
+        }
+        return (cachedNotes() ?? [], true)
+    }
+
     // MARK: Mood
 
     /// A check-in through the write queue, so it's kept when offline and sent once, logged at the
@@ -504,6 +531,7 @@ final class AppModel {
         retryAttempt = 0
         setTimer(.idle)
         await store.signOut()
+        try? FileManager.default.removeItem(at: notesCacheURL)
         // This account's reminders must not keep firing, and writes the widget or share sheet
         // dropped in the shared inbox belong to it, not to whoever signs in next.
         reminders.sync(todos: [])

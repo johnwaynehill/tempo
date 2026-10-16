@@ -441,8 +441,7 @@ struct TodoDetailView: View {
     }
 
     private func loadNotes() async {
-        guard let client = session.client else { return }
-        if let fetched = try? await client.notes() { notes = fetched }
+        notes = await model.loadNotes(client: session.client).notes
         notesLoaded = true
     }
 

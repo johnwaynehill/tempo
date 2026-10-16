@@ -16,10 +16,13 @@ private struct NoteRoute: Hashable {
 /// how `MoodModel` manages its own small slice of state).
 struct NotesListView: View {
     @Environment(Session.self) private var session
+    @Environment(AppModel.self) private var model
 
     @State private var notes: [Note] = []
     @State private var hasLoaded = false
     @State private var error: String?
+    /// Showing the phone's copy because the server couldn't be reached. Not an error, so it's quiet.
+    @State private var offlineNote: String?
     @State private var creating = false
     @State private var selectedNote: NoteRoute?
 
@@ -43,6 +46,11 @@ struct NotesListView: View {
                 Text(error)
                     .font(Theme.font(.footnote))
                     .foregroundStyle(Theme.error)
+                    .plainRow(bottom: Theme.grid)
+            } else if let offlineNote {
+                Text(offlineNote)
+                    .font(Theme.font(.footnote))
+                    .foregroundStyle(Theme.onSurfaceVariant)
                     .plainRow(bottom: Theme.grid)
             }
 
@@ -78,6 +86,10 @@ struct NotesListView: View {
         // or delete edit landed straight in the shared `notes` binding — still catches
         // this list up if it was ever out of sync, and the first appearance loads too.
         .onAppear { Task { await load() } }
+        // Keeps the phone's copy current with edits made in the editor.
+        .onChange(of: notes) { _, latest in
+            if hasLoaded, !latest.isEmpty { model.cacheNotes(latest) }
+        }
         .refreshable { await load() }
     }
 
@@ -116,13 +128,21 @@ struct NotesListView: View {
         .cardRow()
     }
 
+    /// Shows the copy on the phone at once, then the server's list; offline, the copy stays.
     private func load() async {
-        guard let client = session.client else { hasLoaded = true; return }
-        do {
-            notes = try await client.notes()
+        if notes.isEmpty, let cached = model.cachedNotes() {
+            notes = cached
+            hasLoaded = true
+        }
+        let result = await model.loadNotes(client: session.client)
+        if result.fromCache {
+            if notes.isEmpty { notes = result.notes }
+            error = notes.isEmpty ? "Couldn't load notes. Pull to refresh to try again." : nil
+            offlineNote = notes.isEmpty ? nil : "Offline. These are the notes saved on this phone; edits need a connection."
+        } else {
+            notes = result.notes
             error = nil
-        } catch {
-            self.error = "Couldn't load notes. Pull to refresh to try again."
+            offlineNote = nil
         }
         hasLoaded = true
     }
