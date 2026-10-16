@@ -103,6 +103,24 @@ extension CacheSnapshot {
             }
         case .deleteHabit(_, _, let habitId):
             habits.removeAll { $0.id == habitId }
+        case .createProject(_, _, let draft):
+            // Names are unique per user; the server hands back the existing project for a repeat.
+            if !projects.contains(where: { $0.id == draft.id || $0.name == draft.name }) {
+                projects.append(Project(id: draft.id, userId: preferences?.userId ?? "", name: draft.name, createdAt: now, updatedAt: now))
+            }
+        case .renameProject(_, _, let projectId, let name):
+            if let i = projects.firstIndex(where: { $0.id == projectId }) {
+                let old = projects[i].name
+                projects[i].name = name
+                projects[i].updatedAt = now
+                for j in todos.indices where todos[j].project == old { todos[j].project = name }
+            }
+        case .deleteProject(_, _, let projectId):
+            if let i = projects.firstIndex(where: { $0.id == projectId }) {
+                let old = projects[i].name
+                projects.remove(at: i)
+                for j in todos.indices where todos[j].project == old { todos[j].project = nil }
+            }
         }
     }
 }

@@ -256,6 +256,18 @@ public actor TempoStore {
         case .deleteHabit(_, _, let habitId):
             try await client.deleteHabit(id: habitId)
             cache.habits.removeAll { $0.id == habitId }
+        case .createProject(_, _, let draft):
+            let row = try await client.createProject(draft)
+            // A name that already existed comes back under the server's id, not the draft's.
+            cache.projects.removeAll { $0.id == draft.id || $0.id == row.id }
+            cache.projects.append(row)
+        case .renameProject(_, _, let projectId, let name):
+            let row = try await client.renameProject(id: projectId, name: name)
+            cache.apply(op)  // carries the rename onto the cached todos, as the server just did
+            if let i = cache.projects.firstIndex(where: { $0.id == row.id }) { cache.projects[i] = row }
+        case .deleteProject(_, _, let projectId):
+            try await client.deleteProject(id: projectId)
+            cache.apply(op)
         }
     }
 
@@ -338,6 +350,9 @@ extension WriteOp {
         case .createHabit: "createHabit"
         case .updateHabit: "updateHabit"
         case .deleteHabit: "deleteHabit"
+        case .createProject: "createProject"
+        case .renameProject: "renameProject"
+        case .deleteProject: "deleteProject"
         }
     }
 }

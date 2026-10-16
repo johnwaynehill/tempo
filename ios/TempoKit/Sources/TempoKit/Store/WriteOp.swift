@@ -20,6 +20,11 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
     case createHabit(id: UUID = UUID(), createdAt: Date = Date(), draft: HabitDraft)
     case updateHabit(id: UUID = UUID(), createdAt: Date = Date(), habitId: UUID, update: HabitUpdate)
     case deleteHabit(id: UUID = UUID(), createdAt: Date = Date(), habitId: UUID)
+    case createProject(id: UUID = UUID(), createdAt: Date = Date(), draft: ProjectDraft)
+    /// The server renames every todo carrying the old name too.
+    case renameProject(id: UUID = UUID(), createdAt: Date = Date(), projectId: UUID, name: String)
+    /// The server clears the project from its todos; the todos stay.
+    case deleteProject(id: UUID = UUID(), createdAt: Date = Date(), projectId: UUID)
 
     /// The op's own id, not the id of the row it touches.
     public var id: UUID {
@@ -27,7 +32,8 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         case .createTodo(let id, _, _), .updateTodo(let id, _, _, _), .completeTodo(let id, _, _, _),
              .deleteTodo(let id, _, _), .toggleHabit(let id, _, _, _, _), .setTodaySet(let id, _, _, _),
              .updatePreferences(let id, _, _), .createHabit(let id, _, _), .updateHabit(let id, _, _, _),
-             .deleteHabit(let id, _, _):
+             .deleteHabit(let id, _, _), .createProject(let id, _, _), .renameProject(let id, _, _, _),
+             .deleteProject(let id, _, _):
             id
         }
     }
@@ -37,7 +43,8 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         case .createTodo(_, let at, _), .updateTodo(_, let at, _, _), .completeTodo(_, let at, _, _),
              .deleteTodo(_, let at, _), .toggleHabit(_, let at, _, _, _), .setTodaySet(_, let at, _, _),
              .updatePreferences(_, let at, _), .createHabit(_, let at, _), .updateHabit(_, let at, _, _),
-             .deleteHabit(_, let at, _):
+             .deleteHabit(_, let at, _), .createProject(_, let at, _), .renameProject(_, let at, _, _),
+             .deleteProject(_, let at, _):
             at
         }
     }
@@ -47,7 +54,8 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         switch self {
         case .createTodo(_, _, let draft): draft.id
         case .updateTodo(_, _, let todoId, _), .completeTodo(_, _, let todoId, _), .deleteTodo(_, _, let todoId): todoId
-        case .toggleHabit, .setTodaySet, .updatePreferences, .createHabit, .updateHabit, .deleteHabit: nil
+        case .toggleHabit, .setTodaySet, .updatePreferences, .createHabit, .updateHabit, .deleteHabit,
+             .createProject, .renameProject, .deleteProject: nil
         }
     }
 }

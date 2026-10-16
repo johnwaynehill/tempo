@@ -134,6 +134,22 @@ public actor TempoClient {
         try await requestList("GET", "/api/projects")
     }
 
+    /// Returns the existing project when one with this name already exists.
+    public func createProject(_ draft: ProjectDraft) async throws -> Project {
+        try await request("POST", "/api/projects", body: draft)
+    }
+
+    /// Renames the todos that carry the old name too.
+    public func renameProject(id: UUID, name: String) async throws -> Project {
+        struct Body: Encodable { var name: String }
+        return try await request("PUT", "/api/projects/\(id.uuidString.lowercased())", body: Body(name: name))
+    }
+
+    /// Clears the project from its todos (they aren't deleted).
+    public func deleteProject(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/projects/\(id.uuidString.lowercased())")
+    }
+
     public func playlists() async throws -> [Playlist] {
         try await requestList("GET", "/api/playlists")
     }

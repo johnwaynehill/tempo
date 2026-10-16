@@ -23,6 +23,11 @@ struct MoreView: View {
             }
             .cardRow()
 
+            NavigationLink { ProjectsView() } label: {
+                MoreRow(symbol: "folder", title: "Projects")
+            }
+            .cardRow()
+
             NavigationLink { PlaylistsView() } label: {
                 MoreRow(symbol: "list.bullet.rectangle", title: "Playlists")
             }

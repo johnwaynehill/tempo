@@ -438,6 +438,39 @@ final class AppModel {
         await enqueue(.deleteHabit(habitId: id))
     }
 
+    // MARK: Projects
+
+    var sortedProjects: [Project] {
+        projects.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
+    func project(id: UUID) -> Project? {
+        projects.first { $0.id == id }
+    }
+
+    func project(named name: String) -> Project? {
+        projects.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    }
+
+    /// Names are unique per user, so an existing name hands back that project instead of a copy.
+    @discardableResult
+    func createProject(name: String) async -> UUID {
+        if let existing = project(named: name) { return existing.id }
+        let draft = ProjectDraft(name: name)
+        await enqueue(.createProject(draft: draft))
+        return draft.id
+    }
+
+    /// Renames the project and every todo carrying it, as the server does.
+    func renameProject(id: UUID, to name: String) async {
+        await enqueue(.renameProject(projectId: id, name: name))
+    }
+
+    /// Clears the project from its todos; the todos themselves stay.
+    func deleteProject(id: UUID) async {
+        await enqueue(.deleteProject(projectId: id))
+    }
+
     // MARK: Preferences
 
     func updatePreferences(_ update: UserPreferencesUpdate) async {

@@ -7,16 +7,10 @@ import TempoKit
 struct BacklogView: View {
     @Environment(AppModel.self) private var model
     @State private var pendingDelete: Todo?
-    @State private var sort: SortMode = .priority
+    @State private var sort: TodoSortMode = .priority
     @State private var projectFilter: String?
     @State private var energyFilter: EnergyLevel?
     @State private var showNew = false
-
-    /// `Backlog.tsx`'s three orders.
-    enum SortMode: String, CaseIterable, Identifiable {
-        case priority = "Priority", due = "Due date", recent = "Recent"
-        var id: Self { self }
-    }
 
     private var backlog: [Todo] { model.backlog }
 
@@ -40,27 +34,7 @@ struct BacklogView: View {
     }
 
     private var sorted: [Todo] {
-        switch sort {
-        case .priority:
-            let energy = model.preferences?.currentEnergy
-            let now = Date()
-            let calendar = model.calendar
-            return filtered
-                .map { ($0, Scoring.scoreTodo($0, currentEnergy: energy, now: now, calendar: calendar)) }
-                .sorted { $0.1 > $1.1 }
-                .map(\.0)
-        case .due:
-            // Undated last, as on the web.
-            return filtered.sorted { a, b in
-                switch (a.dueDate, b.dueDate) {
-                case let (x?, y?): x < y
-                case (.some, nil): true
-                default: false
-                }
-            }
-        case .recent:
-            return filtered.sorted { $0.createdAt > $1.createdAt }
-        }
+        sort.apply(to: filtered, energy: model.preferences?.currentEnergy, calendar: model.calendar)
     }
 
     private var groups: [(name: String, todos: [Todo])] {
@@ -193,7 +167,7 @@ struct BacklogView: View {
                     FilterChip(title: energyFilter.map(TodoRow.label(for:)) ?? "Energy", isActive: energyFilter != nil)
                 }
                 Menu {
-                    ForEach(SortMode.allCases) { mode in
+                    ForEach(TodoSortMode.allCases) { mode in
                         Button {
                             sort = mode
                         } label: {
@@ -262,5 +236,32 @@ struct BacklogView: View {
                 }
                 .tint(Theme.onSurfaceVariant)
             }
+    }
+}
+
+/// `Backlog.tsx`'s three orders, shared with the project page.
+enum TodoSortMode: String, CaseIterable, Identifiable {
+    case priority = "Priority", due = "Due date", recent = "Recent"
+    var id: Self { self }
+
+    func apply(to todos: [Todo], energy: EnergyLevel?, calendar: Calendar, now: Date = Date()) -> [Todo] {
+        switch self {
+        case .priority:
+            return todos
+                .map { ($0, Scoring.scoreTodo($0, currentEnergy: energy, now: now, calendar: calendar)) }
+                .sorted { $0.1 > $1.1 }
+                .map(\.0)
+        case .due:
+            // Undated last, as on the web.
+            return todos.sorted { a, b in
+                switch (a.dueDate, b.dueDate) {
+                case let (x?, y?): x < y
+                case (.some, nil): true
+                default: false
+                }
+            }
+        case .recent:
+            return todos.sorted { $0.createdAt > $1.createdAt }
+        }
     }
 }
