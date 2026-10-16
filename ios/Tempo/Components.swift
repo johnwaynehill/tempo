@@ -1,17 +1,31 @@
 import SwiftUI
 import TempoKit
 
-/// Page title in the display face with a quiet subtitle, like the web's `<h1>` blocks.
-struct PageHeader: View {
+/// Page title in the display face with a quiet subtitle, like the web's `<h1>` blocks. Tab
+/// screens hide the navigation bar and pass their buttons as `trailing`, so the actions sit on
+/// the title's row instead of floating above it.
+struct PageHeader<Trailing: View>: View {
     var title: String
     var subtitle: String?
+    @ViewBuilder var trailing: Trailing
+
+    init(title: String, subtitle: String? = nil, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title
+        self.subtitle = subtitle
+        self.trailing = trailing()
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(title)
-                .font(Theme.display(.largeTitle))
-                .foregroundStyle(Theme.onSurface)
-                .tracking(-0.5)
+            HStack(alignment: .center, spacing: Theme.grid) {
+                Text(title)
+                    .font(Theme.display(.largeTitle))
+                    .foregroundStyle(Theme.onSurface)
+                    .tracking(-0.5)
+                    .accessibilityAddTraits(.isHeader)
+                Spacer(minLength: Theme.grid)
+                trailing
+            }
             if let subtitle {
                 Text(subtitle)
                     .font(Theme.font(.subheadline))
@@ -20,7 +34,50 @@ struct PageHeader: View {
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .accessibilityElement(children: .combine)
+    }
+}
+
+extension PageHeader where Trailing == EmptyView {
+    init(title: String, subtitle: String? = nil) {
+        self.init(title: title, subtitle: subtitle) { EmptyView() }
+    }
+}
+
+/// A page's actions in one glass capsule, beside its title.
+struct HeaderActions<Content: View>: View {
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        HStack(spacing: 0) { content }
+            .padding(.horizontal, 4)
+            .glassEffect(.regular.interactive(), in: .capsule)
+    }
+}
+
+/// One icon in `HeaderActions`, with a full 44pt hit area.
+struct HeaderIconButton: View {
+    var symbol: String
+    var label: String
+    var action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: symbol)
+                .font(.system(size: 18, weight: .medium))
+                .foregroundStyle(Theme.onSurfaceVariant)
+                .frame(width: 44, height: 44)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
+extension View {
+    /// Tab roots draw their own header row (title plus actions), so the system bar is hidden;
+    /// screens pushed from them get their usual bar with a back button.
+    func tabRootChrome() -> some View {
+        self.toolbarVisibility(.hidden, for: .navigationBar)
     }
 }
 

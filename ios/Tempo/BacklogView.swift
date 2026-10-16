@@ -57,7 +57,11 @@ struct BacklogView: View {
             PageHeader(
                 title: "Backlog",
                 subtitle: activeFilterCount == 0 ? "\(backlog.count) total" : "\(backlog.count) total · \(filtered.count) showing"
-            )
+            ) {
+                HeaderActions {
+                    HeaderIconButton(symbol: "plus", label: "New todo") { showNew = true }
+                }
+            }
             .plainRow(top: Theme.grid, bottom: Theme.grid)
 
             filterBar
@@ -128,20 +132,12 @@ struct BacklogView: View {
         }
         .animation(.easeOut(duration: 0.3), value: backlog.map(\.id))
         .refreshable { await model.reload() }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showNew = true } label: {
-                    Image(systemName: "plus").foregroundStyle(Theme.onSurfaceVariant)
-                }
-                .accessibilityLabel("New todo")
-            }
-        }
         .sheet(isPresented: $showNew) {
             // A new todo inherits the filters you're looking through, as on the web.
             NewTodoSheet(status: .backlog, project: projectFilter, energy: energyFilter)
                 .presentationDetents([.height(220)])
         }
-        .toolbarTitleDisplayMode(.inline)
+        .tabRootChrome()
         .task { await model.loadIfNeeded() }
     }
 

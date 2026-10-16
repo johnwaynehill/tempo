@@ -3,6 +3,10 @@ import SwiftUI
 /// The fifth tab: everything that doesn't fit Today/Inbox/Backlog/Habits. Mirrors the
 /// web's sidebar items below the four bottom-nav pages.
 struct MoreView: View {
+    @Environment(Session.self) private var session
+    @Environment(AppModel.self) private var model
+    @State private var confirmingSignOut = false
+
     var body: some View {
         List {
             PageHeader(title: "More")
@@ -52,10 +56,31 @@ struct MoreView: View {
                 MoreRow(symbol: "gearshape", title: "Settings")
             }
             .cardRow()
+
+            VStack(alignment: .leading, spacing: Theme.grid) {
+                if let email = session.me?.email {
+                    Text("Signed in as \(email)")
+                        .font(Theme.font(.footnote))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                }
+                Button("Sign out", role: .destructive) { confirmingSignOut = true }
+                    .font(Theme.font(.subheadline, weight: .medium))
+                    .buttonStyle(.borderless)
+            }
+            .plainRow(top: Theme.grid * 4, bottom: Theme.grid * 4)
         }
         .tempoList()
-        .navigationTitle("")
-        .toolbarTitleDisplayMode(.inline)
+        .tabRootChrome()
+        .confirmationDialog("Sign out of Tempo?", isPresented: $confirmingSignOut, titleVisibility: .visible) {
+            Button("Sign out", role: .destructive) {
+                Task {
+                    await model.signOut()
+                    session.signOut()
+                }
+            }
+        } message: {
+            Text("Changes that haven't synced yet are lost.")
+        }
     }
 }
 

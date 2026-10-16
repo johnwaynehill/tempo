@@ -16,7 +16,11 @@ struct HabitsView: View {
             PageHeader(
                 title: "Habits",
                 subtitle: habits.isEmpty ? nil : "\(completedToday) of \(habits.count) done today"
-            )
+            ) {
+                HeaderActions {
+                    HeaderIconButton(symbol: "plus", label: "New habit") { showNew = true }
+                }
+            }
             .plainRow(top: Theme.grid, bottom: Theme.grid * 2)
 
             if let error = model.error, model.hasLoaded {
@@ -73,19 +77,11 @@ struct HabitsView: View {
         .animation(.easeOut(duration: 0.3), value: completedToday)
         .sensoryFeedback(.success, trigger: completedToday) { old, new in new > old }
         .refreshable { await model.reload() }
-        .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
-                Button { showNew = true } label: {
-                    Image(systemName: "plus").foregroundStyle(Theme.onSurfaceVariant)
-                }
-                .accessibilityLabel("New habit")
-            }
-        }
         .sheet(isPresented: $showNew) {
             HabitEditorSheet()
                 .presentationDetents([.height(260)])
         }
-        .toolbarTitleDisplayMode(.inline)
+        .tabRootChrome()
         .task { await model.loadIfNeeded() }
     }
 }
