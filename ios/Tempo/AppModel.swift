@@ -341,8 +341,10 @@ final class AppModel {
     // MARK: Todo mutations
 
     @discardableResult
-    func createTodo(title: String, status: TodoStatus = .inbox) async -> Todo? {
-        let draft = TodoDraft(id: UUID(), title: title, status: status)
+    func createTodo(
+        title: String, status: TodoStatus = .inbox, project: String? = nil, energyLevel: EnergyLevel? = nil
+    ) async -> Todo? {
+        let draft = TodoDraft(id: UUID(), title: title, status: status, project: project, energyLevel: energyLevel)
         await enqueue(.createTodo(draft: draft))
         return todo(id: draft.id)
     }

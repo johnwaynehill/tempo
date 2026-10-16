@@ -7,17 +7,60 @@ import TempoKit
 struct BacklogView: View {
     @Environment(AppModel.self) private var model
     @State private var pendingDelete: Todo?
+    @State private var sort: SortMode = .priority
+    @State private var projectFilter: String?
+    @State private var energyFilter: EnergyLevel?
+    @State private var showNew = false
+
+    /// `Backlog.tsx`'s three orders.
+    enum SortMode: String, CaseIterable, Identifiable {
+        case priority = "Priority", due = "Due date", recent = "Recent"
+        var id: Self { self }
+    }
 
     private var backlog: [Todo] { model.backlog }
 
+    private var filtered: [Todo] {
+        backlog.filter { todo in
+            (energyFilter == nil || todo.energyLevel == energyFilter)
+                && (projectFilter == nil || todo.project == projectFilter)
+        }
+    }
+
+    private var activeFilterCount: Int { (projectFilter == nil ? 0 : 1) + (energyFilter == nil ? 0 : 1) }
+
+    /// Projects that actually have something in the Backlog, with how many.
+    private var projectCounts: [(name: String, count: Int)] {
+        var counts: [String: Int] = [:]
+        for todo in backlog {
+            if let project = todo.project, !project.isEmpty { counts[project, default: 0] += 1 }
+        }
+        return counts.map { ($0.key, $0.value) }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+    }
+
     private var sorted: [Todo] {
-        let energy = model.preferences?.currentEnergy
-        let now = Date()
-        let calendar = model.calendar
-        return backlog
-            .map { ($0, Scoring.scoreTodo($0, currentEnergy: energy, now: now, calendar: calendar)) }
-            .sorted { $0.1 > $1.1 }
-            .map(\.0)
+        switch sort {
+        case .priority:
+            let energy = model.preferences?.currentEnergy
+            let now = Date()
+            let calendar = model.calendar
+            return filtered
+                .map { ($0, Scoring.scoreTodo($0, currentEnergy: energy, now: now, calendar: calendar)) }
+                .sorted { $0.1 > $1.1 }
+                .map(\.0)
+        case .due:
+            // Undated last, as on the web.
+            return filtered.sorted { a, b in
+                switch (a.dueDate, b.dueDate) {
+                case let (x?, y?): x < y
+                case (.some, nil): true
+                default: false
+                }
+            }
+        case .recent:
+            return filtered.sorted { $0.createdAt > $1.createdAt }
+        }
     }
 
     private var groups: [(name: String, todos: [Todo])] {
@@ -37,8 +80,14 @@ struct BacklogView: View {
 
     var body: some View {
         List {
-            PageHeader(title: "Backlog", subtitle: "\(backlog.count) total")
-                .plainRow(top: Theme.grid, bottom: Theme.grid * 2)
+            PageHeader(
+                title: "Backlog",
+                subtitle: activeFilterCount == 0 ? "\(backlog.count) total" : "\(backlog.count) total · \(filtered.count) showing"
+            )
+            .plainRow(top: Theme.grid, bottom: Theme.grid)
+
+            filterBar
+                .plainRow(bottom: Theme.grid * 2)
 
             if let error = model.error, model.hasLoaded {
                 Text(error)
@@ -52,6 +101,9 @@ struct BacklogView: View {
                     .plainRow(top: Theme.grid * 8)
             } else if backlog.isEmpty {
                 EmptyState(symbol: "list.bullet", title: "Backlog is empty", message: "Nothing queued up. Capture something in Inbox.")
+                    .plainRow()
+            } else if filtered.isEmpty {
+                EmptyState(symbol: "line.3.horizontal.decrease", title: "Nothing matches", message: "Try another project or energy level.")
                     .plainRow()
             } else if groups.count > 1 {
                 ForEach(groups, id: \.name) { group in
@@ -102,8 +154,70 @@ struct BacklogView: View {
         }
         .animation(.easeOut(duration: 0.3), value: backlog.map(\.id))
         .refreshable { await model.reload() }
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button { showNew = true } label: {
+                    Image(systemName: "plus").foregroundStyle(Theme.onSurfaceVariant)
+                }
+                .accessibilityLabel("New todo")
+            }
+        }
+        .sheet(isPresented: $showNew) {
+            // A new todo inherits the filters you're looking through, as on the web.
+            NewTodoSheet(status: .backlog, project: projectFilter, energy: energyFilter)
+                .presentationDetents([.height(220)])
+        }
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
+    }
+
+    private var filterBar: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: Theme.grid * 0.75) {
+                if !projectCounts.isEmpty {
+                    Menu {
+                        Button("All projects") { projectFilter = nil }
+                        ForEach(projectCounts, id: \.name) { item in
+                            Button("\(item.name) (\(item.count))") { projectFilter = item.name }
+                        }
+                    } label: {
+                        FilterChip(title: projectFilter ?? "Project", isActive: projectFilter != nil)
+                    }
+                }
+                Menu {
+                    Button("All levels") { energyFilter = nil }
+                    ForEach(EnergyLevel.allCases, id: \.self) { level in
+                        Button(TodoRow.label(for: level)) { energyFilter = level }
+                    }
+                } label: {
+                    FilterChip(title: energyFilter.map(TodoRow.label(for:)) ?? "Energy", isActive: energyFilter != nil)
+                }
+                Menu {
+                    ForEach(SortMode.allCases) { mode in
+                        Button {
+                            sort = mode
+                        } label: {
+                            if sort == mode { Label(mode.rawValue, systemImage: "checkmark") } else { Text(mode.rawValue) }
+                        }
+                    }
+                } label: {
+                    FilterChip(title: sort == .priority ? "Sort" : sort.rawValue, isActive: sort != .priority)
+                }
+                if activeFilterCount > 0 {
+                    Button {
+                        projectFilter = nil
+                        energyFilter = nil
+                    } label: {
+                        Label("Clear", systemImage: "xmark")
+                            .font(Theme.font(.caption, weight: .medium))
+                            .foregroundStyle(Theme.onSurfaceVariant)
+                            .padding(.horizontal, Theme.grid)
+                            .frame(minHeight: 32)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     /// Out of sight until its date, but never out of reach: swipe to bring it back now.

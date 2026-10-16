@@ -63,6 +63,7 @@
 		713CFC8D025B7CBD4BD498EA /* TodayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5CEDCC092F352AF31653D674 /* TodayView.swift */; };
 		715CE20C03A552AC53300B7D /* CompleteActiveTaskIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */; };
 		73E6ABA3094A8D9395B5C909 /* IntentDebugLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9C20C14CB884F051584D8475 /* IntentDebugLaunch.swift */; };
+		76C92CFBEC7BA97BCE0CAC96 /* NewTodoSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1506A07D3767EF53D1632C6C /* NewTodoSheet.swift */; };
 		78D431FC734932DC2397F4AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */; };
 		7A0BC3A6E36F3EF4EC85219E /* BrainDumpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0B030392610BC40D148A04 /* BrainDumpView.swift */; };
 		7A96F839E8E755DDDB6C8708 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C145AFC84C18B35767AD25F0 /* PlaylistDetailView.swift */; };
@@ -153,6 +154,7 @@
 		0C54D4ED7BC531868850F4C1 /* TempoTimerActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoTimerActivity.swift; sourceTree = "<group>"; };
 		147D84C2BCB068C399DF8C8E /* TempoShortcuts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoShortcuts.swift; sourceTree = "<group>"; };
 		14E267F3FADBB034D8C2D37A /* TimerActivityController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerActivityController.swift; sourceTree = "<group>"; };
+		1506A07D3767EF53D1632C6C /* NewTodoSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewTodoSheet.swift; sourceTree = "<group>"; };
 		168A2243B3AAFB4A67BE7256 /* TempoShare.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TempoShare.entitlements; sourceTree = "<group>"; };
 		1720DA0DCE4697825E4EBAA6 /* InboxView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InboxView.swift; sourceTree = "<group>"; };
 		19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -352,6 +354,7 @@
 				54AFA770CD85ACF8D494143C /* MoodCheckInView.swift */,
 				37A7ECCB4658931900F1D758 /* MoodModel.swift */,
 				1CB83FB58AC6F86862BD0822 /* MoreView.swift */,
+				1506A07D3767EF53D1632C6C /* NewTodoSheet.swift */,
 				B0B7C526CFB880EFB454A155 /* NoteEditorView.swift */,
 				B24BA33D57BA2D474DC96172 /* NotesListView.swift */,
 				62AC3C4EF8741909180B7B06 /* NowCard.swift */,
@@ -619,6 +622,7 @@
 				56D0A04FF3C3EB0301D6B695 /* MoodCheckInView.swift in Sources */,
 				86B0D1428924DE661BDE3439 /* MoodModel.swift in Sources */,
 				38F601D296D591B7B295928F /* MoreView.swift in Sources */,
+				76C92CFBEC7BA97BCE0CAC96 /* NewTodoSheet.swift in Sources */,
 				8A7CE68460CDB1714981BB44 /* NoteEditorView.swift in Sources */,
 				F71535C80EE34C16D81EA7B8 /* NotesListView.swift in Sources */,
 				409469BBFD1FB2C382857683 /* NowCard.swift in Sources */,
