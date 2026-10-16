@@ -1,17 +1,16 @@
 import SwiftUI
 import TempoKit
 
-/// Capture first, triage second. Mirrors `Inbox.tsx`: a field that is ready to type
-/// into the moment the tab opens, then the list of what's waiting.
+/// Capture first, triage second. Mirrors `Inbox.tsx`: a capture field, then the list of
+/// what's waiting. Unlike the web, the field isn't focused just by opening the tab (the
+/// keyboard would cover the list); it is when capture is asked for (the Add to Tempo
+/// widget, Brain Dump's "View Inbox").
 struct InboxView: View {
     @Environment(AppModel.self) private var model
 
     @State private var draft = ""
     @State private var processed = 0
     @State private var pendingDelete: Todo?
-    /// The field grabs the keyboard when you first land here, not every time you pop back from a
-    /// todo or switch tabs — then it covers the list and its swipe actions.
-    @State private var focusedOnce = false
     @FocusState private var captureFocused: Bool
 
     private var inbox: [Todo] { model.inbox }
@@ -68,15 +67,11 @@ struct InboxView: View {
             }
         }
         .tempoList()
+        .scrollDismissesKeyboard(.interactively)
         .animation(.easeOut(duration: 0.3), value: inbox.map(\.id))
         .refreshable { await model.reload() }
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
-        .onAppear {
-            guard !focusedOnce else { return }
-            focusedOnce = true
-            captureFocused = true
-        }
         .confirmationDialog(
             "Delete \"\(pendingDelete?.title ?? "")\"?",
             isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
@@ -122,17 +117,36 @@ struct InboxView: View {
                 .accessibilityLabel("Add")
                 .transition(.opacity)
             }
+
+            // A keyboard toolbar doesn't render inside this tab's list on iOS 26, so the way
+            // out of typing sits in the field itself (dragging the list works too).
+            if captureFocused {
+                Button {
+                    captureFocused = false
+                } label: {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                        .font(.system(size: 17))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .frame(width: 32, height: 32)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Hide keyboard")
+                .transition(.opacity)
+            }
         }
         .padding(.vertical, Theme.grid * 1.5)
         .padding(.horizontal, Theme.grid * 2)
         .background(Theme.surfaceContainerLow, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .animation(.easeOut(duration: 0.2), value: draft.isEmpty)
+        .animation(.easeOut(duration: 0.2), value: captureFocused)
     }
 
-    /// Enter creates the todo, clears the field, and keeps the keyboard up for the next one.
+    /// Return creates the todo, clears the field, and keeps the keyboard up for the next one.
     private func capture() {
         let title = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !title.isEmpty else { return }
+        // Return on an empty field puts the keyboard away.
+        guard !title.isEmpty else { captureFocused = false; return }
         draft = ""
         captureFocused = true
         Task { await model.createTodo(title: title, status: .inbox) }
