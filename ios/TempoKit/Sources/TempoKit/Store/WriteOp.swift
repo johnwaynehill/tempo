@@ -25,6 +25,8 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
     case renameProject(id: UUID = UUID(), createdAt: Date = Date(), projectId: UUID, name: String)
     /// The server clears the project from its todos; the todos stay.
     case deleteProject(id: UUID = UUID(), createdAt: Date = Date(), projectId: UUID)
+    /// A mood check-in. The server also checks off any habit with "mood" in its name for `draft.date`.
+    case logMood(id: UUID = UUID(), createdAt: Date = Date(), draft: MoodDraft)
 
     /// The op's own id, not the id of the row it touches.
     public var id: UUID {
@@ -33,7 +35,7 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
              .deleteTodo(let id, _, _), .toggleHabit(let id, _, _, _, _), .setTodaySet(let id, _, _, _),
              .updatePreferences(let id, _, _), .createHabit(let id, _, _), .updateHabit(let id, _, _, _),
              .deleteHabit(let id, _, _), .createProject(let id, _, _), .renameProject(let id, _, _, _),
-             .deleteProject(let id, _, _):
+             .deleteProject(let id, _, _), .logMood(let id, _, _):
             id
         }
     }
@@ -44,7 +46,7 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
              .deleteTodo(_, let at, _), .toggleHabit(_, let at, _, _, _), .setTodaySet(_, let at, _, _),
              .updatePreferences(_, let at, _), .createHabit(_, let at, _), .updateHabit(_, let at, _, _),
              .deleteHabit(_, let at, _), .createProject(_, let at, _), .renameProject(_, let at, _, _),
-             .deleteProject(_, let at, _):
+             .deleteProject(_, let at, _), .logMood(_, let at, _):
             at
         }
     }
@@ -67,7 +69,7 @@ public enum WriteOp: Codable, Hashable, Sendable, Identifiable {
         case .createTodo(_, _, let draft): draft.id
         case .updateTodo(_, _, let todoId, _), .completeTodo(_, _, let todoId, _), .deleteTodo(_, _, let todoId): todoId
         case .toggleHabit, .setTodaySet, .updatePreferences, .createHabit, .updateHabit, .deleteHabit,
-             .createProject, .renameProject, .deleteProject: nil
+             .createProject, .renameProject, .deleteProject, .logMood: nil
         }
     }
 }

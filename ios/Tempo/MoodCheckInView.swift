@@ -30,18 +30,19 @@ struct MoodRow: View {
                 today.show(entry)
                 saves += 1
                 Task {
-                    await today.refresh(client: session.client)
-                    // The server checks off any habit with "mood" in its name; pull that in.
+                    // Send it (and the habit the server checks off) before asking for today's entry.
                     await model.reload()
+                    await today.refresh(client: session.client)
                 }
             }
             .environment(session)
+            .environment(model)
         }
         .task {
             await today.refresh(client: session.client)
             #if DEBUG
             await DebugLaunch.runMood(
-                client: session.client,
+                model: model,
                 openSheet: { showSheet = true },
                 onSaved: { entry in
                     today.show(entry)
@@ -106,6 +107,7 @@ struct MoodRow: View {
 struct MoodCheckInSheet: View {
     var onSaved: (MoodEntry) -> Void
 
+    @Environment(AppModel.self) private var model
     @Environment(Session.self) private var session
     @Environment(\.dismiss) private var dismiss
 
@@ -230,7 +232,8 @@ struct MoodCheckInSheet: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .background(Theme.surface.ignoresSafeArea())
-        .presentationDetents([.medium, .large])
+        // Full height: at .medium the Save button sat below the fold.
+        .presentationDetents([.large])
         .presentationDragIndicator(.visible)
         .presentationBackground(Theme.surface)
     }
@@ -251,31 +254,23 @@ struct MoodCheckInSheet: View {
 
     private func save() {
         guard !saving else { return }
-        guard let client = session.client else {
-            message = "You're not signed in, so this can't be saved."
-            return
-        }
         noteFocused = false
         saving = true
         message = nil
         Task {
-            let outcome = await MoodCheckIn.save(client: client, value: Int(value.rounded()), note: note, alsoHealth: alsoHealth)
+            let (entry, health) = await MoodCheckIn.save(model: model, value: Int(value.rounded()), note: note, alsoHealth: alsoHealth)
             saving = false
-            switch outcome {
-            case .saved(let entry, let health):
-                onSaved(entry)
-                if health.needsNote {
-                    message = "Saved to Tempo. Apple Health wasn't updated."
-                    try? await Task.sleep(for: .seconds(1.8))
-                } else {
-                    try? await Task.sleep(for: .milliseconds(250))
-                }
-                dismiss()
-            case .offline:
-                message = "You're offline, so this didn't save. Try again once you're back online."
-            case .failed:
-                message = "Couldn't save just now. Try again in a moment."
+            onSaved(entry)
+            if health.needsNote {
+                message = "Saved to Tempo. Apple Health wasn't updated."
+                try? await Task.sleep(for: .seconds(1.8))
+            } else if model.isOffline {
+                message = "Saved. It'll reach Tempo when you're back online."
+                try? await Task.sleep(for: .seconds(1.5))
+            } else {
+                try? await Task.sleep(for: .milliseconds(250))
             }
+            dismiss()
         }
     }
 }

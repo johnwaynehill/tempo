@@ -121,6 +121,11 @@ extension CacheSnapshot {
                 projects.remove(at: i)
                 for j in todos.indices where todos[j].project == old { todos[j].project = nil }
             }
+        case .logMood(_, _, let draft):
+            // Mood entries aren't cached; the side effect the server applies to habits is.
+            for i in habits.indices where !habits[i].archived && habits[i].name.localizedCaseInsensitiveContains("mood") {
+                habits[i].completions[draft.date] = true
+            }
         }
     }
 }

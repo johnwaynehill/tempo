@@ -349,6 +349,9 @@ public actor TempoStore {
         case .deleteProject(_, _, let projectId):
             try await client.deleteProject(id: projectId)
             cache.apply(op)
+        case .logMood(_, _, let draft):
+            _ = try await client.logMood(draft)
+            cache.apply(op)
         }
     }
 
@@ -442,6 +445,7 @@ extension WriteOp {
         case .createProject: "createProject"
         case .renameProject: "renameProject"
         case .deleteProject: "deleteProject"
+        case .logMood: "logMood"
         }
     }
 }

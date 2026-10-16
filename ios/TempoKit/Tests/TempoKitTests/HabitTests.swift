@@ -67,3 +67,27 @@ import Testing
         #expect(json?["description"] is NSNull)
     }
 }
+
+@Suite struct MoodQueueTests {
+    let now = LA.at(21, 0, on: LA.day(2026, 10, 15))
+
+    @Test func aQueuedCheckInChecksOffMoodHabitsForItsLocalDay() {
+        var snapshot = CacheSnapshot(habits: [
+            Habit(name: "Log my mood", createdAt: now),
+            Habit(name: "Stretch", createdAt: now),
+            Habit(name: "Mood journal", archived: true, createdAt: now),
+        ])
+        let draft = MoodDraft(value: 70, createdAt: now, date: "2026-10-15")
+        snapshot.apply(.logMood(createdAt: now, draft: draft))
+        snapshot.apply(.logMood(createdAt: now, draft: draft))
+        #expect(snapshot.habits[0].completions == ["2026-10-15": true])
+        #expect(snapshot.habits[1].completions.isEmpty)
+        #expect(snapshot.habits[2].completions.isEmpty, "archived habits are left alone, as on the server")
+    }
+
+    @Test func moodOpsRoundTripThroughJSON() throws {
+        let ops: [WriteOp] = [.logMood(createdAt: now, draft: MoodDraft(value: 42, note: "tired", createdAt: now, date: "2026-10-15"))]
+        let decoded = try TempoJSON.decoder.decode([WriteOp].self, from: TempoJSON.encoder.encode(ops))
+        #expect(decoded == ops)
+    }
+}

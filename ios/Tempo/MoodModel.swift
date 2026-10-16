@@ -93,42 +93,22 @@ enum MoodPalette {
     }
 }
 
-/// What happened when a check-in was saved.
-enum MoodSaveOutcome: Sendable, Equatable {
-    /// Saved to Tempo; `health` says what happened on the Apple Health side.
-    case saved(MoodEntry, health: HealthMoodResult)
-    /// Couldn't reach the server. Mood logging isn't queued (it isn't a `WriteOp`).
-    case offline
-    case failed
-}
-
 /// The one save path shared by the check-in sheet and the `TEMPO_DEBUG_LOG_MOOD` hook.
 @MainActor
 enum MoodCheckIn {
     static let log = Logger(subsystem: "com.johnwaynehill.Tempo", category: "mood")
 
-    /// `POST /api/mood`, then (when asked) a State of Mind sample. Health never blocks the
-    /// Tempo save: it only runs once the server has the entry.
-    static func save(client: TempoClient, value: Int, note: String?, alsoHealth: Bool) async -> MoodSaveOutcome {
-        let clamped = min(100, max(1, value))
+    /// Queues the check-in (it reaches Tempo now, or when the phone is back online), then, when
+    /// asked, writes a State of Mind sample for the same moment. Health never blocks the Tempo save.
+    static func save(model: AppModel, value: Int, note: String?, alsoHealth: Bool) async -> (entry: MoodEntry, health: HealthMoodResult) {
         let trimmed = note?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let entry: MoodEntry
-        do {
-            entry = try await client.logMood(value: clamped, note: (trimmed?.isEmpty ?? true) ? nil : trimmed)
-        } catch let error as TempoAPIError {
-            log.info("save: failed \(String(describing: error), privacy: .public)")
-            if case .transport = error { return .offline }
-            return .failed
-        } catch {
-            log.info("save: failed \(String(describing: error), privacy: .public)")
-            return .failed
-        }
-        log.info("save: logged mood \(entry.id.uuidString, privacy: .public) value=\(entry.value)")
+        let entry = await model.logMood(value: value, note: (trimmed?.isEmpty ?? true) ? nil : trimmed)
+        log.info("save: queued mood \(entry.id.uuidString, privacy: .public) value=\(entry.value)")
 
-        guard alsoHealth else { return .saved(entry, health: .skipped) }
-        let health = await HealthMoodWriter.shared.save(value: clamped, date: entry.createdAt)
+        guard alsoHealth else { return (entry, .skipped) }
+        let health = await HealthMoodWriter.shared.save(value: entry.value, date: entry.createdAt)
         log.info("save: health result \(String(describing: health), privacy: .public)")
-        return .saved(entry, health: health)
+        return (entry, health)
     }
 
     /// The newest entry logged since local midnight, from `GET /api/mood?days=1`.
@@ -149,7 +129,14 @@ final class MoodTodayModel {
     func refresh(client: TempoClient?) async {
         guard let client else { return }
         do {
-            entry = try await MoodCheckIn.todayEntry(client: client)
+            let fetched = try await MoodCheckIn.todayEntry(client: client)
+            // A check-in still waiting in the queue is newer than anything the server has.
+            if let shown = entry, Calendar.current.isDateInToday(shown.createdAt),
+               shown.createdAt > (fetched?.createdAt ?? .distantPast) {
+                hasLoaded = true
+                return
+            }
+            entry = fetched
             hasLoaded = true
         } catch {
             // Offline or a hiccup: keep whatever was showing.

@@ -69,6 +69,11 @@ public actor TempoClient {
         return try await request("POST", "/api/mood", body: Body(value: value, note: note))
     }
 
+    /// The queued form: idempotent on `draft.id`, logged at `draft.createdAt`.
+    public func logMood(_ draft: MoodDraft) async throws -> MoodEntry {
+        try await request("POST", "/api/mood", body: draft)
+    }
+
     /// `GET /api/mood?days=N` — entries from the last `days` days, newest first.
     public func moodHistory(days: Int = 7) async throws -> [MoodEntry] {
         try await request("GET", "/api/mood", query: [URLQueryItem(name: "days", value: String(days))])

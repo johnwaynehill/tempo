@@ -76,8 +76,8 @@ enum DebugLaunch {
         }
     }
 
-    static func runMood(client: TempoClient?, openSheet: () -> Void, onSaved: (MoodEntry) -> Void) async {
-        guard !moodRan, let client else { return }
+    static func runMood(model: AppModel, openSheet: () -> Void, onSaved: (MoodEntry) -> Void) async {
+        guard !moodRan else { return }
         moodRan = true
         let env = ProcessInfo.processInfo.environment
 
@@ -100,17 +100,10 @@ enum DebugLaunch {
             }
             let note = parts.count > 1 ? parts[1] : nil
             let alsoHealth = UserDefaults.standard.bool(forKey: HealthMoodWriter.toggleDefaultsKey)
-            let outcome = await MoodCheckIn.save(client: client, value: value, note: note, alsoHealth: alsoHealth)
-            switch outcome {
-            case .saved(let entry, let health):
-                onSaved(entry)
-                log.info("log-mood: saved \(entry.id.uuidString, privacy: .public) value=\(entry.value) note=\(entry.note ?? "nil", privacy: .public) health=\(String(describing: health), privacy: .public)")
-                if health == .saved { await HealthMoodWriter.shared.debugReadBack() }
-            case .offline:
-                log.info("log-mood: offline")
-            case .failed:
-                log.info("log-mood: failed")
-            }
+            let (entry, health) = await MoodCheckIn.save(model: model, value: value, note: note, alsoHealth: alsoHealth)
+            onSaved(entry)
+            log.info("log-mood: saved \(entry.id.uuidString, privacy: .public) value=\(entry.value) note=\(entry.note ?? "nil", privacy: .public) health=\(String(describing: health), privacy: .public)")
+            if health == .saved { await HealthMoodWriter.shared.debugReadBack() }
         }
     }
 }

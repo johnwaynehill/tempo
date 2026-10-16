@@ -477,6 +477,17 @@ final class AppModel {
         await enqueue(.deleteProject(projectId: id))
     }
 
+    // MARK: Mood
+
+    /// A check-in through the write queue, so it's kept when offline and sent once, logged at the
+    /// moment it was made. Returns the entry as the server will store it.
+    @discardableResult
+    func logMood(value: Int, note: String?) async -> MoodEntry {
+        let draft = MoodDraft(value: min(100, max(1, value)), note: note, createdAt: Date(), date: todayString)
+        await enqueue(.logMood(draft: draft))
+        return MoodEntry(draft: draft, userId: preferences?.userId ?? "")
+    }
+
     // MARK: Preferences
 
     func updatePreferences(_ update: UserPreferencesUpdate) async {
