@@ -158,17 +158,24 @@ private struct PlaylistRow: View {
 
     var body: some View {
         HStack(spacing: Theme.grid * 2) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(playlist.name)
-                    .font(Theme.font(.subheadline, weight: .medium))
-                    .foregroundStyle(Theme.onSurface)
-                    .lineLimit(1)
-                Text("\(playlist.items.count) task\(playlist.items.count == 1 ? "" : "s") · \(TimeMath.formatMinutes(totalMinutes))")
-                    .font(Theme.font(.caption))
-                    .foregroundStyle(Theme.onSurfaceVariant)
-                    .monospacedDigit()
+            // The name side opens the playlist; the Start button keeps its own hit area. (A clear
+            // button layered behind the content never received taps, so rows didn't open.)
+            HStack(spacing: 0) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(playlist.name)
+                        .font(Theme.font(.subheadline, weight: .medium))
+                        .foregroundStyle(Theme.onSurface)
+                        .lineLimit(1)
+                    Text("\(playlist.items.count) task\(playlist.items.count == 1 ? "" : "s") · \(TimeMath.formatMinutes(totalMinutes))")
+                        .font(Theme.font(.caption))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .monospacedDigit()
+                }
+                Spacer(minLength: Theme.grid)
             }
-            Spacer(minLength: Theme.grid)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: onOpen)
+
             Button(action: onStart) {
                 Text(isStarting ? "Starting…" : "Start")
             }
@@ -177,14 +184,6 @@ private struct PlaylistRow: View {
         }
         .padding(Theme.grid * 2)
         .background(Theme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
-        .contentShape(Rectangle())
-        // An invisible control behind the row content, so tapping the name/estimate
-        // opens the playlist while the foreground Start button keeps its own hit area.
-        .background(
-            Button(action: onOpen) { Color.clear }
-                .buttonStyle(.plain)
-                .accessibilityHidden(true)
-        )
         .accessibilityElement(children: .combine)
         .accessibilityAction(named: "Open") { onOpen() }
     }

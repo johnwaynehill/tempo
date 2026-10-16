@@ -10,6 +10,10 @@ struct FocusModeView: View {
     @Environment(AppModel.self) private var model
     @Environment(\.dismiss) private var dismiss
 
+    /// Walk exactly these todos, in this order (a playlist just started), instead of Today.
+    /// Done ones drop out as they're completed.
+    var queue: [UUID]? = nil
+
     private enum Phase { case focus, transition, breakTime }
 
     @State private var currentIndex = 0
@@ -22,7 +26,10 @@ struct FocusModeView: View {
     @State private var timerTaps = 0
     @State private var advanceTask: Task<Void, Never>?
 
-    private var focusTodos: [Todo] { model.todayTodos }
+    private var focusTodos: [Todo] {
+        guard let queue else { return model.todayTodos }
+        return queue.compactMap { model.todo(id: $0) }.filter { $0.status != .done }
+    }
 
     private var activeIndex: Int? {
         guard let id = model.timer.activeTaskId else { return nil }
@@ -313,7 +320,8 @@ struct FocusModeView: View {
                 model.resumeTimer()
                 timerTaps += 1
             }
-        } else if !model.timer.isRunning {
+        } else if queue != nil || !model.timer.isRunning {
+            // A playlist's walk takes the clock from a task outside it (which keeps its minutes).
             model.startTimer(todo.id)
             timerTaps += 1
         }

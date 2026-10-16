@@ -6,6 +6,8 @@ struct TodayView: View {
     @Environment(AppModel.self) private var model
 
     @State private var showFocus = false
+    /// A started playlist's steps, when that's what Focus Mode should walk.
+    @State private var focusQueue: [UUID]?
     @State private var showPlan = false
 
     var body: some View {
@@ -22,6 +24,7 @@ struct TodayView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
+                        focusQueue = nil
                         showFocus = true
                     } label: {
                         Image(systemName: "target")
@@ -53,13 +56,15 @@ struct TodayView: View {
                     .environment(model)
             }
             .fullScreenCover(isPresented: $showFocus) {
-                FocusModeView()
+                FocusModeView(queue: focusQueue)
                     .environment(model)
             }
             .onChange(of: model.focusRequested, initial: true) { _, requested in
                 // The Start focus App Intent asked for Focus Mode.
                 guard requested else { return }
                 model.focusRequested = false
+                focusQueue = model.focusQueue
+                model.focusQueue = nil
                 showFocus = true
             }
             .task {
