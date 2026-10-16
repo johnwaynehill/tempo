@@ -42,6 +42,7 @@ enum HabitsWidgetData {
         let overrides = readOverrides()
         let active = snapshot.habits
             .filter { !$0.archived }
+            .sorted { $0.createdAt < $1.createdAt }
             .map { habit -> HabitsWidgetHabit in
                 let override = overrides["\(habit.id.uuidString)|\(today)"]
                 let completedToday = (override != nil && now.timeIntervalSince(override!.at) < overrideTTL)

@@ -540,6 +540,8 @@ struct PlanMyDayView: View {
                 await model.pin(id: id)
             }
             await model.setTodaySet(todoIds: finalSelection)
+            // Opened from More this leaves you on More's stack; Today is where the plan lives.
+            model.todayRequested = true
             dismiss()
         }
     }

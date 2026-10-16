@@ -320,13 +320,15 @@ struct FocusModeView: View {
     }
 
     private func done() {
-        guard currentTodo != nil else { return }
+        guard let finishing = currentTodo else { return }
         let nextId = nextTodo?.id
         phase = .transition
         completions += 1
         advanceTask?.cancel()
         advanceTask = Task {
-            await model.completeActive()
+            // The todo on screen, not "whatever the clock happens to be on": if the clock was
+            // stopped or cleared (midnight, another screen) this must still complete it.
+            await model.complete(id: finishing.id)
             try? await Task.sleep(for: .seconds(3.5))
             guard !Task.isCancelled else { return }
             advance(to: nextId)

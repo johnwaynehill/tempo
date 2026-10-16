@@ -115,6 +115,7 @@ struct SettingsView: View {
             let url = try await client.googleCalendarConnectURL()
             _ = try await webAuthSession.authenticate(using: url, callbackURLScheme: "tempo")
             await refreshStatus()
+            await model.reload()
         } catch is CancellationError {
             // User dismissed the sheet — not an error worth surfacing.
         } catch let authError as ASWebAuthenticationSessionError where authError.code == .canceledLogin {
@@ -130,6 +131,8 @@ struct SettingsView: View {
         do {
             try await client.disconnectGoogleCalendar()
             await refreshStatus()
+            // The server purges the mirrored events; drop them from Today too.
+            await model.reload()
         } catch {
             errorMessage = "Couldn't disconnect. Try again."
         }

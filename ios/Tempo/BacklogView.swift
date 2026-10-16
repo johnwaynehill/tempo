@@ -6,6 +6,7 @@ import TempoKit
 /// grouped by project when there is more than one group.
 struct BacklogView: View {
     @Environment(AppModel.self) private var model
+    @State private var pendingDelete: Todo?
 
     private var backlog: [Todo] { model.backlog }
 
@@ -72,16 +73,63 @@ struct BacklogView: View {
                     row(todo)
                 }
             }
+
+            if model.hasLoaded, !model.deferredLater.isEmpty {
+                Section {
+                    ForEach(model.deferredLater) { todo in
+                        deferredRow(todo)
+                    }
+                } header: {
+                    SectionLabel(text: "Deferred", count: model.deferredLater.count)
+                        .padding(.horizontal, Theme.grid * 2 + 4)
+                        .padding(.top, Theme.grid * 2)
+                        .textCase(nil)
+                }
+                .listSectionSeparator(.hidden)
+                .listSectionMargins(.vertical, 0)
+            }
         }
         .tempoList()
+        .confirmationDialog(
+            "Delete \"\(pendingDelete?.title ?? "")\"?",
+            isPresented: Binding(get: { pendingDelete != nil }, set: { if !$0 { pendingDelete = nil } }),
+            titleVisibility: .visible
+        ) {
+            Button("Delete", role: .destructive) {
+                if let todo = pendingDelete { Task { await model.delete(id: todo.id) } }
+                pendingDelete = nil
+            }
+        }
         .animation(.easeOut(duration: 0.3), value: backlog.map(\.id))
         .refreshable { await model.reload() }
         .toolbarTitleDisplayMode(.inline)
         .task { await model.loadIfNeeded() }
     }
 
+    /// Out of sight until its date, but never out of reach: swipe to bring it back now.
+    private func deferredRow(_ todo: Todo) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            TodoRow(todo: todo)
+            if let until = todo.deferUntil {
+                Text("Back \(until.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day()))")
+                    .font(Theme.font(.caption))
+                    .foregroundStyle(Theme.onSurfaceVariant)
+                    .padding(.leading, Theme.grid * 2)
+            }
+        }
+        .navigates(to: todo.id)
+        .cardRow()
+        .opacity(0.75)
+        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+            Button("Restore", systemImage: "arrow.uturn.backward") {
+                Task { await model.restoreFromDefer(id: todo.id) }
+            }
+            .tint(Theme.primary)
+        }
+    }
+
     private func row(_ todo: Todo) -> some View {
-        TodoRow(todo: todo)
+        TodoRow(todo: todo, onComplete: { Task { await model.complete(id: todo.id) } })
             .navigates(to: todo.id)
             .cardRow()
             .swipeActions(edge: .leading, allowsFullSwipe: true) {
@@ -92,7 +140,7 @@ struct BacklogView: View {
             }
             .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                 Button("Delete", systemImage: "trash", role: .destructive) {
-                    Task { await model.delete(id: todo.id) }
+                    pendingDelete = todo
                 }
                 .tint(Theme.error)
                 Button("Defer", systemImage: "moon") {

@@ -12,6 +12,12 @@ struct WeeklyReviewView: View {
     @State private var reflectionText = ""
     @State private var review: TempoKit.WeeklyReview?
     @State private var saveTask: Task<Void, Never>?
+    /// Typing that hasn't reached the server yet, so switching weeks can send it first instead of
+    /// cancelling it.
+    @State private var pending: (id: String, text: String)?
+    /// The week's reflection couldn't be fetched. The editor locks until it can be, because an
+    /// empty box that accepts typing would overwrite whatever is saved on the server.
+    @State private var loadFailed = false
 
     private var weekStart: Date {
         let thisWeek = Insights.startOfWeek(Date(), calendar: model.calendar)
@@ -228,6 +234,8 @@ struct WeeklyReviewView: View {
                         .allowsHitTesting(false)
                 }
                 TextEditor(text: $reflectionText)
+                    .disabled(loadFailed)
+                    .opacity(loadFailed ? 0.5 : 1)
                     .font(Theme.font(.subheadline))
                     .foregroundStyle(Theme.onSurface)
                     .scrollContentBackground(.hidden)
@@ -237,6 +245,17 @@ struct WeeklyReviewView: View {
             .background(Theme.surfaceContainerLowest, in: RoundedRectangle(cornerRadius: Theme.cardRadius, style: .continuous))
             .onChange(of: reflectionText) { _, newValue in
                 scheduleSave(newValue)
+            }
+
+            if loadFailed {
+                HStack(spacing: Theme.grid) {
+                    Text("Couldn't load this week's reflection.")
+                        .font(Theme.font(.caption))
+                        .foregroundStyle(Theme.error)
+                    Button("Try again") { Task { await loadReview() } }
+                        .font(Theme.font(.caption, weight: .medium))
+                        .foregroundStyle(Theme.primary)
+                }
             }
 
             if let updatedAt = review?.updatedAt {
@@ -250,7 +269,14 @@ struct WeeklyReviewView: View {
     // MARK: Data
 
     private func loadReview() async {
-        saveTask?.cancel()
+        // Moving to another week mid-typing: send what's pending for the old one first.
+        if let unsent = pending, unsent.id != weekId {
+            saveTask?.cancel()
+            if let client = session.client {
+                _ = try? await client.updateReview(id: unsent.id, reflection: unsent.text)
+            }
+            pending = nil
+        }
         guard let client = session.client else {
             review = nil
             reflectionText = ""
@@ -261,11 +287,13 @@ struct WeeklyReviewView: View {
             let match = all.first { $0.id == weekId }
             review = match
             reflectionText = match?.reflection ?? ""
+            loadFailed = false
         } catch {
-            // Offline or a hiccup: leave the editor blank rather than showing stale text
-            // from a different week.
+            // Offline or a hiccup. Show nothing from another week, and don't let typing into the
+            // empty box replace the real reflection — see `loadFailed`.
             review = nil
             reflectionText = ""
+            loadFailed = true
         }
     }
 
@@ -273,6 +301,7 @@ struct WeeklyReviewView: View {
         guard let client = session.client else { return }
         saveTask?.cancel()
         let id = weekId
+        pending = (id, text)
         saveTask = Task {
             try? await Task.sleep(nanoseconds: 800_000_000)
             guard !Task.isCancelled else { return }
@@ -283,6 +312,7 @@ struct WeeklyReviewView: View {
             do {
                 let saved = try await client.updateReview(id: id, reflection: text)
                 if id == weekId { review = saved }
+                if pending?.id == id, pending?.text == text { pending = nil }
             } catch {
                 // Will retry on the next keystroke or the next time this week loads.
             }

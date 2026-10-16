@@ -114,6 +114,13 @@ private struct MainTabs: View {
         .onChange(of: model.focusRequested) { _, requested in
             if requested { selection = .today }
         }
+        // Finishing Plan My Day (pushed from More) lands you on Today.
+        .onChange(of: model.todayRequested) { _, requested in
+            if requested {
+                selection = .today
+                model.todayRequested = false
+            }
+        }
         // Add to Tempo (widget link) switches to Inbox; InboxView itself focuses the field.
         .onChange(of: model.captureRequested) { _, requested in
             if requested { selection = .inbox }
