@@ -504,7 +504,9 @@ Log a new mood entry. Also auto-completes any non-archived habit whose name cont
 { "value": 72, "note": "Energized after walk" }
 ```
 
-**400** if `value` is missing or out of range (1–100).
+Optional, for clients that queue check-ins offline: `id` (UUID; a repeat with the same id returns the existing entry with **200**, another user's id is **409**), `createdAt` (ISO time it was logged; clamped to now), and `date` (the client's local `yyyy-MM-dd`, used for the mood-habit check-off instead of the server's UTC date).
+
+**400** if `value` is missing or out of range (1–100), or `id` / `date` / `createdAt` is malformed.
 
 #### `GET /api/mood`
 Get history.
@@ -513,6 +515,27 @@ Get history.
 
 #### `GET /api/mood/latest`
 Most recent entry, or `null` if none.
+
+---
+
+### Push
+
+Devices that receive APNs pushes (see `Docs/PushNotifications.md`). Write scope.
+
+#### `PUT /api/push/devices`
+Register (or move) this device's token for the signed-in user. Registering a token another account had moves it here.
+
+**Body:**
+```json
+{ "token": "<hex APNs device token>", "environment": "sandbox", "bundleId": "com.johnwaynehill.Tempo" }
+```
+
+`environment` is `sandbox` for Xcode debug builds, `production` for TestFlight and App Store builds. **400** on a malformed token or environment.
+
+#### `DELETE /api/push/devices/:token`
+Stop pushing to this device for this user (sign-out). **204**.
+
+Todos also gain a server-owned `reminderPushedAt` (ignored on write): when the reminder went out as a push. Changing `reminderAt` clears it.
 
 ---
 

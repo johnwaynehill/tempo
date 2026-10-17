@@ -238,6 +238,18 @@ public actor TempoClient {
         try await request("GET", "/api/ai-usage")
     }
 
+    // MARK: Push
+
+    /// `PUT /api/push/devices`: this device's APNs token, for the signed-in account.
+    public func registerPushDevice(token: String, environment: String, bundleId: String) async throws {
+        struct Body: Encodable { var token: String; var environment: String; var bundleId: String }
+        let _: JSONValue = try await request("PUT", "/api/push/devices", body: Body(token: token, environment: environment, bundleId: bundleId))
+    }
+
+    public func unregisterPushDevice(token: String) async throws {
+        try await requestVoid("DELETE", "/api/push/devices/\(token)")
+    }
+
     // MARK: Plumbing
 
     private func makeRequest(_ method: String, _ path: String, query: [URLQueryItem], body: (any Encodable)?) throws -> URLRequest {

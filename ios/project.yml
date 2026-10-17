@@ -57,6 +57,9 @@ targets:
         # Shared container: offline cache, extension inbox, timer state for the widget.
         com.apple.security.application-groups:
           - group.com.johnwaynehill.Tempo
+        # Reminders and "plan ready" arrive as pushes (Docs/PushNotifications.md). Xcode
+        # rewrites this to `production` when exporting for TestFlight / the App Store.
+        aps-environment: development
         # Mood check-ins are saved to Apple Health as State of Mind (write only).
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
