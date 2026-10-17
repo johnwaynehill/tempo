@@ -53,9 +53,11 @@ router.get('/:id', async (req, res) => {
 // offline write behind it. A repeat from the same user gets the existing row (200);
 // an id that belongs to someone else is a conflict (409).
 router.post('/', async (req, res) => {
+  // reminderPushedAt is server-owned (lib/push.ts).
+  const { reminderPushedAt: _pushed, ...body } = req.body ?? {}
   const [row] = await db
     .insert(schema.todos)
-    .values({ ...req.body, userId: req.userId! })
+    .values({ ...body, userId: req.userId! })
     .onConflictDoNothing({ target: schema.todos.id })
     .returning()
 
@@ -71,7 +73,9 @@ router.post('/', async (req, res) => {
 
 // Update todo
 router.put('/:id', async (req, res) => {
-  const { id, userId, createdAt, firestoreId, ...updates } = req.body
+  const { id, userId, createdAt, firestoreId, reminderPushedAt, ...updates } = req.body
+  // A new (or cleared) reminder time is a new reminder: let the push sweep send it again.
+  if ('reminderAt' in updates) updates.reminderPushedAt = null
   const [row] = await db
     .update(schema.todos)
     .set(updates)

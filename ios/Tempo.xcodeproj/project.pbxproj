@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		00739EF01C7CB4AA18BA65A2 /* Keychain.swift in Sources */ = {isa = PBXBuildFile; fileRef = 751BA7C01657B3A2B0E73F7F /* Keychain.swift */; };
+		026B197B93C8BA32E0A63C49 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C544E2475F93D09D9BDC7670 /* AppDelegate.swift */; };
 		03B0BDCB9B9F78DEA3D32ECC /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 0F2B287CDB50455F97B74F9D /* TempoKit */; };
 		0424E97754ACC8D38893F69D /* HabitsWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0940A215613386560E72B577 /* HabitsWidgetData.swift */; };
 		059FE307DB456E18777F2AD2 /* Charts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48D702CD8C649D33D7F66640 /* Charts.swift */; };
@@ -41,6 +42,7 @@
 		409469BBFD1FB2C382857683 /* NowCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62AC3C4EF8741909180B7B06 /* NowCard.swift */; };
 		439E4D46C0F69F0B188DF79B /* DebugLaunch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 95A0449A5BBE528B535297D6 /* DebugLaunch.swift */; };
 		44B3F8E991B7FAF4B441CE86 /* TempoIntents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 503EDF7A08F7B75087C30CAD /* TempoIntents.swift */; };
+		45CC1CD8ED29CF88C06EDF0C /* TimerNudge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 048C609D042AF7F5510DEF0C /* TimerNudge.swift */; };
 		49BE77B9856AA29D533741D2 /* HabitsWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0940A215613386560E72B577 /* HabitsWidgetData.swift */; };
 		4B55908B27441800288D6A22 /* InboxView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1720DA0DCE4697825E4EBAA6 /* InboxView.swift */; };
 		4C3624309BEDFA2D7F6E2FCF /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = 9E8A9F2018543CA0905879C7 /* TempoKit */; };
@@ -108,6 +110,7 @@
 		CFE4B43BA8AADA8C645AD362 /* PlanMyDayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE0405253AC65CDD39D16DB /* PlanMyDayView.swift */; };
 		D1A0C6E5A8EE517555A298ED /* TempoKit in Frameworks */ = {isa = PBXBuildFile; productRef = A501EFA5E1E9239BCBDB799A /* TempoKit */; };
 		D1B50AF423AB988E82E1C61A /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 410E1C43D2E3E7174D34A175 /* Theme.swift */; };
+		DD80E632E7D45E98E24AE952 /* PushRegistration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B73D2C9EB02F4C3CF600CF7 /* PushRegistration.swift */; };
 		DEECE97C9065D5F8D026769C /* ReminderScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C257BC542B015099982FCC /* ReminderScheduler.swift */; };
 		E04AF11317EB823C8E3CD4AE /* TodayWidgetData.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCFADF7A7117BE4406A3AC01 /* TodayWidgetData.swift */; };
 		EA0E00BF58E741B756D4D673 /* ShareCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CE4A90DD2A28857A15E5C96 /* ShareCapture.swift */; };
@@ -152,6 +155,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		048C609D042AF7F5510DEF0C /* TimerNudge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimerNudge.swift; sourceTree = "<group>"; };
 		051F7F422AC2DF0D56604358 /* CompleteActiveTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompleteActiveTaskIntent.swift; sourceTree = "<group>"; };
 		0940A215613386560E72B577 /* HabitsWidgetData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsWidgetData.swift; sourceTree = "<group>"; };
 		09C257BC542B015099982FCC /* ReminderScheduler.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderScheduler.swift; sourceTree = "<group>"; };
@@ -184,6 +188,7 @@
 		60AA7274DB6EAAA51F550B39 /* TempoTimerLiveActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoTimerLiveActivity.swift; sourceTree = "<group>"; };
 		62AC3C4EF8741909180B7B06 /* NowCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowCard.swift; sourceTree = "<group>"; };
 		639D2C611797D3B60E6651BD /* StartNextTaskIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartNextTaskIntent.swift; sourceTree = "<group>"; };
+		6B73D2C9EB02F4C3CF600CF7 /* PushRegistration.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PushRegistration.swift; sourceTree = "<group>"; };
 		70D1BBFA81B4F88F7166F5F1 /* Manrope[wght].ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Manrope[wght].ttf"; sourceTree = "<group>"; };
 		74371ED08F71EA13BDC933C1 /* TempoWidgetsBundle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TempoWidgetsBundle.swift; sourceTree = "<group>"; };
 		751BA7C01657B3A2B0E73F7F /* Keychain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keychain.swift; sourceTree = "<group>"; };
@@ -215,6 +220,7 @@
 		C08F3D17FC6F080E04A6B484 /* HabitsWidgetViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitsWidgetViews.swift; sourceTree = "<group>"; };
 		C145AFC84C18B35767AD25F0 /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
 		C3834064BD62907CE342351B /* ToggleHabitWidgetIntent.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHabitWidgetIntent.swift; sourceTree = "<group>"; };
+		C544E2475F93D09D9BDC7670 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		C5C71775352D4383D2544089 /* ShareViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareViewController.swift; sourceTree = "<group>"; };
 		CC470CEEAE272D27F858AED3 /* InsightsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InsightsView.swift; sourceTree = "<group>"; };
 		CE519FDDFF855E2DEAE1AB5A /* CompletionSparkle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CompletionSparkle.swift; sourceTree = "<group>"; };
@@ -340,6 +346,7 @@
 			isa = PBXGroup;
 			children = (
 				7071F5775E773B1CD69A5F52 /* Fonts */,
+				C544E2475F93D09D9BDC7670 /* AppDelegate.swift */,
 				CE7BE2B9BA0F6FA7489B121E /* AppModel.swift */,
 				19BD6B0F4B6E8C72E51A9764 /* Assets.xcassets */,
 				FC293CCEC874826FAF365063 /* BackgroundRefresh.swift */,
@@ -373,6 +380,7 @@
 				C145AFC84C18B35767AD25F0 /* PlaylistDetailView.swift */,
 				F8485AE943E1734EF6FFA512 /* PlaylistsView.swift */,
 				53F7F581276658D9B615C4B2 /* ProjectsView.swift */,
+				6B73D2C9EB02F4C3CF600CF7 /* PushRegistration.swift */,
 				09C257BC542B015099982FCC /* ReminderScheduler.swift */,
 				5A6246B31BA2F1224264AD02 /* Session.swift */,
 				D772451920EB3F99A6E18E4C /* SettingsView.swift */,
@@ -381,6 +389,7 @@
 				DE37B2DC31D748FD529F6B6B /* TempoApp.swift */,
 				410E1C43D2E3E7174D34A175 /* Theme.swift */,
 				14E267F3FADBB034D8C2D37A /* TimerActivityController.swift */,
+				048C609D042AF7F5510DEF0C /* TimerNudge.swift */,
 				5CEDCC092F352AF31653D674 /* TodayView.swift */,
 				99E93E2B3BA9C949485ACF2D /* TodayViewModel.swift */,
 				B0AE8A68801A1598BD39A0FC /* TodoDetailView.swift */,
@@ -609,6 +618,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27F60790CFCFBC38AB072CDE /* AddTodoIntent.swift in Sources */,
+				026B197B93C8BA32E0A63C49 /* AppDelegate.swift in Sources */,
 				3CFF3C5C3161C444394FD8A9 /* AppGroup.swift in Sources */,
 				60DC923B08A2FD668E651F48 /* AppModel.swift in Sources */,
 				64BAF174B3CA9C32F0C27317 /* BackgroundRefresh.swift in Sources */,
@@ -645,6 +655,7 @@
 				7A96F839E8E755DDDB6C8708 /* PlaylistDetailView.swift in Sources */,
 				67FF880C8B7631E10ACB4A96 /* PlaylistsView.swift in Sources */,
 				32CFB3BB79D38F9288A7AB35 /* ProjectsView.swift in Sources */,
+				DD80E632E7D45E98E24AE952 /* PushRegistration.swift in Sources */,
 				DEECE97C9065D5F8D026769C /* ReminderScheduler.swift in Sources */,
 				680F5CF364C9F8D2A88A02A9 /* Session.swift in Sources */,
 				CDF9091CBD0483ED3A77DDD5 /* SettingsView.swift in Sources */,
@@ -659,6 +670,7 @@
 				5DC245C15D3E21EC4AC59F2F /* TempoTimerActivity.swift in Sources */,
 				D1B50AF423AB988E82E1C61A /* Theme.swift in Sources */,
 				25A2F6225C6396E81CFE55E6 /* TimerActivityController.swift in Sources */,
+				45CC1CD8ED29CF88C06EDF0C /* TimerNudge.swift in Sources */,
 				713CFC8D025B7CBD4BD498EA /* TodayView.swift in Sources */,
 				38A283033C3D6D54AAD3277E /* TodayViewModel.swift in Sources */,
 				A3961A67F817D3CF3D7D8B49 /* TodayWidgetData.swift in Sources */,

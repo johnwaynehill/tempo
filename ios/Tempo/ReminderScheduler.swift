@@ -6,7 +6,9 @@ import UserNotifications
 ///
 /// `sync(todos:)` is called by `AppModel` after every load and mutation: it schedules
 /// one request per todo whose reminder is still ahead (identifier = todo id) and
-/// removes pending requests for todos that no longer qualify. The server's
+/// removes pending requests for todos that no longer qualify. While the server is pushing
+/// reminders to this device (`PushRegistration.isActive`) it schedules none, so a reminder
+/// never arrives twice. The server's
 /// `reminderAt` is left alone on purpose; the web client clears it after firing and
 /// the phone shouldn't fight that.
 @MainActor
@@ -52,11 +54,12 @@ final class ReminderScheduler {
         guard await ensureAuthorized() else { return }
 
         let now = Date()
-        let wanted = todos.filter { Self.qualifies($0, now: now) }
+        let wanted = PushRegistration.shared.isActive ? [] : todos.filter { Self.qualifies($0, now: now) }
         let wantedIds = Set(wanted.map { $0.id.uuidString.lowercased() })
 
+        // Only reminders are ours to prune (their identifiers are todo ids); the timer nudge isn't.
         let pending = await center.pendingNotificationRequests()
-        let stale = pending.map(\.identifier).filter { !wantedIds.contains($0) }
+        let stale = pending.map(\.identifier).filter { UUID(uuidString: $0) != nil && !wantedIds.contains($0) }
         if !stale.isEmpty {
             center.removePendingNotificationRequests(withIdentifiers: stale)
         }
@@ -69,6 +72,7 @@ final class ReminderScheduler {
             content.body = Self.body(for: todo)
             content.sound = .default
             content.threadIdentifier = "reminders"
+            content.userInfo = ["kind": "reminder", "todoId": todo.id.uuidString.lowercased()]
 
             let components = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute, .second], from: at)
             let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
@@ -89,7 +93,9 @@ final class ReminderScheduler {
         case .notDetermined:
             guard !authorizationRequested else { return false }
             authorizationRequested = true
-            return (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+            let granted = (try? await center.requestAuthorization(options: [.alert, .sound])) ?? false
+            if granted { PushRegistration.shared.permissionGranted() }
+            return granted
         case .denied:
             return false
         @unknown default:
