@@ -114,6 +114,8 @@ struct MoodCheckInSheet: View {
     @State private var value: Double
     @State private var note = ""
     @State private var saving = false
+    /// The check-in saved but Apple Health didn't; the sheet stays open on the reason until Done.
+    @State private var savedWithHealthNote = false
     @State private var message: String?
     @AppStorage(HealthMoodWriter.toggleDefaultsKey) private var alsoHealth = false
     @FocusState private var noteFocused: Bool
@@ -218,7 +220,7 @@ struct MoodCheckInSheet: View {
                 }
 
                 Button(action: save) {
-                    Text(saving ? "Saving…" : "Save")
+                    Text(savedWithHealthNote ? "Done" : saving ? "Saving…" : "Save")
                 }
                 .buttonStyle(BarPrimaryButtonStyle())
                 .disabled(saving)
@@ -252,7 +254,25 @@ struct MoodCheckInSheet: View {
         }
     }
 
+    /// Why Apple Health didn't get the check-in, in words someone can act on.
+    static func healthNote(_ result: HealthMoodResult) -> String? {
+        switch result {
+        case .skipped, .saved:
+            nil
+        case .notAuthorized:
+            "Saved to Tempo. Apple Health didn't get it because Tempo isn't allowed to write State of Mind. Turn it on in Settings → Health → Data Access & Devices → Tempo."
+        case .unavailable:
+            "Saved to Tempo. Apple Health isn't available on this device."
+        case .failed:
+            "Saved to Tempo, but Apple Health couldn't save it this time."
+        }
+    }
+
     private func save() {
+        if savedWithHealthNote {
+            dismiss()
+            return
+        }
         guard !saving else { return }
         noteFocused = false
         saving = true
@@ -261,9 +281,12 @@ struct MoodCheckInSheet: View {
             let (entry, health) = await MoodCheckIn.save(model: model, value: Int(value.rounded()), note: note, alsoHealth: alsoHealth)
             saving = false
             onSaved(entry)
-            if health.needsNote {
-                message = "Saved to Tempo. Apple Health wasn't updated."
-                try? await Task.sleep(for: .seconds(1.8))
+            if let note = Self.healthNote(health) {
+                // Stays up until Done: the check-in is saved, and the reason Health didn't get it
+                // (usually a permission) needs reading, not a 2-second flash.
+                message = note
+                savedWithHealthNote = true
+                return
             } else if model.isOffline {
                 message = "Saved. It'll reach Tempo when you're back online."
                 try? await Task.sleep(for: .seconds(1.5))
