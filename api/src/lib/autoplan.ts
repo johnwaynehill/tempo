@@ -15,6 +15,7 @@ import { db, schema } from '../db/index.js'
 import { getSpendToday, recordUsage } from './ai-usage.js'
 import { localDate } from './ai-pricing.js'
 import type { TokenUsage } from './ai-pricing.js'
+import { sendPlanReady } from './push.js'
 
 // --- Tunables ---
 
@@ -412,6 +413,9 @@ export async function runAutoplanForUser(
       target: schema.userPreferences.userId,
       set: { autoplanLastRunDate: todayDate },
     })
+
+  // Tell the phone the morning plan landed. Never blocks or fails the plan itself.
+  await sendPlanReady(userId, pickedIds)
 
   return {
     userId,

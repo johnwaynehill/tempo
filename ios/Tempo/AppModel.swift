@@ -55,6 +55,8 @@ final class AppModel {
     /// Set by screens pushed on another tab (Plan My Day from More) that finish by sending you
     /// to Today; the tab bar switches and clears it.
     var todayRequested = false
+    /// A tapped reminder or nudge: Today shows that todo's detail and clears this.
+    var openTodoRequested: UUID?
 
     /// The day a refresh last finished for. Until it matches `todayString`, an empty Today
     /// means "not planned yet", not "nothing to do" — after midnight, or on a cold start before
@@ -71,6 +73,7 @@ final class AppModel {
     /// The last notes list seen, so the notes screens open offline (read-only: note edits
     /// aren't in the write queue). Lives beside the store's files for this account.
     private let notesCacheURL: URL
+    private let client: TempoClient
     private let reminders: ReminderScheduler
     private let activity: TimerActivityController
     private var loadTask: Task<Void, Never>?
@@ -102,6 +105,7 @@ final class AppModel {
         calendar: Calendar = .autoupdatingCurrent
     ) {
         let directory = Self.storeDirectory(for: apiKey)
+        self.client = client
         self.store = TempoStore(client: client, directory: directory, calendar: calendar)
         self.notesCacheURL = directory.appendingPathComponent("notes.json")
         self.reminders = reminders
@@ -111,6 +115,11 @@ final class AppModel {
         consumeFocusRequest()
         startClockWatch()
         startPathWatch()
+        // Push took over reminders (or handed them back): reschedule the local ones to match.
+        PushRegistration.shared.onActiveChange = { [weak self] in
+            guard let self else { return }
+            self.reminders.sync(todos: self.todos)
+        }
     }
 
     isolated deinit {
@@ -274,6 +283,7 @@ final class AppModel {
         await drainInbox()
         await refresh()
         await flush()
+        await PushRegistration.shared.refresh(client: client)
         Self.log.info("load: done hasLoaded=\(self.hasLoaded) offline=\(self.isOffline) pending=\(self.pendingCount)")
     }
 
@@ -294,6 +304,8 @@ final class AppModel {
         await drainInbox()
         await flush()
         await refresh()
+        // Notifications may have been allowed or turned off in Settings while we were away.
+        await PushRegistration.shared.refresh(client: client)
     }
 
     /// Imports writes the share extension and App Intents dropped in the App Group inbox,
@@ -530,6 +542,8 @@ final class AppModel {
         retryTask?.cancel()
         retryAttempt = 0
         setTimer(.idle)
+        // This account stops getting this phone's pushes.
+        await PushRegistration.shared.unregister()
         await store.signOut()
         try? FileManager.default.removeItem(at: notesCacheURL)
         // This account's reminders must not keep firing, and writes the widget or share sheet
@@ -628,6 +642,7 @@ final class AppModel {
         persistTimer()
         updateTick()
         syncActivity(previous: previous)
+        TimerNudge.sync(timer: timer, todo: timer.activeTaskId.flatMap { todo(id: $0) }, now: now)
     }
 
     private func restoreTimer() {
@@ -875,6 +890,8 @@ extension AppModel: TempoIntentHost {
     func adoptSharedTimer() {
         restoreTimer()
         now = Date()
+        // A widget or Shortcut may have started, paused or stopped the clock while we were away.
+        TimerNudge.sync(timer: timer, todo: timer.activeTaskId.flatMap { todo(id: $0) }, now: now)
         if timer.isActive, activityTodoId != timer.activeTaskId, activeTodo != nil {
             syncActivity(previous: .idle)
         }

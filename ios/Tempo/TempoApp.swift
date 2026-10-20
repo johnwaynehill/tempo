@@ -4,6 +4,7 @@ import TempoKit
 
 @main
 struct TempoApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
     @State private var session = Session()
 
     var body: some Scene {
@@ -52,6 +53,7 @@ private struct RootView: View {
                 model = created
                 registerIntentHost(created)
                 BackgroundRefresh.model = created
+                NotificationRouter.model = created
             } else {
                 model = nil
             }
@@ -113,7 +115,7 @@ private struct MainTabs: View {
     var body: some View {
         TabView(selection: $selection) {
             SwiftUI.Tab("Today", systemImage: "circle.circle", value: Tab.today) {
-                TabStack { TodayView() }
+                TabStack(opensRequestedTodos: true) { TodayView() }
             }
             SwiftUI.Tab("Inbox", systemImage: "arrow.down", value: Tab.inbox) {
                 TabStack { InboxView() }
@@ -143,19 +145,33 @@ private struct MainTabs: View {
         .onChange(of: model.captureRequested) { _, requested in
             if requested { selection = .inbox }
         }
+        // A tapped reminder or nudge opens its todo on Today's stack.
+        .onChange(of: model.openTodoRequested, initial: true) { _, id in
+            if id != nil { selection = .today }
+        }
     }
 }
 
 /// A navigation stack that knows how to push a todo detail from any row.
 private struct TabStack<Content: View>: View {
+    /// Today's stack shows a todo when a notification about it is tapped.
+    var opensRequestedTodos = false
     @ViewBuilder var content: Content
 
+    @Environment(AppModel.self) private var model
+    @State private var path = NavigationPath()
+
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $path) {
             content
                 .navigationDestination(for: UUID.self) { id in
                     TodoDetailView(id: id)
                 }
+        }
+        .onChange(of: model.openTodoRequested, initial: true) { _, id in
+            guard opensRequestedTodos, let id else { return }
+            model.openTodoRequested = nil
+            path = NavigationPath([id])
         }
     }
 }

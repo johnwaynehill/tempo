@@ -42,6 +42,8 @@ export const todos = pgTable('todos', {
   noteId: uuid('note_id'),
   deferUntil: timestamp('defer_until', { withTimezone: true }),
   reminderAt: timestamp('reminder_at', { withTimezone: true }),
+  // Server-owned: when the reminder went out as a push, so it's sent once.
+  reminderPushedAt: timestamp('reminder_pushed_at', { withTimezone: true }),
   dismissedFromToday: timestamp('dismissed_from_today', { withTimezone: true }),
   estimatedMinutes: integer('estimated_minutes'),
   // Timer bookkeeping: first start, and total timed minutes across runs.
@@ -292,3 +294,16 @@ export const aiUsageDaily = pgTable('ai_usage_daily', {
   costUsd: numeric('cost_usd', { precision: 12, scale: 6 }).notNull().default('0'),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.userId, t.date] })])
+
+// --- Push notifications ---
+// One row per device that can receive APNs pushes (Docs/PushNotifications.md).
+
+export const pushDevices = pgTable('push_devices', {
+  token: text('token').primaryKey(),
+  userId: text('user_id').notNull(),
+  // 'sandbox' for Xcode debug builds, 'production' for TestFlight / App Store.
+  environment: text('environment').notNull(),
+  bundleId: text('bundle_id').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+})

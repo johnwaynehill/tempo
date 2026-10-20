@@ -25,6 +25,8 @@ import authRouter from './routes/auth.js'
 import autoplanRouter from './routes/autoplan.js'
 import googleCalendarRouter, { googleCalendarCallbackRouter } from './routes/google-calendar.js'
 import googleSyncRouter from './routes/google-sync.js'
+import pushRouter from './routes/push.js'
+import { startPushScheduler } from './lib/push.js'
 
 // Init Firebase Admin (for token verification + user lookups)
 const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
@@ -117,6 +119,7 @@ app.use('/api/google-calendar', requireMethodScope, googleCalendarRouter)
 app.use('/api/mcp-oauth', requireMethodScope, mcpOauthRouter)
 app.use('/api/auth', requireMethodScope, authRouter)
 app.use('/api/ai-usage', requireMethodScope, aiUsageRouter)
+app.use('/api/push', requireMethodScope, pushRouter)
 
 // Anthropic proxy is gated on the 'ai' scope (separate from read/write because it spends money),
 // rate-limited, and capped at AI_DAILY_CAP_USD per user per local day (aiBudget also
@@ -129,4 +132,5 @@ app.use('/api/api-keys', requireFirebaseAuth, apiKeysRouter)
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Tempo API running on port ${port}`)
+  startPushScheduler()
 })
