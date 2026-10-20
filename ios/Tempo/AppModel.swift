@@ -367,9 +367,34 @@ final class AppModel {
     func createTodo(
         title: String, status: TodoStatus = .inbox, project: String? = nil, energyLevel: EnergyLevel? = nil
     ) async -> Todo? {
-        let draft = TodoDraft(id: UUID(), title: title, status: status, project: project, energyLevel: energyLevel)
+        await createTodo(TodoDraft(id: UUID(), title: title, status: status, project: project, energyLevel: energyLevel))
+    }
+
+    @discardableResult
+    func createTodo(_ draft: TodoDraft) async -> Todo? {
         await enqueue(.createTodo(draft: draft))
         return todo(id: draft.id)
+    }
+
+    /// Suggestions are off for the rest of the session once the server says this key can't use
+    /// AI (403) or today's AI budget is spent (429), instead of asking on every keystroke.
+    private var smartCaptureUnavailable = false
+
+    /// Claude's suggested fields for a new todo's title, or nil (offline, no `ai` scope, budget spent).
+    func smartCapture(title: String) async -> SmartSuggestions? {
+        guard !smartCaptureUnavailable else { return nil }
+        do {
+            return try await client.smartCapture(title: title)
+        } catch let error as TempoAPIError {
+            switch error {
+            case .unauthorized: smartCaptureUnavailable = true
+            case .http(let status, _) where status == 403 || status == 429: smartCaptureUnavailable = true
+            default: break
+            }
+            return nil
+        } catch {
+            return nil
+        }
     }
 
     @discardableResult

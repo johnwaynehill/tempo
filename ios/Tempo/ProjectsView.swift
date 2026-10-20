@@ -216,7 +216,7 @@ struct ProjectDetailView: View {
         }
         .sheet(isPresented: $showNew) {
             NewTodoSheet(status: .backlog, project: name, energy: energyFilter)
-                .presentationDetents([.height(220)])
+                .presentationDetents([.large])
         }
         .alert("Rename project", isPresented: $renaming) {
             TextField("Project name", text: $renameValue)

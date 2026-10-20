@@ -26,6 +26,7 @@ import autoplanRouter from './routes/autoplan.js'
 import googleCalendarRouter, { googleCalendarCallbackRouter } from './routes/google-calendar.js'
 import googleSyncRouter from './routes/google-sync.js'
 import pushRouter from './routes/push.js'
+import smartCaptureRouter from './routes/smart-capture.js'
 import { startPushScheduler } from './lib/push.js'
 
 // Init Firebase Admin (for token verification + user lookups)
@@ -125,6 +126,8 @@ app.use('/api/push', requireMethodScope, pushRouter)
 // rate-limited, and capped at AI_DAILY_CAP_USD per user per local day (aiBudget also
 // clamps max_tokens and rejects models Tempo doesn't use).
 app.use('/api/anthropic', requireScope('ai'), anthropicRateLimit, aiBudget, anthropicRouter)
+// Suggested fields for a new todo (iOS capture sheet). Costs money, so 'ai' scope + AI rate limit.
+app.use('/api/smart-capture', requireScope('ai'), anthropicRateLimit, smartCaptureRouter)
 
 // API-key management is privileged — only the user (via Firebase auth) can mint or revoke keys.
 // This prevents a 'write'-scoped key from minting an 'ai' key for itself.

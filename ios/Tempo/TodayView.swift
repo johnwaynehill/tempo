@@ -23,7 +23,7 @@ struct TodayView: View {
             .tabRootChrome()
             .sheet(isPresented: $showNew) {
                 NewTodoSheet(status: .todayPinned)
-                    .presentationDetents([.height(220)])
+                    .presentationDetents([.large])
             }
             .fullScreenCover(isPresented: $showPlan) {
                 PlanMyDayView()
