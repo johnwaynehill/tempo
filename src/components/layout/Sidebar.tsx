@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router'
 import { useAuth } from '@/context/AuthContext'
+import { Avatar } from '../ui/Avatar'
 
 const mainNav = [
   { to: '/today', label: 'Today', icon: '◉' },
@@ -94,11 +95,7 @@ export function Sidebar() {
             to="/settings"
             className="flex items-center gap-3 px-3 py-2 text-xs text-on-surface-variant hover:text-on-surface transition-colors duration-200 rounded-xl"
           >
-            <img
-              src={user.photoURL ?? ''}
-              alt=""
-              className="w-5 h-5 rounded-full"
-            />
+            <Avatar photoURL={user.photoURL} name={user.displayName ?? user.email} size={20} />
             <span className="truncate">{user.displayName}</span>
           </NavLink>
         )}
