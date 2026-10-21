@@ -121,7 +121,7 @@ final class Session {
         request.httpMethod = "POST"
         request.setValue("Bearer \(firebaseIDToken)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(Body(name: "iOS (Google Sign-In)", scopes: ["read", "write"]))
+        request.httpBody = try JSONEncoder().encode(Body(name: "iOS (Google Sign-In)", scopes: ["read", "write", "ai"]))
 
         let data: Data
         let response: URLResponse

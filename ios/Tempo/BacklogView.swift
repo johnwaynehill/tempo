@@ -135,7 +135,7 @@ struct BacklogView: View {
         .sheet(isPresented: $showNew) {
             // A new todo inherits the filters you're looking through, as on the web.
             NewTodoSheet(status: .backlog, project: projectFilter, energy: energyFilter)
-                .presentationDetents([.height(220)])
+                .presentationDetents([.large])
         }
         .tabRootChrome()
         .task { await model.loadIfNeeded() }

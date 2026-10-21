@@ -518,6 +518,22 @@ Most recent entry, or `null` if none.
 
 ---
 
+### Smart capture
+
+#### `POST /api/smart-capture`
+Suggested fields for a new todo from its title: the web capture drawer's classifier (`useSmartCapture`), run on the server for clients without their own Anthropic client. Requires the `ai` scope, shares the AI rate limit, and counts against the daily AI cap (**429** `ai_budget_exceeded` once reached).
+
+**Body:** `{ "title": "Pay the water bill by Friday" }`
+
+**Response:**
+```json
+{ "suggestions": { "energyLevel": "low", "size": "small", "impact": 3, "estimatedMinutes": 5, "dueDate": "2026-10-23" } }
+```
+
+Every field is optional; invalid ones are dropped, `project` is always one of the user's existing projects, and `dueDate` is `yyyy-MM-dd` in the user's local calendar. `suggestions` is `null` for titles under 5 characters or when nothing fits. **403** without the `ai` scope, **503** if the server has no Anthropic key.
+
+---
+
 ### Push
 
 Devices that receive APNs pushes (see `Docs/PushNotifications.md`). Write scope.

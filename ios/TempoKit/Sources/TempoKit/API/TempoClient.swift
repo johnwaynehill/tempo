@@ -238,6 +238,17 @@ public actor TempoClient {
         try await request("GET", "/api/ai-usage")
     }
 
+    // MARK: Smart capture
+
+    /// Suggested fields for a new todo from its title. Needs the key's `ai` scope (403 otherwise)
+    /// and counts against the daily AI cap (429 once it's reached). Nil when nothing fits.
+    public func smartCapture(title: String) async throws -> SmartSuggestions? {
+        struct Body: Encodable { var title: String }
+        struct Response: Decodable { var suggestions: SmartSuggestions? }
+        let response: Response = try await request("POST", "/api/smart-capture", body: Body(title: title))
+        return response.suggestions.flatMap { $0.isEmpty ? nil : $0 }
+    }
+
     // MARK: Push
 
     /// `PUT /api/push/devices`: this device's APNs token, for the signed-in account.
