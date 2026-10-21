@@ -172,6 +172,13 @@ export const api = {
   aiUsage: {
     get: () => apiFetch<AiUsageSummary>('/api/ai-usage'),
   },
+  /** Claude's suggested fields for a new todo's title, snake_cased; null when it has none. */
+  smartCapture: {
+    suggest: (title: string, signal?: AbortSignal) =>
+      apiFetch<{ suggestions: Record<string, unknown> | null }>('/api/smart-capture', {
+        method: 'POST', body: JSON.stringify({ title }), signal,
+      }).then(r => r.suggestions ? mapKeys(r.suggestions, camelToSnake) : null),
+  },
 
   preferences: {
     get: () => apiFetch<Record<string, unknown>>('/api/preferences')
