@@ -215,8 +215,48 @@ struct SettingsView: View {
 
     // MARK: Reminders
 
-    @ViewBuilder
     private var remindersCard: some View {
+        VStack(alignment: .leading, spacing: Theme.grid * 2) {
+            notificationPermissionRow
+            habitReminderRow
+        }
+    }
+
+    /// One push a day at the chosen time, sent by the server only if habits are still open.
+    @ViewBuilder
+    private var habitReminderRow: some View {
+        Toggle(isOn: Binding(
+            get: { prefs.habitReminderEnabled },
+            set: { on in
+                // The time is read in the account's time zone, which otherwise only the morning
+                // plan sets; with that off, take the phone's so 8 PM means 8 PM here.
+                let device = TimeZone.current.identifier
+                let zone = on && !prefs.autoplanEnabled && prefs.autoplanTimezone != device ? device : nil
+                Task { await model.updatePreferences(UserPreferencesUpdate(autoplanTimezone: zone, habitReminderEnabled: on)) }
+            }
+        )) {
+            SettingTitle(
+                title: "Daily habit reminder",
+                detail: "Once a day, at a time you pick, if any of today's habits are still open."
+            )
+        }
+        .tint(Theme.primary)
+
+        if prefs.habitReminderEnabled {
+            HStack {
+                Text("Remind me at")
+                    .font(Theme.font(.subheadline))
+                    .foregroundStyle(Theme.onSurface)
+                Spacer(minLength: Theme.grid)
+                DatePicker("Remind me at", selection: clockBinding(\.habitReminderTime) { UserPreferencesUpdate(habitReminderTime: $0) },
+                           displayedComponents: .hourAndMinute)
+                    .labelsHidden()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var notificationPermissionRow: some View {
         HStack(spacing: Theme.grid * 2) {
             SettingTitle(title: "Reminder notifications", detail: reminderDetail)
             Spacer(minLength: 0)

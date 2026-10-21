@@ -55,6 +55,8 @@ final class AppModel {
     /// Set by screens pushed on another tab (Plan My Day from More) that finish by sending you
     /// to Today; the tab bar switches and clears it.
     var todayRequested = false
+    /// The daily habit reminder was tapped: the tab bar switches to Habits and clears it.
+    var habitsRequested = false
     /// A tapped reminder or nudge: Today shows that todo's detail and clears this.
     var openTodoRequested: UUID?
 

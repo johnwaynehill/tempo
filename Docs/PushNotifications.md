@@ -1,11 +1,12 @@
 # Push notifications
 
-Tempo sends three kinds of notification to the iOS app:
+Tempo sends four kinds of notification to the iOS app:
 
 | Kind | Sent by | When |
 |---|---|---|
 | **Reminder** | Server (APNs) | A todo's `reminder_at` arrives, whichever client set it (web, iOS, Claude via MCP). |
 | **Morning plan ready** | Server (APNs) | The 06:30 auto-plan fills Today: "4 tasks, about 2h 30m." |
+| **Habit reminder** | Server (APNs) | Once a day at the time set in Settings, if any of today's habits are still open: "Last habit to go: Stretch" or "Did you get to those habits today?" |
 | **Timer running long** | The phone (local) | The task on the clock passes its estimate by a quarter of it, at least 10 minutes. |
 
 The timer nudge is local because the running timer only exists on the phone; it's
@@ -29,7 +30,20 @@ Before push, the app scheduled every reminder as a local notification. Now:
 - Reminder text matches the app's local reminders exactly (same four phrasings, same
   pick per todo id).
 
-Tapping a reminder or nudge opens that todo on Today; tapping "plan ready" opens Today.
+## Habit reminder
+
+Off by default; turned on (with a time) in Settings on iOS or the web. The same 30 s sweep
+checks it: once the user's local time (in `autoplan_timezone`) reaches the chosen time, it
+claims the day by setting `user_preferences.habit_reminder_last_date` with a conditional
+`UPDATE … RETURNING` (so two API instances can't both send it), then sends only if at least
+one unarchived habit isn't completed for that local date. Up to 60 minutes late is still
+sent (a deploy in between); later than that, the day is skipped. The wording rotates one
+step a day through four phrasings for one open habit and four for several (at most three
+named, then "and 2 more"), so consecutive days never read the same. There's no local
+fallback: without a registered device it isn't sent.
+
+Tapping a reminder or nudge opens that todo on Today; tapping "plan ready" opens Today;
+tapping the habit reminder opens Habits.
 Signing out unregisters the device.
 
 ## Setup (one time)

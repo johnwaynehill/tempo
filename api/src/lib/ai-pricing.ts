@@ -132,6 +132,12 @@ function safeParts(tz: string, now: Date): Record<string, string> {
   return out
 }
 
+/** Minutes since local midnight in the user's timezone (0–1439). Falls back to UTC on a bad zone. */
+export function localMinutes(tz: string, now: Date = new Date()): number {
+  const p = safeParts(tz, now)
+  return (Number(p.hour) % 24) * 60 + Number(p.minute)
+}
+
 /** "2026-09-13" in the user's timezone. Falls back to UTC on a bad zone. */
 export function localDate(tz: string, now: Date = new Date()): string {
   const p = safeParts(tz, now)
