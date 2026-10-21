@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { anthropic, AI_ENABLED, AI_MODEL, AI_THINKING_OFF } from '@/lib/anthropic'
+import { useState, useEffect, useRef } from 'react'
+import { api } from '@/lib/api'
 import type { EnergyLevel, TodoSize } from '@/types'
 
 export interface SmartSuggestions {
@@ -19,29 +19,29 @@ interface UseSmartCaptureResult {
 const DEBOUNCE_MS = 600
 const MIN_CHARS = 5
 
-export function useSmartCapture(
-  title: string,
-  enabled: boolean,
-  projectNames: string[],
-): UseSmartCaptureResult {
+// Errors that won't change by asking again this session: the daily AI cap, a key without
+// the `ai` scope, or a server with no Anthropic key. After one, stop asking until reload.
+const UNAVAILABLE = /ai_budget_exceeded|Insufficient scope|AI is not configured/
+let unavailable = false
+
+/**
+ * Suggested metadata for a new todo's title, from `POST /api/smart-capture` (which holds the
+ * prompt, the model and the validation, shared with iOS, and counts toward the daily AI cap).
+ */
+export function useSmartCapture(title: string, enabled: boolean): UseSmartCaptureResult {
   const [suggestions, setSuggestions] = useState<SmartSuggestions | null>(null)
   const [loading, setLoading] = useState(false)
-  const cacheRef = useRef<Map<string, SmartSuggestions>>(new Map())
+  const cacheRef = useRef<Map<string, SmartSuggestions | null>>(new Map())
   const abortRef = useRef<AbortController | null>(null)
 
-  // Stabilize projectNames to avoid re-triggering the effect on every render
-  const stableProjectNames = useMemo(() => projectNames, [projectNames.join(',')])
-
   useEffect(() => {
-    if (!enabled || !AI_ENABLED || title.trim().length < MIN_CHARS) {
+    const trimmed = title.trim()
+    if (!enabled || unavailable || trimmed.length < MIN_CHARS) {
       setSuggestions(null)
       setLoading(false)
       return
     }
 
-    const trimmed = title.trim()
-
-    // Check cache
     if (cacheRef.current.has(trimmed)) {
       setSuggestions(cacheRef.current.get(trimmed)!)
       return
@@ -50,80 +50,22 @@ export function useSmartCapture(
     setLoading(true)
 
     const timer = setTimeout(async () => {
-      // Abort previous request
       abortRef.current?.abort()
       const controller = new AbortController()
       abortRef.current = controller
 
       try {
-        const projectList = stableProjectNames.length > 0
-          ? `Known projects: ${stableProjectNames.join(', ')}`
-          : 'No existing projects.'
-
-        const today = new Date().toISOString().split('T')[0]
-
-        const response = await anthropic.messages.create({
-          model: AI_MODEL,
-          thinking: AI_THINKING_OFF,
-          max_tokens: 120,
-          system: `You are a task metadata classifier. Given a task title, suggest metadata. Return ONLY valid JSON with these optional fields:
-- energy_level: one of "low", "medium_low", "medium", "high"
-- size: one of "small", "medium", "large"
-- project: pick from the known projects list ONLY, or omit if none fit
-- impact: integer 1-5 (1=low, 5=critical)
-- estimated_minutes: integer (common values: 5, 15, 25, 45, 60, 90)
-- due_date: ISO date string if the task implies a deadline, omit otherwise. Today is ${today}.
-${projectList}
-Return JSON only, no explanation.`,
-          messages: [
-            { role: 'user', content: trimmed },
-          ],
-        })
-
+        const result = await api.smartCapture.suggest(trimmed, controller.signal)
         if (controller.signal.aborted) return
-
-        let text = response.content.find((b) => b.type === 'text')?.text.trim() ?? null
-        // Strip markdown code fences if present
-        if (text) {
-          text = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/,  '').trim()
-          const parsed = JSON.parse(text) as SmartSuggestions
-
-          // Validate fields
-          const valid: SmartSuggestions = {}
-          if (['low', 'medium_low', 'medium', 'high'].includes(parsed.energy_level ?? '')) {
-            valid.energy_level = parsed.energy_level
-          }
-          if (['small', 'medium', 'large'].includes(parsed.size ?? '')) {
-            valid.size = parsed.size
-          }
-          if (parsed.project && stableProjectNames.includes(parsed.project)) {
-            valid.project = parsed.project
-          }
-          if (typeof parsed.impact === 'number' && parsed.impact >= 1 && parsed.impact <= 5) {
-            valid.impact = Math.round(parsed.impact)
-          }
-          if (typeof parsed.estimated_minutes === 'number' && parsed.estimated_minutes > 0 && parsed.estimated_minutes <= 480) {
-            valid.estimated_minutes = parsed.estimated_minutes
-          }
-          if (parsed.due_date && /^\d{4}-\d{2}-\d{2}$/.test(parsed.due_date)) {
-            valid.due_date = parsed.due_date
-          }
-
-          if (Object.keys(valid).length > 0) {
-            cacheRef.current.set(trimmed, valid)
-            setSuggestions(valid)
-          } else {
-            setSuggestions(null)
-          }
-        }
-      } catch {
-        if (!controller.signal.aborted) {
-          setSuggestions(null)
-        }
+        const valid = (result as SmartSuggestions | null) ?? null
+        cacheRef.current.set(trimmed, valid)
+        setSuggestions(valid)
+      } catch (err) {
+        if (controller.signal.aborted) return
+        if (err instanceof Error && UNAVAILABLE.test(err.message)) unavailable = true
+        setSuggestions(null)
       } finally {
-        if (!controller.signal.aborted) {
-          setLoading(false)
-        }
+        if (!controller.signal.aborted) setLoading(false)
       }
     }, DEBOUNCE_MS)
 
@@ -131,7 +73,7 @@ Return JSON only, no explanation.`,
       clearTimeout(timer)
       setLoading(false)
     }
-  }, [title, enabled, stableProjectNames])
+  }, [title, enabled])
 
   return { suggestions, loading }
 }
