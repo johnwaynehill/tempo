@@ -14,6 +14,9 @@ public struct UserPreferences: Codable, Identifiable, Hashable, Sendable {
     /// `"HH:MM"` local wall-clock.
     public var workDayStart: String
     public var workDayEnd: String
+    /// One push a day at `habitReminderTime` (`"HH:MM"` in `autoplanTimezone`) while habits are open.
+    public var habitReminderEnabled: Bool
+    public var habitReminderTime: String
 
     public var id: String { userId }
 
@@ -21,7 +24,8 @@ public struct UserPreferences: Codable, Identifiable, Hashable, Sendable {
         userId: String = "", currentEnergy: EnergyLevel? = nil, theme: ThemePreference = .system,
         notificationsEnabled: Bool = false, adaptiveTheme: Bool = false, autoplanEnabled: Bool = false,
         autoplanTimezone: String = "America/Los_Angeles", autoplanLastRunDate: String? = nil,
-        workDayStart: String = "09:00", workDayEnd: String = "17:00"
+        workDayStart: String = "09:00", workDayEnd: String = "17:00",
+        habitReminderEnabled: Bool = false, habitReminderTime: String = "20:00"
     ) {
         self.userId = userId
         self.currentEnergy = currentEnergy
@@ -33,6 +37,26 @@ public struct UserPreferences: Codable, Identifiable, Hashable, Sendable {
         self.autoplanLastRunDate = autoplanLastRunDate
         self.workDayStart = workDayStart
         self.workDayEnd = workDayEnd
+        self.habitReminderEnabled = habitReminderEnabled
+        self.habitReminderTime = habitReminderTime
+    }
+
+    /// Fields added after launch decode with their defaults, so an older server or a cache
+    /// written by an older build still loads.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        userId = try c.decode(String.self, forKey: .userId)
+        currentEnergy = try c.decodeIfPresent(EnergyLevel.self, forKey: .currentEnergy)
+        theme = try c.decode(ThemePreference.self, forKey: .theme)
+        notificationsEnabled = try c.decode(Bool.self, forKey: .notificationsEnabled)
+        adaptiveTheme = try c.decode(Bool.self, forKey: .adaptiveTheme)
+        autoplanEnabled = try c.decode(Bool.self, forKey: .autoplanEnabled)
+        autoplanTimezone = try c.decode(String.self, forKey: .autoplanTimezone)
+        autoplanLastRunDate = try c.decodeIfPresent(String.self, forKey: .autoplanLastRunDate)
+        workDayStart = try c.decodeIfPresent(String.self, forKey: .workDayStart) ?? "09:00"
+        workDayEnd = try c.decodeIfPresent(String.self, forKey: .workDayEnd) ?? "17:00"
+        habitReminderEnabled = try c.decodeIfPresent(Bool.self, forKey: .habitReminderEnabled) ?? false
+        habitReminderTime = try c.decodeIfPresent(String.self, forKey: .habitReminderTime) ?? "20:00"
     }
 }
 
@@ -47,11 +71,14 @@ public struct UserPreferencesUpdate: Codable, Hashable, Sendable {
     public var autoplanTimezone: String?
     public var workDayStart: String?
     public var workDayEnd: String?
+    public var habitReminderEnabled: Bool?
+    public var habitReminderTime: String?
 
     public init(
         currentEnergy: Patch<EnergyLevel>? = nil, theme: ThemePreference? = nil,
         notificationsEnabled: Bool? = nil, adaptiveTheme: Bool? = nil, autoplanEnabled: Bool? = nil,
-        autoplanTimezone: String? = nil, workDayStart: String? = nil, workDayEnd: String? = nil
+        autoplanTimezone: String? = nil, workDayStart: String? = nil, workDayEnd: String? = nil,
+        habitReminderEnabled: Bool? = nil, habitReminderTime: String? = nil
     ) {
         self.currentEnergy = currentEnergy
         self.theme = theme
@@ -61,11 +88,13 @@ public struct UserPreferencesUpdate: Codable, Hashable, Sendable {
         self.autoplanTimezone = autoplanTimezone
         self.workDayStart = workDayStart
         self.workDayEnd = workDayEnd
+        self.habitReminderEnabled = habitReminderEnabled
+        self.habitReminderTime = habitReminderTime
     }
 
     private enum CodingKeys: String, CodingKey {
         case currentEnergy, theme, notificationsEnabled, adaptiveTheme, autoplanEnabled,
-             autoplanTimezone, workDayStart, workDayEnd
+             autoplanTimezone, workDayStart, workDayEnd, habitReminderEnabled, habitReminderTime
     }
 
     public init(from decoder: Decoder) throws {
@@ -78,6 +107,8 @@ public struct UserPreferencesUpdate: Codable, Hashable, Sendable {
         autoplanTimezone = try c.decodeIfPresent(String.self, forKey: .autoplanTimezone)
         workDayStart = try c.decodeIfPresent(String.self, forKey: .workDayStart)
         workDayEnd = try c.decodeIfPresent(String.self, forKey: .workDayEnd)
+        habitReminderEnabled = try c.decodeIfPresent(Bool.self, forKey: .habitReminderEnabled)
+        habitReminderTime = try c.decodeIfPresent(String.self, forKey: .habitReminderTime)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -90,6 +121,8 @@ public struct UserPreferencesUpdate: Codable, Hashable, Sendable {
         try c.encodeIfPresent(autoplanTimezone, forKey: .autoplanTimezone)
         try c.encodeIfPresent(workDayStart, forKey: .workDayStart)
         try c.encodeIfPresent(workDayEnd, forKey: .workDayEnd)
+        try c.encodeIfPresent(habitReminderEnabled, forKey: .habitReminderEnabled)
+        try c.encodeIfPresent(habitReminderTime, forKey: .habitReminderTime)
     }
 }
 
@@ -111,6 +144,8 @@ extension UserPreferences {
         if let v = update.autoplanTimezone { p.autoplanTimezone = v }
         if let v = update.workDayStart { p.workDayStart = v }
         if let v = update.workDayEnd { p.workDayEnd = v }
+        if let v = update.habitReminderEnabled { p.habitReminderEnabled = v }
+        if let v = update.habitReminderTime { p.habitReminderTime = v }
         return p
     }
 }

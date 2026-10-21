@@ -17,15 +17,16 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
         #if DEBUG
-        // TEMPO_DEBUG_NOTIFICATION_TAP=<todo id>[,delay seconds]: acts as if that todo's reminder
-        // was tapped, at launch (cold) or after the delay (warm). The simulator can't tap banners.
+        // TEMPO_DEBUG_NOTIFICATION_TAP=<todo id | kind>[,delay seconds]: acts as if that todo's
+        // reminder (or a push of that kind, e.g. "habits") was tapped, at launch (cold) or after the
+        // delay (warm). The simulator can't tap banners.
         if let raw = ProcessInfo.processInfo.environment["TEMPO_DEBUG_NOTIFICATION_TAP"] {
             let parts = raw.split(separator: ",").map(String.init)
             let id = UUID(uuidString: parts[0])
             let delay = parts.count > 1 ? Double(parts[1]) ?? 0 : 0
             Task { @MainActor in
                 try? await Task.sleep(for: .seconds(delay))
-                NotificationRouter.open(todoId: id, kind: "reminder")
+                NotificationRouter.open(todoId: id, kind: id == nil ? parts[0] : "reminder")
             }
         }
         #endif
@@ -95,6 +96,8 @@ enum NotificationRouter {
             model.openTodoRequested = id
         } else if request.kind == "plan" {
             model.todayRequested = true
+        } else if request.kind == "habits" {
+            model.habitsRequested = true
         }
     }
 }

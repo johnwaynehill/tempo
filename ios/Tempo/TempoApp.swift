@@ -141,6 +141,13 @@ private struct MainTabs: View {
                 model.todayRequested = false
             }
         }
+        // The daily habit reminder opens Habits.
+        .onChange(of: model.habitsRequested, initial: true) { _, requested in
+            if requested {
+                selection = .habits
+                model.habitsRequested = false
+            }
+        }
         // Add to Tempo (widget link) switches to Inbox; InboxView itself focuses the field.
         .onChange(of: model.captureRequested) { _, requested in
             if requested { selection = .inbox }

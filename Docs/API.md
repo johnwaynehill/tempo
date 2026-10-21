@@ -337,7 +337,9 @@ Upsert.
   "autoplanEnabled": true,
   "autoplanTimezone": "America/Los_Angeles",
   "workDayStart": "09:00",
-  "workDayEnd": "17:00"
+  "workDayEnd": "17:00",
+  "habitReminderEnabled": true,
+  "habitReminderTime": "20:00"
 }
 ```
 
@@ -347,7 +349,11 @@ Fields:
 - `notificationsEnabled` — boolean. Default `false`.
 - `adaptiveTheme` — boolean. Default `false`. Tints UI based on `currentEnergy`.
 - `autoplanEnabled` — boolean. Default `false`. Opts the user into the server-side morning auto-plan (see *Internal endpoints* below).
-- `autoplanTimezone` — IANA timezone string. Default `"America/Los_Angeles"`. Determines when "today" rolls over for idempotency.
+- `autoplanTimezone` — IANA timezone string. Default `"America/Los_Angeles"`. Determines when "today" rolls over for idempotency, and the zone the habit reminder time is read in.
+- `workDayStart`, `workDayEnd` — `"HH:MM"` local wall-clock. Defaults `"09:00"` and `"17:00"`.
+- `habitReminderEnabled` — boolean. Default `false`. One push a day to the user's iOS devices at `habitReminderTime` if any habit is still open that day (see `Docs/PushNotifications.md`).
+- `habitReminderTime` — `"HH:MM"` (24-hour). Default `"20:00"`. Anything else is a `400`.
+- `habitReminderLastDate` — read-only; the local date the habit reminder last went out. Ignored on write.
 
 ---
 
