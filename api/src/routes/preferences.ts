@@ -19,6 +19,8 @@ router.get('/', async (req, res) => {
       autoplanTimezone: 'America/Los_Angeles',
       workDayStart: '09:00',
       workDayEnd: '17:00',
+      habitReminderEnabled: false,
+      habitReminderTime: '20:00',
     })
     return
   }
@@ -27,9 +29,14 @@ router.get('/', async (req, res) => {
 
 router.put('/', async (req, res) => {
   // Strip server-managed fields so a stale client payload can't clobber state
-  // the cron just wrote (e.g. autoplanLastRunDate).
-  const { userId, autoplanLastRunDate, ...updates } = req.body
+  // the cron just wrote (e.g. autoplanLastRunDate, habitReminderLastDate).
+  const { userId, autoplanLastRunDate, habitReminderLastDate, ...updates } = req.body
   void autoplanLastRunDate
+  void habitReminderLastDate
+  if ('habitReminderTime' in updates && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(updates.habitReminderTime))) {
+    res.status(400).json({ error: 'habitReminderTime must be "HH:MM"' })
+    return
+  }
   const [row] = await db
     .insert(schema.userPreferences)
     .values({ ...updates, userId: req.userId! })

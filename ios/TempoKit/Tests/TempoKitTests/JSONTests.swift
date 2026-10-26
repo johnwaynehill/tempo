@@ -145,10 +145,24 @@ import Testing
         #expect(p.autoplanLastRunDate == nil)
         #expect(p.theme == .system)
         #expect(p.workDayEnd == "17:00")
+        // Fields newer than the server (or the cached snapshot) fall back to their defaults.
+        #expect(p.habitReminderEnabled == false)
+        #expect(p.habitReminderTime == "20:00")
         let update = UserPreferencesUpdate(currentEnergy: .null, workDayStart: "08:30")
         let obj = try #require(JSONSerialization.jsonObject(with: TempoJSON.encoder.encode(update)) as? [String: Any])
         #expect(Set(obj.keys) == ["currentEnergy", "workDayStart"])
         #expect(obj["currentEnergy"] is NSNull)
+    }
+
+    @Test func habitReminderPreferences() throws {
+        let update = UserPreferencesUpdate(habitReminderEnabled: true, habitReminderTime: "21:15")
+        let obj = try #require(JSONSerialization.jsonObject(with: TempoJSON.encoder.encode(update)) as? [String: Any])
+        #expect(Set(obj.keys) == ["habitReminderEnabled", "habitReminderTime"])
+        let applied = UserPreferences().applying(update)
+        #expect(applied.habitReminderEnabled && applied.habitReminderTime == "21:15")
+        // Round trip, as the cache stores it.
+        let decoded = try TempoJSON.decoder.decode(UserPreferences.self, from: TempoJSON.encoder.encode(applied))
+        #expect(decoded == applied)
     }
 
     @Test func otherModels() throws {

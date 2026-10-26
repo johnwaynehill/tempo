@@ -482,6 +482,50 @@ export function SettingsPage() {
               />
             </div>
           </div>
+          {/* Daily habit reminder (a push to the iPhone app) */}
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-on-surface text-sm font-medium">Daily habit reminder</p>
+              <p className="text-on-surface-variant text-xs">
+                Once a day on your iPhone, at a time you pick, if any of today's habits are still open.
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              {preferences.habit_reminder_enabled && (
+                <input
+                  type="time"
+                  value={preferences.habit_reminder_time}
+                  onChange={(e) => e.target.value && updatePreferences({ habit_reminder_time: e.target.value })}
+                  aria-label="Habit reminder time"
+                  className="bg-surface-container rounded-lg px-3 py-1.5 text-sm text-on-surface outline-none font-mono"
+                />
+              )}
+              <button
+                role="switch"
+                aria-checked={preferences.habit_reminder_enabled}
+                aria-label="Daily habit reminder"
+                onClick={() => {
+                  const on = !preferences.habit_reminder_enabled
+                  // The time is read in the account's time zone, which otherwise only the morning
+                  // plan sets; with that off, take this browser's so 8 PM means 8 PM here.
+                  const local = Intl.DateTimeFormat().resolvedOptions().timeZone
+                  updatePreferences({
+                    habit_reminder_enabled: on,
+                    ...(on && !preferences.autoplan_enabled && local ? { autoplan_timezone: local } : {}),
+                  })
+                }}
+                className={`relative w-11 h-6 rounded-full transition-colors duration-200 cursor-pointer ${
+                  preferences.habit_reminder_enabled ? 'bg-primary' : 'bg-surface-container-high'
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-surface-container-lowest shadow transition-transform duration-200 ${
+                    preferences.habit_reminder_enabled ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

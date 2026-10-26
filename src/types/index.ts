@@ -230,4 +230,7 @@ export interface UserPreferences {
   /** Working hours, "HH:MM" local wall-clock, for overcommitment detection. */
   work_day_start: string
   work_day_end: string
+  /** One push a day to the iPhone app at habit_reminder_time ("HH:MM" in autoplan_timezone) while habits are open. */
+  habit_reminder_enabled: boolean
+  habit_reminder_time: string
 }

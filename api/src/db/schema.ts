@@ -168,6 +168,11 @@ export const userPreferences = pgTable('user_preferences', {
   // Working hours ("HH:MM" local wall-clock) for overcommitment detection.
   workDayStart: text('work_day_start').notNull().default('09:00'),
   workDayEnd: text('work_day_end').notNull().default('17:00'),
+  // Daily habit reminder push at a local "HH:MM" (in autoplanTimezone), only when habits are
+  // still open. habitReminderLastDate is server-managed: the local date it last went out.
+  habitReminderEnabled: boolean('habit_reminder_enabled').notNull().default(false),
+  habitReminderTime: text('habit_reminder_time').notNull().default('20:00'),
+  habitReminderLastDate: text('habit_reminder_last_date'),
 })
 
 // --- Today Sets ---

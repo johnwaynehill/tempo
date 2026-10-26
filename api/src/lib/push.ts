@@ -1,5 +1,6 @@
-import { and, eq, gt, inArray, isNull, lte, ne } from 'drizzle-orm'
+import { and, asc, eq, gt, inArray, isNull, lte, ne, or } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
+import { localDate, localMinutes } from './ai-pricing.js'
 import { apnsConfigured, sendApns, type ApnsEnvironment, type ApnsNotification } from './apns.js'
 
 // Who gets which push, and when (Docs/PushNotifications.md). APNs plumbing is in apns.ts.
@@ -124,6 +125,101 @@ export async function dispatchDueReminders(now = new Date()): Promise<number> {
   return due.length
 }
 
+// --- Daily habit reminder: one push at the user's chosen time, only if habits are still open.
+
+type Copy = { title: string; body: string }
+
+/** With one habit left. The user's own example leads: "Last habit to go: Stretch". */
+const ONE_LEFT: ((name: string) => Copy)[] = [
+  (n) => ({ title: `Last habit to go: ${n}`, body: 'Still time to check it off today.' }),
+  (n) => ({ title: 'One habit left today', body: `${n}, whenever you're ready.` }),
+  (n) => ({ title: 'Almost there', body: `Just ${n} left for today.` }),
+  (n) => ({ title: `${n} is still open`, body: "A quick one before the day's done?" }),
+]
+
+/** With several left; `list` is "Stretch, Read and Journal" (at most three named). */
+const SEVERAL_LEFT: ((list: string, count: number) => Copy)[] = [
+  (l) => ({ title: 'Did you get to those habits today?', body: `Still open: ${l}.` }),
+  (l, n) => ({ title: 'Quick habit check-in', body: `${n} still open: ${l}.` }),
+  (l) => ({ title: "Habits, before the day's done", body: `${l} are still waiting.` }),
+  (l) => ({ title: 'How did the habits go today?', body: `Still open: ${l}.` }),
+]
+
+function listNames(names: string[]): string {
+  const shown = names.length > 3 ? [...names.slice(0, 3), `${names.length - 3} more`] : names
+  return shown.length === 1 ? shown[0] : `${shown.slice(0, -1).join(', ')} and ${shown[shown.length - 1]}`
+}
+
+/**
+ * The reminder's wording for the open habits on a local date ("2026-10-20"). The phrasing
+ * moves on one step each day, so consecutive days never read the same.
+ */
+export function habitReminderCopy(openNames: string[], date: string): Copy {
+  const [y, m, d] = date.split('-').map(Number)
+  const day = Math.floor(Date.UTC(y, m - 1, d) / 86_400_000)
+  if (openNames.length === 1) return ONE_LEFT[day % ONE_LEFT.length](openNames[0])
+  return SEVERAL_LEFT[day % SEVERAL_LEFT.length](listNames(openNames), openNames.length)
+}
+
+/** Sent up to this long after the chosen time (a deploy or restart in between); after that, skipped for the day. */
+const HABIT_REMINDER_GRACE_MIN = 60
+
+/**
+ * Sends today's habit reminder to everyone whose chosen time has come (in their timezone).
+ * Claiming the day is one conditional UPDATE, so it goes out once even with two API
+ * instances; a day with every habit done is claimed and sends nothing.
+ */
+export async function dispatchHabitReminders(now = new Date()): Promise<number> {
+  const prefs = schema.userPreferences
+  const candidates = await db
+    .select({
+      userId: prefs.userId,
+      time: prefs.habitReminderTime,
+      timezone: prefs.autoplanTimezone,
+      lastDate: prefs.habitReminderLastDate,
+    })
+    .from(prefs)
+    .where(and(
+      eq(prefs.habitReminderEnabled, true),
+      inArray(prefs.userId, db.select({ userId: schema.pushDevices.userId }).from(schema.pushDevices)),
+    ))
+
+  let sent = 0
+  for (const c of candidates) {
+    const date = localDate(c.timezone, now)
+    if (c.lastDate === date) continue
+    const [h, m] = c.time.split(':').map(Number)
+    const minutesLate = localMinutes(c.timezone, now) - (h * 60 + m)
+    if (!(minutesLate >= 0 && minutesLate <= HABIT_REMINDER_GRACE_MIN)) continue
+
+    const claimed = await db
+      .update(prefs)
+      .set({ habitReminderLastDate: date })
+      .where(and(eq(prefs.userId, c.userId), or(isNull(prefs.habitReminderLastDate), ne(prefs.habitReminderLastDate, date))))
+      .returning({ userId: prefs.userId })
+    if (claimed.length === 0) continue
+
+    const habits = await db
+      .select({ name: schema.habits.name, completions: schema.habits.completions })
+      .from(schema.habits)
+      .where(and(eq(schema.habits.userId, c.userId), eq(schema.habits.archived, false)))
+      .orderBy(asc(schema.habits.createdAt))
+    const open = habits
+      .filter((habit) => !(habit.completions as Record<string, boolean> | null)?.[date])
+      .map((habit) => habit.name)
+    if (open.length === 0) continue
+
+    await sendToUser(c.userId, {
+      ...habitReminderCopy(open, date),
+      threadId: 'habits',
+      collapseId: 'habit-reminder',
+      data: { kind: 'habits' },
+    })
+    sent += 1
+  }
+  return sent
+}
+
 /** Starts the reminder sweep (every 30 s) when APNs is configured. Safe to call once at boot. */
 export function startPushScheduler(intervalMs = 30_000): void {
   if (!apnsConfigured()) {
@@ -137,6 +233,8 @@ export function startPushScheduler(intervalMs = 30_000): void {
     try {
       const sent = await dispatchDueReminders()
       if (sent > 0) console.log(`[push] sent ${sent} reminder(s)`)
+      const habitsSent = await dispatchHabitReminders()
+      if (habitsSent > 0) console.log(`[push] sent ${habitsSent} habit reminder(s)`)
     } catch (err) {
       console.error('[push] reminder sweep failed:', err)
     } finally {
