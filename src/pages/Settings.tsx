@@ -13,6 +13,7 @@ import { CodaImportModal } from '@/components/ui/CodaImportModal'
 import { CompletionToast } from '@/components/ui/CompletionToast'
 import { MenuButton } from '@/components/ui/MenuButton'
 import type { UserPreferences } from '@/types'
+import { Avatar } from '../components/ui/Avatar'
 
 export function SettingsPage() {
   const { user, signOut } = useAuth()
@@ -269,11 +270,7 @@ export function SettingsPage() {
         {user && (
           <div className="flex items-center justify-between bg-surface-container-lowest rounded-xl p-5">
             <div className="flex items-center gap-4">
-              <img
-                src={user.photoURL ?? ''}
-                alt=""
-                className="w-10 h-10 rounded-full"
-              />
+              <Avatar photoURL={user.photoURL} name={user.displayName ?? user.email} size={40} />
               <div>
                 <p className="text-on-surface text-sm font-medium">{user.displayName}</p>
                 <p className="text-on-surface-variant text-xs">{user.email}</p>
