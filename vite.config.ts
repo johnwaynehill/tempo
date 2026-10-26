@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
     {
       name: 'static-folder-index',
       configureServer(server) {
-        const staticPaths = ['/design-system', '/privacy']
+        const staticPaths = ['/design-system', '/privacy', '/ios/google-calendar']
         server.middlewares.use((req, _res, next) => {
           if (!req.url) return next()
           const path = req.url.split('?')[0]
@@ -79,12 +79,13 @@ export default defineConfig(({ mode }) => {
         // generateSW registers a catch-all NavigationRoute that serves the
         // cached index.html for EVERY navigation once the service worker is
         // active — that's correct for SPA routes, but it hijacks the
-        // standalone static pages (/design-system, /privacy) too: the browser never hits
+        // standalone static pages (/design-system, /privacy, /ios/google-calendar)
+        // and Apple's /.well-known file too: the browser never hits
         // the network (where serve.json's rewrite correctly serves
         // <page>/index.html), so React Router boots instead and its
         // catch-all route bounces to /today. Exclude them from the fallback so
         // the SW lets the request through to the network like normal.
-        navigateFallbackDenylist: [/^\/design-system/, /^\/privacy/],
+        navigateFallbackDenylist: [/^\/design-system/, /^\/privacy/, /^\/ios\//, /^\/\.well-known\//],
         // Runtime cache: Google Fonts so the app looks right offline
         runtimeCaching: [
           {

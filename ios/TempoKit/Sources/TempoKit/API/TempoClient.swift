@@ -216,11 +216,15 @@ public actor TempoClient {
     }
 
     /// The consent URL to open in an `ASWebAuthenticationSession`; the server ties the
-    /// eventual callback back to this user via a one-time state token. `?platform=ios`
-    /// tells the callback to redirect to the app's `tempo://` scheme instead of the web app.
+    /// eventual callback back to this user via a one-time state token. `?platform=ios&callback=https`
+    /// tells the callback to redirect to `/ios/google-calendar` on the web app's domain,
+    /// which the session catches, instead of to the web app's Settings page.
     public func googleCalendarConnectURL() async throws -> URL {
         struct Response: Decodable { var url: URL }
-        let r: Response = try await request("GET", "/api/google-calendar/connect", query: [URLQueryItem(name: "platform", value: "ios")])
+        let r: Response = try await request("GET", "/api/google-calendar/connect", query: [
+            URLQueryItem(name: "platform", value: "ios"),
+            URLQueryItem(name: "callback", value: "https"),
+        ])
         return r.url
     }
 

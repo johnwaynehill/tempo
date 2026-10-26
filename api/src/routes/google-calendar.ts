@@ -77,10 +77,12 @@ router.get('/status', async (req: Request, res: Response) => {
 router.get('/connect', async (req: Request, res: Response) => {
   if (!integrationReady(res)) return
   const state = randomBytes(32).toString('hex')
-  // The iOS app has no https callback to intercept (no Associated Domains on a
-  // free personal team), so it asks for `?platform=ios` and the callback below
-  // redirects to the app's custom URL scheme instead of the web app.
-  const platform = req.query.platform === 'ios' ? 'ios' : undefined
+  // The iOS app asks for `?platform=ios&callback=https`, and the callback below
+  // then redirects to an https page on the web app's domain that the app's sign-in
+  // sheet catches (the app has it as an associated domain). App builds from before
+  // that send only `?platform=ios` and get the `tempo://` URL scheme instead.
+  const platform = req.query.platform !== 'ios' ? undefined
+    : req.query.callback === 'https' ? 'ios-https' : 'ios'
   await db.insert(schema.mcpOauthState).values({
     key: state,
     type: STATE_TYPE,
@@ -168,8 +170,8 @@ googleCalendarCallbackRouter.get('/', async (req: Request, res: Response) => {
 
   // Consume the one-time state as early as possible (even on a denied/missing-code
   // request) so we know which app to redirect back to — the iOS app watches for its
-  // own URL scheme, not the web app's https URL, and it started this flow with a
-  // state row same as the web app did.
+  // own return address, not the web app's Settings page, and it started this flow
+  // with a state row same as the web app did.
   const [stateRow] = stateKey
     ? await db.select().from(schema.mcpOauthState).where(eq(schema.mcpOauthState.key, stateKey))
     : []
@@ -178,9 +180,9 @@ googleCalendarCallbackRouter.get('/', async (req: Request, res: Response) => {
   const platform = (stateRow?.data as { platform?: string } | undefined)?.platform
   const redirectBack = (status: string) =>
     res.redirect(
-      platform === 'ios'
-        ? `tempo://google-calendar?google=${status}`
-        : `${appUrl()}/settings?google=${status}`,
+      platform === 'ios-https' ? `${appUrl()}/ios/google-calendar?google=${status}`
+        : platform === 'ios' ? `tempo://google-calendar?google=${status}`
+          : `${appUrl()}/settings?google=${status}`,
     )
 
   if (!isGoogleOAuthConfigured() || !isEncryptionConfigured()) {
