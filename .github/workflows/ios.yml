@@ -1,12 +1,13 @@
 name: iOS
 
-# TempoKit's tests (models, client, the offline store and sync queue, the logic ports).
-# TempoKit targets macOS 26, so this needs a macOS 26 runner and a Swift 6 toolchain.
+# TempoKit's tests (models, client, the offline store and sync queue, the logic ports), and a
+# build of the app with its widget and share extensions. Both need a macOS 26 runner: TempoKit
+# targets macOS 26, and the app targets iOS 26 with Swift 6.
 on:
   push:
     branches: [main]
     paths: &paths
-      - "ios/TempoKit/**"
+      - "ios/**"
       - ".github/workflows/ios.yml"
   pull_request:
     paths: *paths
@@ -26,3 +27,27 @@ jobs:
       - uses: actions/checkout@v4
       - run: swift --version
       - run: swift test
+
+  # Builds the committed Tempo.xcodeproj (regenerate it with `xcodegen generate` after editing
+  # project.yml) for the simulator, unsigned, so a PR can't break the app's compile.
+  app:
+    runs-on: macos-26
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - run: xcodebuild -version
+      - uses: actions/cache@v4
+        with:
+          path: .spm
+          key: spm-${{ hashFiles('ios/Tempo.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+      - name: Build
+        run: >
+          xcodebuild build
+          -project ios/Tempo.xcodeproj
+          -scheme Tempo
+          -destination 'generic/platform=iOS Simulator'
+          -clonedSourcePackagesDirPath .spm
+          -skipPackagePluginValidation
+          -skipMacroValidation
+          CODE_SIGNING_ALLOWED=NO
+          -quiet

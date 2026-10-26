@@ -5,6 +5,7 @@ import { useNotes } from '@/hooks/useNotes'
 import { useTodos } from '@/hooks/useTodos'
 import { useNewTodo } from '@/hooks/useNewTodo'
 import { TodoDetailDrawer } from '@/components/ui/TodoDetailDrawer'
+import { Avatar } from './Avatar'
 
 const navItems = [
   {
@@ -187,9 +188,7 @@ export function MobileMenu({ open, onClose }: MobileMenuProps) {
               onClick={onClose}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-surface-container-low transition-colors"
             >
-              {user.photoURL && (
-                <img src={user.photoURL} alt="" className="w-8 h-8 rounded-full shrink-0" />
-              )}
+              <Avatar photoURL={user.photoURL} name={user.displayName ?? user.email} size={32} />
               <div className="min-w-0 flex-1">
                 <p className="text-on-surface text-xs font-medium truncate">{user.displayName}</p>
                 <p className="text-on-surface-variant text-[11px] truncate">{user.email}</p>

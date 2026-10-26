@@ -34,7 +34,7 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
   const [liveDescription, setLiveDescription] = useState(todo.description ?? '')
 
   // Smart capture: suggest metadata based on title
-  const { suggestions } = useSmartCapture(liveTitle, true, projects)
+  const { suggestions } = useSmartCapture(liveTitle, true)
 
   const setField = (field: string, value: unknown) => {
     updateTodo(todo.id, { [field]: value })
@@ -170,12 +170,16 @@ export function TodoDetailDrawer({ todo, onClose }: TodoDetailDrawerProps) {
                 due_date: !!todo.due_date,
               }}
               onAcceptAll={(s) => {
-                if (s.energy_level) setField('energy_level', s.energy_level)
-                if (s.size) setField('size', s.size)
-                if (s.project) setField('project', s.project)
-                if (s.impact) setField('impact', s.impact)
-                if (s.estimated_minutes) setField('estimated_minutes', s.estimated_minutes)
-                if (s.due_date) setField('due_date', new Date(s.due_date + 'T00:00:00'))
+                // One update, not one per field: each update refetches the list, and with
+                // six in flight an older refetch could land last and show stale fields.
+                const updates: Partial<Todo> = {}
+                if (s.energy_level) updates.energy_level = s.energy_level
+                if (s.size) updates.size = s.size
+                if (s.project) updates.project = s.project
+                if (s.impact) updates.impact = s.impact
+                if (s.estimated_minutes) updates.estimated_minutes = s.estimated_minutes
+                if (s.due_date) updates.due_date = new Date(s.due_date + 'T00:00:00')
+                if (Object.keys(updates).length > 0) updateTodo(todo.id, updates)
               }}
             />
           )}
