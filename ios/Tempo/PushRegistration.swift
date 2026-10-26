@@ -19,6 +19,9 @@ final class PushRegistration {
     private(set) var isActive = false
     /// Told when `isActive` changes, so reminders can be rescheduled.
     var onActiveChange: (() -> Void)?
+    /// Bumped on every token request, so a late answer doesn't trip an older request's warning.
+    private var requestCount = 0
+    private var answeredCount = 0
 
     static var environment: String {
         #if DEBUG
@@ -34,8 +37,21 @@ final class PushRegistration {
         let status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus
         switch status {
         case .authorized, .provisional, .ephemeral:
+            requestCount += 1
+            let request = requestCount
+            log.info("register: asking iOS for a token (\(Self.environment, privacy: .public))")
             UIApplication.shared.registerForRemoteNotifications()
+            // iOS answers with a token or an error, usually within a second. Silence means the
+            // phone can't reach Apple's push service (a VPN or network blocking it), and iOS
+            // keeps waiting without saying so.
+            Task {
+                try? await Task.sleep(for: .seconds(15))
+                if answeredCount < request {
+                    log.error("register: no answer from iOS after 15 s; can this phone reach Apple's push service?")
+                }
+            }
         default:
+            log.info("register: notifications not allowed (status \(status.rawValue, privacy: .public))")
             setActive(false)
         }
     }
@@ -47,13 +63,16 @@ final class PushRegistration {
     }
 
     func didRegister(_ token: Data) {
+        answeredCount = requestCount
         let hex = token.map { String(format: "%02x", $0) }.joined()
+        log.info("register: iOS gave a token \(hex.prefix(8), privacy: .public)…; uploading")
         deviceToken = hex
         Task { await upload(hex) }
     }
 
     func didFailToRegister(_ error: any Error) {
-        log.info("register: failed \(String(describing: error), privacy: .public)")
+        answeredCount = requestCount
+        log.error("register: failed \(String(describing: error), privacy: .public)")
         setActive(false)
     }
 
@@ -68,7 +87,10 @@ final class PushRegistration {
     }
 
     private func upload(_ token: String) async {
-        guard let client else { return }
+        guard let client else {
+            log.error("register: no API client yet; token not uploaded")
+            return
+        }
         do {
             try await client.registerPushDevice(
                 token: token,
@@ -78,7 +100,7 @@ final class PushRegistration {
             log.info("register: server has the token (\(Self.environment, privacy: .public))")
             setActive(true)
         } catch {
-            log.info("register: upload failed \(String(describing: error), privacy: .public)")
+            log.error("register: upload failed \(String(describing: error), privacy: .public)")
             setActive(false)
         }
     }
