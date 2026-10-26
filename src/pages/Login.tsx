@@ -77,6 +77,12 @@ export function LoginPage() {
         <p className="text-on-surface-variant/60 text-xs mt-8">
           Your data stays yours. Always exportable.
         </p>
+        <a
+          href="/privacy"
+          className="block text-on-surface-variant/60 text-xs mt-2 underline underline-offset-2 hover:text-on-surface transition-colors duration-200"
+        >
+          Privacy Policy
+        </a>
       </div>
     </div>
   )
