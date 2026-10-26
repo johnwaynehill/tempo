@@ -448,13 +448,22 @@ struct SettingsView: View {
         defer { isConnecting = false }
         do {
             let url = try await client.googleCalendarConnectURL()
-            _ = try await webAuthSession.authenticate(using: url, callbackURLScheme: "tempo")
+            // The server's callback redirects here (on `APP_URL`'s host); the sheet catches it
+            // because the app has this domain under `webcredentials` in its entitlements.
+            _ = try await webAuthSession.authenticate(
+                using: url,
+                callback: .https(host: "tempo.designbyjohnwayne.com", path: "/ios/google-calendar"),
+                additionalHeaderFields: [:]
+            )
             await refreshStatus()
             await model.reload()
         } catch is CancellationError {
-            // User dismissed the sheet — not an error worth surfacing.
+            // User dismissed the sheet — not an error worth surfacing. Google may still have
+            // connected (if the sheet showed the return page instead of closing), so look.
+            await refreshStatus()
         } catch let authError as ASWebAuthenticationSessionError where authError.code == .canceledLogin {
             // Same dismissal, thrown as an NSError instead on some OS versions.
+            await refreshStatus()
         } catch {
             errorMessage = "Couldn't connect Google Calendar. Try again."
         }

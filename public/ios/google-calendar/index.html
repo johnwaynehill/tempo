@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Back to Tempo</title>
+  <meta name="robots" content="noindex" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <!--
+    Where the Google Calendar callback sends the iOS app. The app's sign-in sheet
+    normally catches this address before it loads, so this page only shows if it
+    didn't (an app build without the associated domain, or Apple's check failing).
+  -->
+  <style>
+    :root { --surface: #f9f9f8; --text: #2f3333; --muted: #5b605f; }
+    @media (prefers-color-scheme: dark) {
+      :root { --surface: #1a1c1b; --text: #e1e3e1; --muted: #9fa3a1; }
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--surface);
+      color: var(--text);
+      font: 17px/1.5 system-ui, sans-serif;
+      text-align: center;
+    }
+    main { max-width: 420px; padding: 24px 16px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: var(--muted); margin: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Back to Tempo</h1>
+    <p>Close this window to return to the app. Settings shows whether Google Calendar connected.</p>
+  </main>
+</body>
+</html>

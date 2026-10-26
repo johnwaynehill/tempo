@@ -70,8 +70,8 @@ private struct RootView: View {
             // registered alongside `tempo` in Info.plist).
             if GIDSignIn.sharedInstance.handle(url) { return }
             // The Add to Tempo widget's Home Screen and Lock Screen links, and its own
-            // `.widgetURL`. Google Calendar's callback shares the `tempo` scheme but is
-            // intercepted by `ASWebAuthenticationSession` before it ever reaches here.
+            // `.widgetURL`. (Google Calendar connect returns over https to its sign-in sheet,
+            // never here.)
             guard url.scheme == "tempo", url.host == "capture" else { return }
             model?.captureRequested = true
         }

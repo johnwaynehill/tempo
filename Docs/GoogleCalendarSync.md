@@ -39,8 +39,8 @@ also happens on demand via the **Sync now** button (`POST /api/google-calendar/s
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
 | `GET` | `/api/google-calendar/status` | user | Connection state for the Settings UI |
-| `GET` | `/api/google-calendar/connect` | user | Returns the Google consent URL (`{ url }`) |
-| `GET` | `/api/google-calendar/callback` | **public** | Google redirects here post-consent; stores tokens, redirects to `${APP_URL}/settings?google=<status>` |
+| `GET` | `/api/google-calendar/connect` | user | Returns the Google consent URL (`{ url }`). The iOS app adds `?platform=ios&callback=https` |
+| `GET` | `/api/google-calendar/callback` | **public** | Google redirects here post-consent; stores tokens, redirects to `${APP_URL}/settings?google=<status>` (iOS: `${APP_URL}/ios/google-calendar?google=<status>`) |
 | `POST` | `/api/google-calendar/sync` | user | Sync every connected account now; returns `{ status, upserted, pruned, accounts }`, 502 only if every account failed |
 | `DELETE` | `/api/google-calendar/:id` | user | Disconnect one account: revoke at Google, drop the connection and its events |
 | `DELETE` | `/api/google-calendar` | user | Disconnect every account and purge all mirrored events |
@@ -49,6 +49,21 @@ The callback is mounted **before** the `/api` auth chain in `index.ts` because
 Google redirects the browser to it with no Authorization header. A one-time,
 10-minute `state` value (stored in `mcp_oauth_state`) ties the anonymous
 callback back to the user who started the flow.
+
+**iOS return.** The app opens the consent URL in an `ASWebAuthenticationSession`
+with an https callback, `.https(host: "tempo.designbyjohnwayne.com", path:
+"/ios/google-calendar")`. The sheet catches the callback's redirect to that page
+before it loads, which iOS allows only for a domain the app has under
+`webcredentials` in its Associated Domains entitlement, confirmed by
+`/.well-known/apple-app-site-association` on that domain
+(`public/.well-known/apple-app-site-association.json`; `serve.json` rewrites the
+extensionless path to it, and the SPA catch-all skips `/.well-known/`). iOS checks
+that file through Apple's CDN
+(`https://app-site-association.cdn-apple.com/a/v1/tempo.designbyjohnwayne.com`), not
+the site. If the check fails, iOS ends the session as if the user cancelled, so
+the sheet never appears. `public/ios/google-calendar/index.html` is a plain "close
+this window" page for the case where the sheet loads it anyway. App builds from
+before 2026-10-26 send only `?platform=ios` and still get `tempo://google-calendar`.
 
 `?google=<status>` values the Settings UI may receive: `connected`, `denied`,
 `expired`, `no_refresh_token`, `error`.

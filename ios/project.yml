@@ -63,6 +63,10 @@ targets:
         # Mood check-ins are saved to Apple Health as State of Mind (write only).
         com.apple.developer.healthkit: true
         com.apple.developer.healthkit.access: []
+        # Google Calendar connect returns to an https page on this domain, which the
+        # sign-in sheet catches (public/.well-known/apple-app-site-association.json).
+        com.apple.developer.associated-domains:
+          - webcredentials:tempo.designbyjohnwayne.com
     info:
       path: Tempo/Info.plist
       properties:

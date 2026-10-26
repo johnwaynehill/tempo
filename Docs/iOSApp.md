@@ -234,7 +234,9 @@ connect needed a small server change: `GET /api/google-calendar/connect`
 accepts `?platform=ios`, and the OAuth callback then redirects to the app's
 `tempo://` custom URL scheme instead of the web app's `/settings` route,
 since a free personal team has no Associated Domains for an https callback
-that `ASWebAuthenticationSession` could intercept directly.
+that `ASWebAuthenticationSession` could intercept directly. (Replaced on
+2026-10-26 by an https callback through Associated Domains; see
+`Docs/GoogleCalendarSync.md`.)
 
 Effort: L, but every screen is independent and shipped in parallel.
 
@@ -302,9 +304,9 @@ completes rather than building against it speculatively. The $99/year
 membership also unlocks TestFlight (see Phase 3's question 3, settled as "own
 device via Xcode" for now) and real Associated Domains, which would let
 Google Calendar connect (Phase 4) use a normal https
-`ASWebAuthenticationSession` callback instead of the current `tempo://`
+`ASWebAuthenticationSession` callback instead of the `tempo://`
 custom-scheme workaround — a nice small cleanup, not a reason on its own to
-pay for the program.
+pay for the program. (Done 2026-10-26.)
 
 **What was buildable in the meantime, and shipped 2026-09-18:** more Today
 widget sizes and a Control Center control — a `systemLarge` layout, a Lock

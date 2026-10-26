@@ -1,6 +1,18 @@
 {
   "rewrites": [
     {
+      "source": "/.well-known/apple-app-site-association",
+      "destination": "/.well-known/apple-app-site-association.json"
+    },
+    {
+      "source": "/ios/google-calendar",
+      "destination": "/ios/google-calendar/index.html"
+    },
+    {
+      "source": "/ios/google-calendar/",
+      "destination": "/ios/google-calendar/index.html"
+    },
+    {
       "source": "/privacy",
       "destination": "/privacy/index.html"
     },
@@ -21,7 +33,7 @@
       "destination": "/design-system/index.html"
     },
     {
-      "source": "!**/*.html",
+      "source": "!{**/*.html,.well-known/**}",
       "destination": "/index.html"
     }
   ]
