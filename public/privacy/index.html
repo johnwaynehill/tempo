@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tempo Privacy Policy</title>
+  <meta name="description" content="What Tempo collects, how it's used, and how to remove it." />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Manrope:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --surface: #f9f9f8;
+      --card: #ffffff;
+      --text: #2f3333;
+      --muted: #5b605f;
+      --primary: #4f645b;
+      --rule: #e1e2e1;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --surface: #1a1c1b;
+        --card: #232625;
+        --text: #e1e3e1;
+        --muted: #9fa3a1;
+        --primary: #8fb5a4;
+        --rule: #333736;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--surface);
+      color: var(--text);
+      font: 16px/1.65 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    main { max-width: 680px; margin: 0 auto; padding: 48px 20px 80px; }
+    header { display: flex; align-items: center; gap: 12px; margin-bottom: 32px; }
+    header img { width: 32px; height: 32px; }
+    header a { color: var(--text); text-decoration: none; font: 700 18px 'Manrope', sans-serif; }
+    h1 { font: 700 32px/1.2 'Manrope', sans-serif; margin: 0 0 8px; letter-spacing: -0.01em; }
+    h2 { font: 600 19px/1.3 'Manrope', sans-serif; margin: 40px 0 8px; }
+    p, li { color: var(--text); }
+    ul { padding-left: 1.2em; }
+    li { margin: 6px 0; }
+    .updated { color: var(--muted); font-size: 14px; margin: 0 0 32px; }
+    .note {
+      background: var(--card);
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+    a { color: var(--primary); }
+    footer { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); color: var(--muted); font-size: 14px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="/favicon.svg" alt="" />
+      <a href="/">Tempo</a>
+    </header>
+
+    <h1>Privacy Policy</h1>
+    <p class="updated">Last updated October 26, 2026</p>
+
+    <p class="note">Tempo is a personal productivity app for todos, notes, habits and mood, on the web and iPhone. It is a small, independently run project. Your data is used to run the app for you, and nothing else: it is not sold, not used for advertising, and not shared except with the services listed below that Tempo needs to work.</p>
+
+    <h2>What Tempo stores</h2>
+    <ul>
+      <li><strong>Your account:</strong> the email address, name and profile photo from the Google account you sign in with.</li>
+      <li><strong>What you put in:</strong> todos, notes, projects, habits and their check-ins, mood check-ins, playlists, weekly reviews, preferences, and Tempo AI conversations.</li>
+      <li><strong>Calendar events:</strong> if you connect Google Calendar (below).</li>
+      <li><strong>Devices:</strong> a push notification token for each iPhone you allow notifications on, so reminders can reach it.</li>
+      <li><strong>API keys</strong> you create for the iPhone app or Claude, stored only as a one-way hash.</li>
+    </ul>
+    <p>Tempo does not use analytics, advertising or tracking tools.</p>
+
+    <h2>Google Calendar</h2>
+    <p>Connecting Google Calendar is optional. When you connect an account, Tempo asks Google for read-only access to your calendars (<code>calendar.readonly</code>) and for your email address, so it can show which account is connected.</p>
+    <ul>
+      <li>Tempo copies events from your primary calendar, from a week ago to three months ahead, so they appear on your Today view and count toward how much free time you have. It refreshes them twice a day and when you ask it to.</li>
+      <li>Tempo never creates, changes or deletes anything in your Google Calendar.</li>
+      <li>The access tokens Google issues are encrypted before they're stored.</li>
+      <li>If you use Tempo AI chat, today's event titles and times are included in what's sent to the AI model (see below), so it can plan around them.</li>
+      <li>Disconnecting in Settings revokes Tempo's access at Google and deletes the copied events from Tempo. You can also remove access any time from your <a href="https://myaccount.google.com/permissions">Google Account permissions</a>.</li>
+    </ul>
+    <p>Tempo's use and transfer of information received from Google APIs adheres to the <a href="https://developers.google.com/terms/api-services-user-data-policy">Google API Services User Data Policy</a>, including the Limited Use requirements. Google user data is not used to train AI models, not sold, not used for advertising, and not read by people except to fix a problem you ask about, for security, or when the law requires it.</p>
+
+    <h2>AI features</h2>
+    <p>Tempo AI (planning your day, chat, and suggested details for a new todo) sends the relevant parts of your data, such as todo titles and details, notes, habits and today's events, to <a href="https://www.anthropic.com/legal/privacy">Anthropic</a>, which runs the Claude models. Anthropic processes it to produce the response and does not use it to train its models. AI features are capped per day and you can choose not to use them.</p>
+
+    <h2>Services Tempo relies on</h2>
+    <ul>
+      <li><strong>Railway</strong> hosts Tempo's server and database.</li>
+      <li><strong>Google Firebase</strong> handles signing in with Google.</li>
+      <li><strong>Anthropic</strong> runs the AI features described above.</li>
+      <li><strong>Apple Push Notification service</strong> delivers reminders to your iPhone.</li>
+    </ul>
+    <p>Each receives only what it needs for that job.</p>
+
+    <h2>Keeping and deleting your data</h2>
+    <p>Your data is kept while you use Tempo. You can export everything from Settings at any time. Disconnecting Google Calendar deletes the copied events immediately. To have your whole account and its data deleted, get in touch using the link below.</p>
+
+    <h2>Changes</h2>
+    <p>If this policy changes, the new version will be posted here with a new date.</p>
+
+    <h2>Contact</h2>
+    <p>Questions or requests: get in touch through <a href="https://designbyjohnwayne.com">designbyjohnwayne.com</a>.</p>
+
+    <footer><a href="/">Back to Tempo</a></footer>
+  </main>
+</body>
+</html>
