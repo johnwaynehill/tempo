@@ -224,8 +224,14 @@ public actor TempoClient {
         return r.url
     }
 
+    /// Disconnects every Google account and removes their events.
     public func disconnectGoogleCalendar() async throws {
         try await requestVoid("DELETE", "/api/google-calendar")
+    }
+
+    /// Disconnects one Google account and removes its events.
+    public func disconnectGoogleCalendar(accountId: String) async throws {
+        try await requestVoid("DELETE", "/api/google-calendar/\(accountId)")
     }
 
     public func syncGoogleCalendar() async throws {

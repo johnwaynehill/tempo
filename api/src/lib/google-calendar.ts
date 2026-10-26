@@ -1,18 +1,19 @@
 /**
  * Google Calendar sync engine (Phase 2).
  *
- * One-way: mirrors the user's **primary** Google calendar into `calendar_events`
- * as read-only `source='google'` rows, over a rolling window of −7 to +90 days.
+ * One-way: mirrors the **primary** calendar of each Google account the user has
+ * connected into `calendar_events` as read-only `source='google'` rows (tagged
+ * with the account's `connection_id`), over a rolling window of −7 to +90 days.
  *
  * Strategy: each run does a full re-list of the window (no sync token) and
- * reconciles — upsert everything returned, then prune any `source='google'`
- * rows for the user that weren't returned (covers deletions, cancellations, and
+ * reconciles — upsert everything returned, then prune any of that account's
+ * rows that weren't returned (covers deletions, cancellations, and
  * events that have aged out of the window). With a small window and a
  * twice-daily cadence this is simpler and more robust than incremental
  * sync-token bookkeeping, and it's naturally idempotent.
  */
 
-import { and, eq, notInArray } from 'drizzle-orm'
+import { and, asc, eq, notInArray } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { encrypt, decrypt } from './crypto.js'
 import { refreshAccessToken } from './google-oauth.js'
@@ -30,11 +31,22 @@ const CALENDAR_EVENTS_URL =
 
 type ConnectionRow = typeof schema.googleCalendarConnections.$inferSelect
 
+export interface AccountSyncResult {
+  connectionId: string
+  email: string | null
+  status: 'ok' | 'disabled' | 'error'
+  upserted: number
+  pruned: number
+  error?: string
+}
+
 export interface SyncResult {
   userId: string
+  /** 'ok' when at least one account synced; per-account detail is in `accounts`. */
   status: 'ok' | 'not_connected' | 'disabled'
   upserted: number
   pruned: number
+  accounts: AccountSyncResult[]
 }
 
 // --- Google event shape (only the fields we use) ---
@@ -70,7 +82,7 @@ async function getFreshAccessToken(conn: ConnectionRow): Promise<string> {
       scope: refreshed.scope,
       updatedAt: new Date(),
     })
-    .where(eq(schema.googleCalendarConnections.userId, conn.userId))
+    .where(eq(schema.googleCalendarConnections.id, conn.id))
   return refreshed.accessToken
 }
 
@@ -146,19 +158,11 @@ function mapEvent(e: GoogleEvent): MappedEvent {
 // --- Sync ---
 
 /**
- * Syncs one user's primary Google calendar into `calendar_events`. Records
- * `last_synced_at` / `last_sync_error` on the connection. Throws on failure
- * (after recording the error) so callers can surface it.
+ * Syncs one connected Google account's primary calendar into `calendar_events`.
+ * Records `last_synced_at` / `last_sync_error` on the connection. Throws on
+ * failure (after recording the error).
  */
-export async function syncGoogleCalendarForUser(userId: string): Promise<SyncResult> {
-  const [conn] = await db
-    .select()
-    .from(schema.googleCalendarConnections)
-    .where(eq(schema.googleCalendarConnections.userId, userId))
-
-  if (!conn) return { userId, status: 'not_connected', upserted: 0, pruned: 0 }
-  if (!conn.syncEnabled) return { userId, status: 'disabled', upserted: 0, pruned: 0 }
-
+async function syncConnection(conn: ConnectionRow): Promise<{ upserted: number; pruned: number }> {
   try {
     const accessToken = await getFreshAccessToken(conn)
     const now = Date.now()
@@ -170,7 +174,7 @@ export async function syncGoogleCalendarForUser(userId: string): Promise<SyncRes
       .filter((e) => e.status !== 'cancelled' && (e.start?.date || e.start?.dateTime))
       .map(mapEvent)
 
-    // Upsert each event by (user_id, external_id).
+    // Upsert each event by (user_id, connection_id, external_id).
     for (const m of mapped) {
       const values = {
         title: m.title,
@@ -184,22 +188,22 @@ export async function syncGoogleCalendarForUser(userId: string): Promise<SyncRes
       }
       await db
         .insert(schema.calendarEvents)
-        .values({ userId, source: 'google', externalId: m.externalId, ...values })
+        .values({ userId: conn.userId, source: 'google', connectionId: conn.id, externalId: m.externalId, ...values })
         .onConflictDoUpdate({
-          target: [schema.calendarEvents.userId, schema.calendarEvents.externalId],
+          target: [schema.calendarEvents.userId, schema.calendarEvents.connectionId, schema.calendarEvents.externalId],
           set: values,
         })
     }
 
-    // Prune any google rows for this user not in the current window/result set —
-    // covers deletions, cancellations, and events that aged out of the window.
+    // Prune this account's rows not in the current window/result set — covers
+    // deletions, cancellations, and events that aged out of the window.
     const keepIds = mapped.map((m) => m.externalId)
     const pruned = await db
       .delete(schema.calendarEvents)
       .where(
         and(
-          eq(schema.calendarEvents.userId, userId),
-          eq(schema.calendarEvents.source, 'google'),
+          eq(schema.calendarEvents.userId, conn.userId),
+          eq(schema.calendarEvents.connectionId, conn.id),
           keepIds.length > 0
             ? notInArray(schema.calendarEvents.externalId, keepIds)
             : undefined,
@@ -210,35 +214,76 @@ export async function syncGoogleCalendarForUser(userId: string): Promise<SyncRes
     await db
       .update(schema.googleCalendarConnections)
       .set({ lastSyncedAt: new Date(), lastSyncError: null, updatedAt: new Date() })
-      .where(eq(schema.googleCalendarConnections.userId, userId))
+      .where(eq(schema.googleCalendarConnections.id, conn.id))
 
-    return { userId, status: 'ok', upserted: mapped.length, pruned: pruned.length }
+    return { upserted: mapped.length, pruned: pruned.length }
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err)
     await db
       .update(schema.googleCalendarConnections)
       .set({ lastSyncError: message, updatedAt: new Date() })
-      .where(eq(schema.googleCalendarConnections.userId, userId))
+      .where(eq(schema.googleCalendarConnections.id, conn.id))
       .catch(() => { /* don't mask the original error */ })
     throw err
   }
 }
 
 /**
- * Syncs every connection with `sync_enabled = true`. Per-user errors are caught
- * and surfaced in the result array so one bad account doesn't abort the batch.
- * (Used by the scheduled cron in Phase 4.)
+ * Syncs every Google account the user has connected. One account failing doesn't
+ * stop the others; it's reported in `accounts` and in its `last_sync_error`.
+ * Throws only when every enabled account failed, so callers can surface that.
+ */
+export async function syncGoogleCalendarForUser(userId: string): Promise<SyncResult> {
+  const conns = await db
+    .select()
+    .from(schema.googleCalendarConnections)
+    .where(eq(schema.googleCalendarConnections.userId, userId))
+    .orderBy(asc(schema.googleCalendarConnections.createdAt))
+
+  if (conns.length === 0) return { userId, status: 'not_connected', upserted: 0, pruned: 0, accounts: [] }
+
+  const accounts: AccountSyncResult[] = []
+  let firstError: unknown = null
+  for (const conn of conns) {
+    const base = { connectionId: conn.id, email: conn.googleEmail }
+    if (!conn.syncEnabled) {
+      accounts.push({ ...base, status: 'disabled', upserted: 0, pruned: 0 })
+      continue
+    }
+    try {
+      accounts.push({ ...base, status: 'ok', ...(await syncConnection(conn)) })
+    } catch (err) {
+      firstError ??= err
+      accounts.push({ ...base, status: 'error', upserted: 0, pruned: 0, error: err instanceof Error ? err.message : String(err) })
+    }
+  }
+
+  const synced = accounts.filter((a) => a.status === 'ok')
+  if (synced.length === 0 && firstError) throw firstError
+  return {
+    userId,
+    status: synced.length > 0 ? 'ok' : 'disabled',
+    upserted: synced.reduce((n, a) => n + a.upserted, 0),
+    pruned: synced.reduce((n, a) => n + a.pruned, 0),
+    accounts,
+  }
+}
+
+/**
+ * Syncs every user with at least one connection that has `sync_enabled = true`.
+ * Per-user errors are caught and surfaced in the result array so one bad
+ * account doesn't abort the batch. (Used by the scheduled cron.)
  */
 export async function syncAllEnabledUsers(): Promise<
   (SyncResult | { userId: string; error: string })[]
 > {
-  const conns = await db
-    .select({ userId: schema.googleCalendarConnections.userId })
+  const users = await db
+    .selectDistinct({ userId: schema.googleCalendarConnections.userId })
     .from(schema.googleCalendarConnections)
     .where(eq(schema.googleCalendarConnections.syncEnabled, true))
 
   const results: (SyncResult | { userId: string; error: string })[] = []
-  for (const { userId } of conns) {
+  for (const { userId } of users) {
     try {
       results.push(await syncGoogleCalendarForUser(userId))
     } catch (err) {

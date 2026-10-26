@@ -7,8 +7,23 @@ const router = Router()
 router.get('/', async (req, res) => {
   const rows = await db.select().from(schema.calendarEvents)
     .where(eq(schema.calendarEvents.userId, req.userId!))
-  res.json(rows)
+  res.json(withoutCrossAccountDuplicates(rows))
 })
+
+/**
+ * A meeting on the calendars of two connected Google accounts (an invite between
+ * them) is synced once per account, usually with the same Google event id. Keep
+ * one copy, so it shows once on Today and isn't counted twice against free time.
+ */
+function withoutCrossAccountDuplicates<T extends { source: string; externalId: string | null }>(rows: T[]): T[] {
+  const seen = new Set<string>()
+  return rows.filter((row) => {
+    if (row.source !== 'google' || !row.externalId) return true
+    if (seen.has(row.externalId)) return false
+    seen.add(row.externalId)
+    return true
+  })
+}
 
 router.get('/:id', async (req, res) => {
   const [row] = await db.select().from(schema.calendarEvents)
@@ -18,9 +33,9 @@ router.get('/:id', async (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-  // `source`/`externalId`/`etag` are owned by the Google sync — never let a
+  // `source`/`externalId`/`etag`/`connectionId` are owned by the Google sync — never let a
   // client forge a mirrored event. New events are always native ('tempo').
-  const { source, externalId, etag, ...rest } = req.body
+  const { source, externalId, etag, connectionId, ...rest } = req.body
   const [row] = await db.insert(schema.calendarEvents)
     .values({ ...rest, userId: req.userId!, source: 'tempo' }).returning()
   res.status(201).json(row)
@@ -34,7 +49,7 @@ router.put('/:id', async (req, res) => {
   if (existing.source === 'google') {
     res.status(403).json({ error: 'Google Calendar events are read-only in Tempo' }); return
   }
-  const { id, userId, createdAt, firestoreId, source, externalId, etag, ...updates } = req.body
+  const { id, userId, createdAt, firestoreId, source, externalId, etag, connectionId, ...updates } = req.body
   const [row] = await db.update(schema.calendarEvents).set(updates)
     .where(and(eq(schema.calendarEvents.id, req.params.id), eq(schema.calendarEvents.userId, req.userId!)))
     .returning()

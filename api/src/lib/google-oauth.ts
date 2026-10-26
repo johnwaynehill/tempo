@@ -52,7 +52,9 @@ export function buildAuthUrl(state: string): string {
     response_type: 'code',
     scope: GOOGLE_SCOPES.join(' '),
     access_type: 'offline',          // request a refresh token
-    prompt: 'consent',               // force consent so a refresh token is reliably returned
+    // consent: so a refresh token is reliably returned. select_account: always show
+    // the account chooser, so connecting another Google account is possible.
+    prompt: 'consent select_account',
     include_granted_scopes: 'true',
     state,
   })

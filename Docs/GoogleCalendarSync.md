@@ -4,6 +4,9 @@ One-way sync: a user's Google Calendar events are mirrored **into** Tempo's
 calendar as read-only entries. Google stays the source of truth — Tempo never
 writes back. A cron service re-syncs a couple of times a day.
 
+A user can connect **several Google accounts** (since 2026-10-26); each one's
+primary calendar is mirrored. See *Several Google accounts* below.
+
 **All four phases are done:** the OAuth account link, the sync engine, the
 front-end UI (Settings connect/disconnect/"Sync now" + read-only rendering of
 Google events), and the scheduled cron (`gcal-sync-cron`, twice daily). Syncing
@@ -38,8 +41,9 @@ also happens on demand via the **Sync now** button (`POST /api/google-calendar/s
 | `GET` | `/api/google-calendar/status` | user | Connection state for the Settings UI |
 | `GET` | `/api/google-calendar/connect` | user | Returns the Google consent URL (`{ url }`) |
 | `GET` | `/api/google-calendar/callback` | **public** | Google redirects here post-consent; stores tokens, redirects to `${APP_URL}/settings?google=<status>` |
-| `POST` | `/api/google-calendar/sync` | user | Sync the primary calendar now; returns `{ status, upserted, pruned }` |
-| `DELETE` | `/api/google-calendar` | user | Revoke at Google, purge mirrored events, drop the connection |
+| `POST` | `/api/google-calendar/sync` | user | Sync every connected account now; returns `{ status, upserted, pruned, accounts }`, 502 only if every account failed |
+| `DELETE` | `/api/google-calendar/:id` | user | Disconnect one account: revoke at Google, drop the connection and its events |
+| `DELETE` | `/api/google-calendar` | user | Disconnect every account and purge all mirrored events |
 
 The callback is mounted **before** the `/api` auth chain in `index.ts` because
 Google redirects the browser to it with no Authorization header. A one-time,
@@ -49,19 +53,38 @@ callback back to the user who started the flow.
 `?google=<status>` values the Settings UI may receive: `connected`, `denied`,
 `expired`, `no_refresh_token`, `error`.
 
+### Several Google accounts
+
+- **Connections:** `google_calendar_connections` has its own `id` primary key, with one
+  row per Google account, unique on `(user_id, google_email)`. The callback upserts on
+  that pair, so connecting another account adds a row and reconnecting one refreshes
+  its tokens. The consent URL uses `prompt=consent select_account`, so Google always
+  shows the account chooser.
+- **Events:** each synced row in `calendar_events` carries `connection_id` (FK,
+  `ON DELETE CASCADE`), and the upsert key is `(user_id, connection_id, external_id)`.
+  When two of the user's accounts are on the same meeting, Google usually gives it the
+  same event id in both. Each account keeps its own copy, and `GET /api/events` returns
+  one (`withoutCrossAccountDuplicates` in `routes/events.ts`), so Today shows it once
+  and doesn't count it twice.
+- **Status:** `GET /status` returns `accounts: [{ id, email, syncEnabled, lastSyncedAt,
+  lastSyncError }]`. The old top-level `email` / `syncEnabled` / `lastSyncedAt` /
+  `lastSyncError` describe the first account, for app builds that predate this.
+- **Failures:** sync runs account by account; one failing (an expired grant) records
+  its own `last_sync_error` and doesn't stop the others.
+
 ### Sync engine
 
-`syncGoogleCalendarForUser(userId)` mirrors the user's **primary** Google
-calendar into `calendar_events` as read-only `source='google'` rows, over a
+`syncGoogleCalendarForUser(userId)` mirrors the **primary** calendar of each
+connected Google account into `calendar_events` as read-only `source='google'` rows, over a
 rolling **−7 to +90 day** window. Each run re-lists the whole window (recurring
 events expanded via `singleEvents=true`) and reconciles: upsert everything
-returned by `(user_id, external_id)`, then prune any `source='google'` rows not
+returned by `(user_id, connection_id, external_id)`, then prune that account's rows not
 in the result (handles deletions, cancellations, and events that aged out of the
 window). It's idempotent. Access tokens are auto-refreshed from the stored
 refresh token when expired.
 
 Native Tempo events are `source='tempo'`; the events routes reject edits/deletes
-to `source='google'` rows (403) and never let a client set `source`/`external_id`.
+to `source='google'` rows (403) and never let a client set `source`/`external_id`/`connection_id`.
 
 ### Scheduled sync (Phase 4)
 
@@ -126,5 +149,7 @@ If `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET`/`GOOGLE_OAUTH_REDIRECT_URI` or
 
 ### 3. Database
 
-Run `npm --prefix api run db:push` (or apply
-`Docs/migrations/2026-06-09-google-calendar-sync.sql`) before deploying.
+Apply the migrations by hand, in order, before deploying (don't `db:push` on prod):
+`Docs/migrations/2026-06-09-google-calendar-sync.sql`,
+`2026-06-13-google-calendar-event-source.sql`, then
+`2026-10-26-google-calendar-multiple-accounts.sql`.

@@ -29,9 +29,9 @@ function requireGoogleSyncSecret(req: Request, res: Response, next: NextFunction
 /**
  * POST /api/internal/google-sync
  *
- * Syncs the primary Google calendar for every connection with
- * `sync_enabled = true`. Per-user errors are surfaced in the result list
- * without aborting the batch.
+ * Syncs the primary calendar of every connected Google account with
+ * `sync_enabled = true`, user by user. Per-user errors are surfaced in the
+ * result list without aborting the batch.
  *
  * Optional body param:
  *   { userId?: string }  — sync only a single user (testing / manual trigger)

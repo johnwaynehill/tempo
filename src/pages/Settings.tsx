@@ -58,7 +58,8 @@ export function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   type GCalStatus = Awaited<ReturnType<typeof api.googleCalendar.status>>
   const [gcal, setGcal] = useState<GCalStatus | null>(null)
-  const [gcalBusy, setGcalBusy] = useState<'idle' | 'connecting' | 'syncing' | 'disconnecting'>('idle')
+  // 'idle', 'connecting', 'syncing', or the id of the account being disconnected.
+  const [gcalBusy, setGcalBusy] = useState<string>('idle')
 
   const loadGcalStatus = useCallback(async () => {
     try { setGcal(await api.googleCalendar.status()) } catch { /* integration may be unconfigured */ }
@@ -108,13 +109,13 @@ export function SettingsPage() {
     }
   }
 
-  const handleDisconnectGoogle = async () => {
-    setGcalBusy('disconnecting')
+  const handleDisconnectGoogle = async (account: GCalStatus['accounts'][number]) => {
+    setGcalBusy(account.id)
     try {
-      await api.googleCalendar.disconnect()
+      await api.googleCalendar.disconnect(account.id)
       await queryClient.invalidateQueries({ queryKey: ['events'] })
       await loadGcalStatus()
-      setToast('Google Calendar disconnected.')
+      setToast(`${account.email ?? 'Google account'} disconnected.`)
     } catch (err) {
       setToast(err instanceof Error ? err.message : 'Failed to disconnect')
     } finally {
@@ -535,43 +536,55 @@ export function SettingsPage() {
         <div className="bg-surface-container-lowest rounded-xl p-5">
           {gcal?.connected ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-on-surface text-sm font-medium">Connected</p>
-                  <p className="text-on-surface-variant text-xs truncate">
-                    {gcal.email ?? 'Google account'}
-                    {gcal.lastSyncedAt && ` · Last synced ${new Date(gcal.lastSyncedAt).toLocaleString()}`}
-                  </p>
-                  {gcal.lastSyncError && (
-                    <p className="text-error text-xs mt-0.5">Last sync error: {gcal.lastSyncError}</p>
-                  )}
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={handleSyncGoogle}
-                    disabled={gcalBusy !== 'idle'}
-                    className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50"
-                  >
-                    {gcalBusy === 'syncing' ? 'Syncing…' : 'Sync now'}
-                  </button>
-                  <button
-                    onClick={handleDisconnectGoogle}
-                    disabled={gcalBusy !== 'idle'}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer disabled:opacity-50"
-                  >
-                    {gcalBusy === 'disconnecting' ? 'Disconnecting…' : 'Disconnect'}
-                  </button>
-                </div>
+              <ul className="space-y-3">
+                {gcal.accounts.map((account) => (
+                  <li key={account.id} className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-on-surface text-sm font-medium truncate">{account.email ?? 'Google account'}</p>
+                      <p className="text-on-surface-variant text-xs">
+                        {account.lastSyncedAt
+                          ? `Last synced ${new Date(account.lastSyncedAt).toLocaleString()}`
+                          : 'Not synced yet'}
+                      </p>
+                      {account.lastSyncError && (
+                        <p className="text-error text-xs mt-0.5">Last sync error: {account.lastSyncError}</p>
+                      )}
+                    </div>
+                    <button
+                      onClick={() => handleDisconnectGoogle(account)}
+                      disabled={gcalBusy !== 'idle'}
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      {gcalBusy === account.id ? 'Disconnecting…' : 'Disconnect'}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={handleSyncGoogle}
+                  disabled={gcalBusy !== 'idle'}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-primary text-on-primary hover:shadow-md transition-all duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {gcalBusy === 'syncing' ? 'Syncing…' : 'Sync now'}
+                </button>
+                <button
+                  onClick={handleConnectGoogle}
+                  disabled={gcalBusy !== 'idle'}
+                  className="px-4 py-1.5 rounded-lg text-xs font-medium bg-surface-container text-on-surface hover:bg-surface-container-high transition-colors duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {gcalBusy === 'connecting' ? 'Connecting…' : 'Add another Google account'}
+                </button>
               </div>
               <p className="text-on-surface-variant text-xs">
-                Your primary Google calendar is mirrored into Tempo (read-only), from 7 days ago through 90 days ahead.
+                Each account's primary Google calendar is mirrored into Tempo (read-only), from 7 days ago through 90 days ahead. A meeting on more than one of them shows once.
               </p>
             </div>
           ) : (
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-on-surface text-sm font-medium">Connect Google Calendar</p>
-                <p className="text-on-surface-variant text-xs">Mirror your Google events into Tempo, read-only.</p>
+                <p className="text-on-surface-variant text-xs">Mirror your Google events into Tempo, read-only. You can connect more than one Google account.</p>
               </div>
               <button
                 onClick={handleConnectGoogle}
