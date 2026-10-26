@@ -262,17 +262,23 @@ export const api = {
     me: () => apiFetch<{ uid: string; email: string | null; displayName: string | null; photoURL: string | null }>('/api/auth/me'),
   },
   googleCalendar: {
+    /** Every connected Google account, oldest first. */
     status: () => apiFetch<{
       connected: boolean
-      email?: string | null
-      syncEnabled?: boolean
-      lastSyncedAt?: string | null
-      lastSyncError?: string | null
+      accounts: {
+        id: string
+        email: string | null
+        syncEnabled: boolean
+        lastSyncedAt: string | null
+        lastSyncError: string | null
+      }[]
     }>('/api/google-calendar/status'),
+    /** Consent URL; connecting while already connected adds another account. */
     connect: () => apiFetch<{ url: string }>('/api/google-calendar/connect'),
     sync: () => apiFetch<{ status: string; upserted: number; pruned: number }>('/api/google-calendar/sync', {
       method: 'POST',
     }),
-    disconnect: () => apiFetch<void>('/api/google-calendar', { method: 'DELETE' }),
+    /** Disconnects one Google account and removes its events. */
+    disconnect: (accountId: string) => apiFetch<void>(`/api/google-calendar/${accountId}`, { method: 'DELETE' }),
   },
 }

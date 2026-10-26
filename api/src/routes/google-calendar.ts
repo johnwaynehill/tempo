@@ -1,7 +1,8 @@
 /**
  * Google Calendar integration — OAuth connect/disconnect + status.
  *
- * Phase 1 establishes the account link only; event syncing is layered on later.
+ * A user can connect several Google accounts; each is its own connection row
+ * and is synced separately (see lib/google-calendar.ts).
  *
  * Routing note: the authenticated endpoints (`/status`, `/connect`, DELETE `/`)
  * live under the normal `/api` auth chain. The OAuth `callback` cannot — Google
@@ -13,7 +14,7 @@
 import { Router } from 'express'
 import type { Request, Response } from 'express'
 import { randomBytes } from 'crypto'
-import { and, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { db, schema } from '../db/index.js'
 import { encrypt, decrypt, isEncryptionConfigured } from '../lib/crypto.js'
 import {
@@ -27,6 +28,7 @@ import { syncGoogleCalendarForUser } from '../lib/google-calendar.js'
 
 const STATE_TYPE = 'google_oauth_state'
 const STATE_TTL_MS = 10 * 60 * 1000 // 10 minutes
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 function appUrl(): string {
   return process.env.APP_URL || 'https://tempo.designbyjohnwayne.com'
@@ -45,18 +47,26 @@ function integrationReady(res: Response): boolean {
 
 const router = Router()
 
-/** GET /api/google-calendar/status — connection state for the Settings UI. */
+/**
+ * GET /api/google-calendar/status — connection state for the Settings UI.
+ * `accounts` lists every connected Google account, oldest first. The top-level
+ * `email` / `syncEnabled` / `lastSyncedAt` / `lastSyncError` describe the first
+ * account, for clients built before several accounts were possible.
+ */
 router.get('/status', async (req: Request, res: Response) => {
-  const [conn] = await db.select().from(schema.googleCalendarConnections)
+  const conns = await db.select().from(schema.googleCalendarConnections)
     .where(eq(schema.googleCalendarConnections.userId, req.userId!))
-  if (!conn) { res.json({ connected: false }); return }
-  res.json({
-    connected: true,
-    email: conn.googleEmail,
-    syncEnabled: conn.syncEnabled,
-    lastSyncedAt: conn.lastSyncedAt,
-    lastSyncError: conn.lastSyncError,
-  })
+    .orderBy(asc(schema.googleCalendarConnections.createdAt))
+  if (conns.length === 0) { res.json({ connected: false, accounts: [] }); return }
+  const accounts = conns.map((c) => ({
+    id: c.id,
+    email: c.googleEmail,
+    syncEnabled: c.syncEnabled,
+    lastSyncedAt: c.lastSyncedAt,
+    lastSyncError: c.lastSyncError,
+  }))
+  const { id: _id, ...first } = accounts[0]
+  res.json({ connected: true, ...first, accounts })
 })
 
 /**
@@ -81,8 +91,9 @@ router.get('/connect', async (req: Request, res: Response) => {
 })
 
 /**
- * POST /api/google-calendar/sync — sync the user's primary Google calendar now.
- * Returns a summary { status, upserted, pruned }.
+ * POST /api/google-calendar/sync — sync every connected account's primary
+ * calendar now. Returns { status, upserted, pruned, accounts: [...] }; 502 only
+ * when every account failed.
  */
 router.post('/sync', async (req: Request, res: Response) => {
   if (!integrationReady(res)) return
@@ -98,23 +109,44 @@ router.post('/sync', async (req: Request, res: Response) => {
   }
 })
 
+/** Revokes the grant at Google and deletes the connection; its events go with it (ON DELETE CASCADE). */
+async function disconnect(conn: typeof schema.googleCalendarConnections.$inferSelect): Promise<void> {
+  try { await revokeToken(decrypt(conn.refreshTokenEnc)) } catch { /* best effort */ }
+  await db.delete(schema.googleCalendarConnections)
+    .where(eq(schema.googleCalendarConnections.id, conn.id))
+}
+
 /**
- * DELETE /api/google-calendar — disconnect: revoke the grant at Google, purge
- * the user's mirrored (source='google') events, and drop the stored connection.
+ * DELETE /api/google-calendar/:id — disconnect one Google account: revoke its
+ * grant at Google and delete its mirrored events and stored connection.
+ */
+router.delete('/:id', async (req, res) => {
+  // A malformed id is just "not found" (Postgres would reject it as a uuid).
+  const [conn] = UUID_RE.test(req.params.id)
+    ? await db.select().from(schema.googleCalendarConnections)
+      .where(and(
+        eq(schema.googleCalendarConnections.id, req.params.id),
+        eq(schema.googleCalendarConnections.userId, req.userId!),
+      ))
+    : []
+  if (!conn) { res.status(404).json({ error: 'Not found' }); return }
+  await disconnect(conn)
+  res.status(204).send()
+})
+
+/**
+ * DELETE /api/google-calendar — disconnect every Google account, and remove any
+ * synced events left without one (from before events were tagged by account).
  */
 router.delete('/', async (req: Request, res: Response) => {
-  const [conn] = await db.select().from(schema.googleCalendarConnections)
+  const conns = await db.select().from(schema.googleCalendarConnections)
     .where(eq(schema.googleCalendarConnections.userId, req.userId!))
-  if (conn) {
-    try { await revokeToken(decrypt(conn.refreshTokenEnc)) } catch { /* best effort */ }
-    await db.delete(schema.calendarEvents)
-      .where(and(
-        eq(schema.calendarEvents.userId, req.userId!),
-        eq(schema.calendarEvents.source, 'google'),
-      ))
-    await db.delete(schema.googleCalendarConnections)
-      .where(eq(schema.googleCalendarConnections.userId, req.userId!))
-  }
+  for (const conn of conns) await disconnect(conn)
+  await db.delete(schema.calendarEvents)
+    .where(and(
+      eq(schema.calendarEvents.userId, req.userId!),
+      eq(schema.calendarEvents.source, 'google'),
+    ))
   res.status(204).send()
 })
 
@@ -190,10 +222,12 @@ googleCalendarCallbackRouter.get('/', async (req: Request, res: Response) => {
       updatedAt: new Date(),
     }
 
+    // Another Google account adds a row; reconnecting one already connected
+    // (same email) refreshes its tokens instead.
     await db.insert(schema.googleCalendarConnections)
       .values({ userId, ...enc })
       .onConflictDoUpdate({
-        target: schema.googleCalendarConnections.userId,
+        target: [schema.googleCalendarConnections.userId, schema.googleCalendarConnections.googleEmail],
         set: enc,
       })
 

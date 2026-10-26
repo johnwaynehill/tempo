@@ -154,6 +154,24 @@ import Testing
         #expect(obj["currentEnergy"] is NSNull)
     }
 
+    @Test func googleCalendarStatusWithSeveralAccounts() throws {
+        let status = try TempoJSON.decoder.decode(GoogleCalendarStatus.self, from: Data("""
+        {"connected":true,"email":"me@example.com","syncEnabled":true,"lastSyncedAt":"2026-10-26T17:10:24.000Z","lastSyncError":null,
+         "accounts":[
+           {"id":"eeb7b2c3-d5f1-409b-9359-a309230dc9a6","email":"me@example.com","syncEnabled":true,"lastSyncedAt":"2026-10-26T17:10:24.000Z","lastSyncError":null},
+           {"id":"98fb63e1-1ed8-47df-a8f5-9c27b797b04f","email":"work@example.com","syncEnabled":true,"lastSyncedAt":null,"lastSyncError":"Google token refresh failed: 400"}]}
+        """.utf8))
+        #expect(status.accounts.map(\.email) == ["me@example.com", "work@example.com"])
+        #expect(status.accounts[1].lastSyncedAt == nil)
+        #expect(status.accounts[1].lastSyncError?.hasPrefix("Google token") == true)
+
+        // A server from before several accounts: no `accounts`, just the one account's fields.
+        let old = try TempoJSON.decoder.decode(GoogleCalendarStatus.self, from: Data("""
+        {"connected":true,"email":"me@example.com","syncEnabled":true,"lastSyncedAt":null,"lastSyncError":null}
+        """.utf8))
+        #expect(old.accounts.isEmpty && old.email == "me@example.com")
+    }
+
     @Test func habitReminderPreferences() throws {
         let update = UserPreferencesUpdate(habitReminderEnabled: true, habitReminderTime: "21:15")
         let obj = try #require(JSONSerialization.jsonObject(with: TempoJSON.encoder.encode(update)) as? [String: Any])

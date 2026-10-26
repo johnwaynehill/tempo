@@ -17,6 +17,8 @@ struct SettingsView: View {
     @State private var isLoading = true
     @State private var isConnecting = false
     @State private var isSyncing = false
+    /// The Google account being disconnected, while that's in flight.
+    @State private var disconnectingId: String?
     @State private var errorMessage: String?
     @State private var aiUsage: AiUsageSummary?
     @State private var notificationStatus: UNAuthorizationStatus?
@@ -365,30 +367,27 @@ struct SettingsView: View {
             if isLoading {
                 HStack { Spacer(); ProgressView().tint(Theme.onSurfaceVariant); Spacer() }
             } else if let status, status.connected {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Connected")
-                        .font(Theme.font(.subheadline, weight: .medium))
-                        .foregroundStyle(Theme.onSurface)
-                    if let email = status.email {
-                        Text(email)
-                            .font(Theme.font(.footnote))
-                            .foregroundStyle(Theme.onSurfaceVariant)
-                    }
-                    if let error = status.lastSyncError {
-                        Text(error)
-                            .font(Theme.font(.footnote))
-                            .foregroundStyle(Theme.error)
-                    }
+                // A server from before several accounts sends no list; show its one account.
+                let accounts = status.accounts.isEmpty
+                    ? [GoogleCalendarAccount(id: "", email: status.email, lastSyncedAt: status.lastSyncedAt, lastSyncError: status.lastSyncError)]
+                    : status.accounts
+                ForEach(accounts) { account in
+                    accountRow(account)
                 }
                 HStack(spacing: Theme.grid) {
                     Button(isSyncing ? "Syncing…" : "Sync now") { Task { await sync() } }
                         .buttonStyle(SecondaryButtonStyle())
-                        .disabled(isSyncing)
-                    Button("Disconnect", role: .destructive) { Task { await disconnect() } }
+                        .disabled(isSyncing || isConnecting)
+                    Button(isConnecting ? "Connecting…" : "Add account") { Task { await connect() } }
                         .buttonStyle(SecondaryButtonStyle())
+                        .disabled(isSyncing || isConnecting)
                 }
+                .padding(.top, Theme.grid)
+                Text("Each account's primary calendar shows on Today. A meeting on more than one of them shows once.")
+                    .font(Theme.font(.footnote))
+                    .foregroundStyle(Theme.onSurfaceVariant)
             } else {
-                Text("Connect your Google Calendar so events show up on Today and count toward your day's availability.")
+                Text("Connect your Google Calendar so events show up on Today and count toward your day's availability. You can connect more than one Google account.")
                     .font(Theme.font(.footnote))
                     .foregroundStyle(Theme.onSurfaceVariant)
                 Button(isConnecting ? "Connecting…" : "Connect Google Calendar") { Task { await connect() } }
@@ -399,6 +398,40 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         // Two buttons in one List row: without this, a tap anywhere fires both.
         .buttonStyle(.borderless)
+    }
+
+    private func accountRow(_ account: GoogleCalendarAccount) -> some View {
+        HStack(alignment: .top, spacing: Theme.grid * 2) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(account.email ?? "Google account")
+                    .font(Theme.font(.subheadline, weight: .medium))
+                    .foregroundStyle(Theme.onSurface)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                if let error = account.lastSyncError {
+                    Text(error)
+                        .font(Theme.font(.footnote))
+                        .foregroundStyle(Theme.error)
+                        .lineLimit(2)
+                } else if let synced = account.lastSyncedAt {
+                    Text("Synced \(synced, format: .relative(presentation: .named))")
+                        .font(Theme.font(.footnote))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                } else {
+                    Text("Not synced yet")
+                        .font(Theme.font(.footnote))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                }
+            }
+            Spacer(minLength: 0)
+            Button(disconnectingId == account.id ? "Disconnecting…" : "Disconnect", role: .destructive) {
+                Task { await disconnect(account) }
+            }
+            .font(Theme.font(.footnote, weight: .medium))
+            .foregroundStyle(Theme.error)
+            .disabled(disconnectingId != nil)
+        }
+        .padding(.vertical, 4)
     }
 
     private func refreshStatus() async {
@@ -427,11 +460,18 @@ struct SettingsView: View {
         }
     }
 
-    private func disconnect() async {
+    private func disconnect(_ account: GoogleCalendarAccount) async {
         guard let client = session.client else { return }
         errorMessage = nil
+        disconnectingId = account.id
+        defer { disconnectingId = nil }
         do {
-            try await client.disconnectGoogleCalendar()
+            // An empty id is the one account an older server described without a list.
+            if account.id.isEmpty {
+                try await client.disconnectGoogleCalendar()
+            } else {
+                try await client.disconnectGoogleCalendar(accountId: account.id)
+            }
             await refreshStatus()
             // The server purges the mirrored events; drop them from Today too.
             await model.reload()

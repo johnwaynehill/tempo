@@ -12,6 +12,7 @@ import {
   numeric,
   unique,
   uniqueIndex,
+  index,
 } from 'drizzle-orm/pg-core'
 
 // --- Enums ---
@@ -122,16 +123,18 @@ export const calendarEvents = pgTable('calendar_events', {
   color: eventColorEnum('color'),
   // Origin of the event: 'tempo' (native, editable) or 'google' (mirrored from
   // Google Calendar, read-only). Google rows carry the source event id + etag
-  // so syncs can upsert by (user_id, external_id).
+  // and the connected Google account they came from, so syncs can upsert by
+  // (user_id, connection_id, external_id).
   source: text('source').notNull().default('tempo'),
   externalId: text('external_id'),
   etag: text('etag'),
+  connectionId: uuid('connection_id').references(() => googleCalendarConnections.id, { onDelete: 'cascade' }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
-  // Upsert key for synced events. Native (tempo) rows have NULL external_id;
-  // Postgres treats NULLs as distinct, so they never collide here.
-  uniqueIndex('calendar_events_user_external_unique').on(table.userId, table.externalId),
+  // Upsert key for synced events. Native (tempo) rows have NULL connection_id
+  // and external_id; Postgres treats NULLs as distinct, so they never collide here.
+  uniqueIndex('calendar_events_user_connection_external_unique').on(table.userId, table.connectionId, table.externalId),
 ])
 
 // --- Conversations ---
@@ -248,8 +251,10 @@ export const mcpOauthState = pgTable('mcp_oauth_state', {
 // Access/refresh tokens are AES-256-GCM encrypted at rest (see
 // `api/src/lib/crypto.ts`) — they are never stored in plaintext. Requires the
 // `TOKEN_ENCRYPTION_KEY` env var on the API service.
+// One row per connected Google account; a user can connect several.
 export const googleCalendarConnections = pgTable('google_calendar_connections', {
-  userId: text('user_id').primaryKey(),
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: text('user_id').notNull(),
   googleEmail: text('google_email'),
   accessTokenEnc: text('access_token_enc').notNull(),
   refreshTokenEnc: text('refresh_token_enc').notNull(),
@@ -264,7 +269,11 @@ export const googleCalendarConnections = pgTable('google_calendar_connections', 
   lastSyncError: text('last_sync_error'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
-})
+}, (table) => [
+  index('google_calendar_connections_user_idx').on(table.userId),
+  // Reconnecting the same Google account updates its row instead of adding another.
+  uniqueIndex('google_calendar_connections_user_email_unique').on(table.userId, table.googleEmail),
+])
 
 // --- API Keys ---
 
