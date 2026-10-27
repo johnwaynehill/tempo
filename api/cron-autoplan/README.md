@@ -10,27 +10,28 @@ and replacing each user's Today view with 3–5 AI-picked todos.
 
 The container is single-purpose — it `curl`s, prints the response, exits.
 
-## Setup (one-time)
+## Setup
 
-1. In the Railway dashboard, **create a new service in the existing Tempo project**:
-   - Source: the same GitHub repo
-   - Root directory: `/` (Railway reads `api/cron-autoplan/railway.json` for build)
-   - Service name: `autoplan-cron`
+The service's settings live in `.railway/railway.ts` (service `autoplan-cron`):
+the Dockerfile, restart policy `NEVER`, and the schedule `30 13 * * *`, which is
+**13:30 UTC**: 06:30 Pacific in summer (PDT) and 05:30 in winter (PST), both
+before 7:30 AM. Change any of them there and run `railway config plan`, then
+`railway config apply`.
 
-2. Override the root config path so Railway picks this service's `railway.json`:
-   - **Settings → Config-as-Code** → set to `api/cron-autoplan/railway.json`
+It isn't linked to the repo, so a push never redeploys it. Deploy it from this
+folder, where its Dockerfile is at the root of the upload:
 
-3. **Set environment variables** on this service:
-   - `API_URL` = `https://tempo-api-production.up.railway.app`
-   - `AUTOPLAN_SECRET` = same value you set on the `tempo-api` service
+```bash
+cd api/cron-autoplan && railway up --service autoplan-cron
+```
 
-4. **Confirm the cron schedule** under Settings → Cron Schedule.
-   The schedule baked into `railway.json` is `30 13 * * *` — **13:30 UTC = 06:30 PT**
-   (PDT in summer). In winter when PT moves to PST (UTC-8), this becomes 05:30 PT,
-   which is still well before 7:30 AM as required. Adjust if needed.
+Its variables are set on Railway, not in the repo:
+- `API_URL` = `https://tempo-api-production.up.railway.app`
+- `AUTOPLAN_SECRET` = the same value set on the `tempo-api` service
 
-5. Deploy. First run will appear in the service's deployments tab. Manual
-   triggers are available via the "Run Now" button in the Railway dashboard.
+A cron runs with the variables from its last deploy, so redeploy it after
+changing one (`railway redeploy --service autoplan-cron -y`). The Railway
+dashboard's "Run Now" button triggers a run by hand.
 
 ## Why a separate service?
 

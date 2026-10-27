@@ -11,7 +11,7 @@ Personal productivity app built for ADHD. Task management, habits, notes, calend
 | Auth | Firebase Auth (Google Sign-In). See `Docs/BetterAuthMigration.md` for future self-hosted plan. |
 | AI | Anthropic Claude via server-side proxy |
 | MCP | `@modelcontextprotocol/sdk` — 17 tools for todos, habits, notes, events, reviews, preferences |
-| Hosting | Railway (frontend + API + Postgres + `autoplan-cron` cron service) |
+| Hosting | Railway (frontend + API + MCP + Postgres + `autoplan-cron` and `gcal-sync-cron` cron services), defined in `.railway/railway.ts` |
 | Editor | Milkdown (Markdown, GFM) for Notes |
 | PWA | vite-plugin-pwa |
 
@@ -37,6 +37,8 @@ Tempo/
   api/cron-autoplan/  Tiny `curlimages/curl` container deployed as a separate
                       Railway service. Cron at 13:30 UTC POSTs to
                       `/api/internal/autoplan` to populate Today for opted-in users.
+  api/cron-gcal-sync/  Same pattern; twice a day POSTs to `/api/internal/google-sync`.
+  .railway/         Railway services and settings as code (`railway.ts`)
   Docs/             Documentation
   scripts/          Migration scripts
   public/           Icons, static assets

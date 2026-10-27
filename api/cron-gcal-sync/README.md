@@ -11,35 +11,23 @@ secret. The API does the real work: iterating over every connection with
 
 The container is single-purpose — it `curl`s, prints the response, exits.
 
-## Setup (one-time)
+## Setup
 
-1. In the Railway dashboard, **create a new service in the existing Tempo project**:
-   - Source: the same GitHub repo
-   - **Root directory: `/`** (the repo root — Railway reads
-     `api/cron-gcal-sync/railway.json`, whose `dockerfilePath` is resolved from
-     the root). Do **not** point the root directory at the `railway.json` file.
-   - Service name: `gcal-sync-cron`
+The service's settings live in `.railway/railway.ts` (service `gcal-sync-cron`):
+the repo as its source with root directory `/`, the Dockerfile at
+`api/cron-gcal-sync/Dockerfile`, restart policy `NEVER`, and the schedule
+`0 13,1 * * *`. That's **13:00 and 01:00 UTC**, roughly **06:00 and 18:00
+Pacific** (morning and evening). A little drift around DST is fine, because the
+sync is idempotent. Change any of them there and run `railway config plan`, then
+`railway config apply`.
 
-2. Point Railway at this service's config file so it picks up the cron schedule
-   and Dockerfile:
-   - **Settings → Config-as-Code** (a.k.a. "Railway Config File") → set to
-     `api/cron-gcal-sync/railway.json`
+Its variables are set on Railway, not in the repo:
+- `API_URL` = `https://tempo-api-production.up.railway.app`
+- `GOOGLE_SYNC_SECRET` = the same value set on the `tempo-api` service
 
-   > **Build fails with `stat .../railway.json: not a directory`?** The Root
-   > Directory was set to the `railway.json` *file* instead of `/`. Fix step 1's
-   > Root directory to `/` and put the config path in step 2's field instead.
-
-3. **Set environment variables** on this service:
-   - `API_URL` = `https://tempo-api-production.up.railway.app`
-   - `GOOGLE_SYNC_SECRET` = same value set on the `tempo-api` service
-
-4. **Confirm the cron schedule** under Settings → Cron Schedule.
-   The schedule baked into `railway.json` is `0 13,1 * * *` — **13:00 and 01:00
-   UTC**, i.e. roughly **06:00 and 18:00 Pacific** (morning + evening). A small
-   window of clock drift around DST is fine; the sync is idempotent.
-
-5. Deploy. First run appears in the service's deployments tab. Manual triggers
-   are available via the "Run Now" button in the Railway dashboard.
+A cron runs with the variables from its last deploy, so redeploy it after
+changing one. Runs appear in the service's deployments tab, and the Railway
+dashboard's "Run Now" button triggers one by hand.
 
 ## Why a separate service?
 
