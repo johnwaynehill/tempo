@@ -147,6 +147,7 @@ Create a todo.
   "impact": 3,
   "energyLevel": "medium",
   "dueDate": "2026-04-25T17:00:00Z",
+  "plannedDate": "2026-04-23",
   "supports": "parent-todo-id",
   "noteId": "uuid",
   "deferUntil": "2026-04-23T00:00:00Z",
@@ -162,6 +163,8 @@ Create a todo.
 **201 Created** — returns the full row.
 
 Creates are **idempotent on a client-supplied `id`**: posting a todo whose `id` already exists for this user returns that existing row with **200** (the body of the repeat is ignored), and an `id` owned by another user returns **409**. Clients that generate ids (web, iOS, the share extension) can therefore retry a create whose response they never saw without making a second copy or blocking an offline queue.
+
+`plannedDate` is the day the user plans to do it (Plan my week), as `YYYY-MM-DD` in their local calendar. It is not a deadline; `dueDate` is. On that day the morning auto-plan and `POST /api/today-set/generate` put it on Today; before it, they leave it out. Send `null` or `""` to clear it.
 
 `startedAt` is set the first time a timer runs on the todo; `actualMinutes` is the total timed minutes across runs, written when the timer stops or the todo completes. Both are null for untimed todos and are excluded from calibration.
 
@@ -375,8 +378,11 @@ merely scoring them lower. **Due-today items in these projects are also
 mandatory** — added to the final picks unconditionally (additive on top of
 the 3–5 target, so the result can occasionally exceed 5), because the AI or
 heuristic pass is otherwise free to leave a merely-*eligible* item out in
-favor of other candidates. Mirrored client-side in `src/lib/scoring.ts` for
-the fallback path when the server hasn't populated `today_sets` yet.
+favor of other candidates. Todos planned for today in Plan my week
+(`plannedDate`) are mandatory the same way, after the chores; a todo planned
+for a later day is not a candidate until that day. Mirrored client-side in
+`src/lib/scoring.ts` for the fallback path when the server hasn't populated
+`today_sets` yet.
 
 **Auth:** `X-Autoplan-Secret: <secret>` matching the API service's `AUTOPLAN_SECRET` env var. Returns 503 if the env var is unset (never open-by-default).
 
@@ -422,7 +428,7 @@ Upsert.
 ```
 
 #### `POST /api/today-set/generate`
-Build (or rebuild) the day's suggestion set with the server-side scoring in `api/src/lib/autoplan.ts` — mandatory due-or-overdue Chore todos first, then the best-scoring discretionary todos up to five minus what's already pinned. Does **not** change any todo's status and does not call the AI. The web client used to compute this in the browser on the first open of each day; now every client asks here.
+Build (or rebuild) the day's suggestion set with the server-side scoring in `api/src/lib/autoplan.ts` — mandatory due-or-overdue Chore todos first, then todos planned for that day, then the best-scoring discretionary todos up to five minus what's already pinned. Does **not** change any todo's status and does not call the AI. The web client used to compute this in the browser on the first open of each day; now every client asks here.
 
 **Body:** `{ "date": "YYYY-MM-DD" }` (optional; defaults to today in the user's timezone).
 

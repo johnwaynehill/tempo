@@ -39,6 +39,8 @@ export const todos = pgTable('todos', {
   impact: integer('impact'),
   energyLevel: energyLevelEnum('energy_level'),
   dueDate: timestamp('due_date', { withTimezone: true }),
+  // The local day the user planned to do it ("YYYY-MM-DD"), from Plan my week. Not a deadline.
+  plannedDate: date('planned_date'),
   supports: text('supports'),
   noteId: uuid('note_id'),
   deferUntil: timestamp('defer_until', { withTimezone: true }),
