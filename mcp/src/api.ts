@@ -37,6 +37,7 @@ export interface Todo {
   impact?: number
   energyLevel?: string
   dueDate?: string
+  plannedDate?: string | null
   supports?: string
   noteId?: string
   estimatedMinutes?: number

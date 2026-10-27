@@ -22,6 +22,7 @@ import { CompletedPage } from '@/pages/Completed'
 import { ProjectsPage } from '@/pages/Projects'
 import { FocusModePage } from '@/pages/FocusMode'
 import { PlanMyDayPage } from '@/pages/PlanMyDay'
+import { PlanMyWeekPage } from '@/pages/PlanMyWeek'
 import { PlaylistsPage } from '@/pages/Playlists'
 import { PlaylistDetailPage } from '@/pages/PlaylistDetail'
 import { MoodPage } from '@/pages/Mood'
@@ -33,6 +34,7 @@ function AuthenticatedApp() {
       {/* Full-screen views — no sidebar/nav */}
       <Route path="/focus" element={<FocusModePage />} />
       <Route path="/plan" element={<PlanMyDayPage />} />
+      <Route path="/plan-week" element={<PlanMyWeekPage />} />
 
       <Route element={<AppShell />}>
         <Route path="/today" element={<TodayPage />} />

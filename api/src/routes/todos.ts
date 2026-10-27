@@ -7,6 +7,20 @@ import { userTimezone } from '../lib/ai-usage.js'
 const TODO_STATUSES = new Set(['inbox', 'today_pinned', 'backlog', 'deferred', 'done'])
 type TodoStatus = 'inbox' | 'today_pinned' | 'backlog' | 'deferred' | 'done'
 
+/**
+ * `plannedDate` is a calendar day, but the body-date middleware has turned "YYYY-MM-DD"
+ * into a Date at local midnight; read it back with local getters. "" or null clears it.
+ */
+function normalizePlannedDate(body: Record<string, unknown>) {
+  if (!('plannedDate' in body)) return
+  const value = body.plannedDate
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    body.plannedDate = `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, '0')}-${String(value.getDate()).padStart(2, '0')}`
+  } else if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    body.plannedDate = null
+  }
+}
+
 const router = Router()
 
 // List todos for authenticated user.
@@ -55,6 +69,7 @@ router.get('/:id', async (req, res) => {
 router.post('/', async (req, res) => {
   // reminderPushedAt is server-owned (lib/push.ts).
   const { reminderPushedAt: _pushed, ...body } = req.body ?? {}
+  normalizePlannedDate(body)
   const [row] = await db
     .insert(schema.todos)
     .values({ ...body, userId: req.userId! })
@@ -76,6 +91,7 @@ router.put('/:id', async (req, res) => {
   const { id, userId, createdAt, firestoreId, reminderPushedAt, ...updates } = req.body
   // A new (or cleared) reminder time is a new reminder: let the push sweep send it again.
   if ('reminderAt' in updates) updates.reminderPushedAt = null
+  normalizePlannedDate(updates)
   const [row] = await db
     .update(schema.todos)
     .set(updates)

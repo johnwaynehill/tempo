@@ -20,10 +20,11 @@ export function createServer(apiKey?: string): McpServer {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number; actualMinutes?: number }) {
+  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; plannedDate?: string | null; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number; actualMinutes?: number }) {
     const parts = [`[${t.status}] ${t.title}`]
     if (t.project) parts.push(`project: ${t.project}`)
     if (t.dueDate) parts.push(`due: ${t.dueDate.slice(0, 10)}`)
+    if (t.plannedDate) parts.push(`planned: ${t.plannedDate}`)
     if (t.size) parts.push(`size: ${t.size}`)
     if (t.impact) parts.push(`impact: ${t.impact}`)
     if (t.energyLevel) parts.push(`energy: ${t.energyLevel}`)
@@ -95,6 +96,7 @@ export function createServer(apiKey?: string): McpServer {
       impact: z.number().min(1).max(5).optional().describe('Impact score 1-5'),
       energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
       due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
+      planned_date: z.string().optional().describe('Day the user plans to do it (YYYY-MM-DD), separate from the due date. On that day the morning auto-plan puts it on Today. Empty string clears it.'),
       estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
     },
     async (input) => {
@@ -107,6 +109,7 @@ export function createServer(apiKey?: string): McpServer {
         impact: input.impact,
         energyLevel: input.energy_level,
         dueDate: input.due_date ? input.due_date + 'T00:00:00' : undefined,
+        plannedDate: input.planned_date || undefined,
         estimatedMinutes: input.estimated_minutes,
       } as Partial<import('./api.js').Todo>)
 
@@ -130,6 +133,7 @@ export function createServer(apiKey?: string): McpServer {
       impact: z.number().min(1).max(5).optional().describe('Impact score 1-5'),
       energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
       due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
+      planned_date: z.string().optional().describe('Day the user plans to do it (YYYY-MM-DD), separate from the due date. On that day the morning auto-plan puts it on Today. Empty string clears it.'),
       estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
     },
     async ({ id, ...updates }) => {
@@ -142,6 +146,7 @@ export function createServer(apiKey?: string): McpServer {
       if (updates.impact !== undefined) data.impact = updates.impact
       if (updates.energy_level !== undefined) data.energyLevel = updates.energy_level
       if (updates.due_date !== undefined) data.dueDate = updates.due_date + 'T00:00:00'
+      if (updates.planned_date !== undefined) data.plannedDate = updates.planned_date || null
       if (updates.estimated_minutes !== undefined) data.estimatedMinutes = updates.estimated_minutes
 
       const todo = await api.todos.update(id, data as Partial<import('./api.js').Todo>)
