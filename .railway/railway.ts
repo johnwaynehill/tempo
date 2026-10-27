@@ -5,14 +5,14 @@
 // `railway config plan` (preview) and `railway config apply`. This file describes
 // the whole project, so a resource left out of it is planned for deletion.
 // `preserve()` keeps a variable's current value on Railway, out of the repo.
+// The web app, API and MCP server use Railway's default restart policy (restart on
+// failure, up to 10 times). Railway stores the default as unset, so declaring it
+// here would show as a change in every plan.
 // See .railway/README.md and Docs/ProjectReference.md.
 
 import { defineRailway, github, postgres, preserve, project, service, volume } from "railway/iac";
 
 const REPO = "johnwaynehill/tempo";
-
-// Long-running services restart on a crash, up to 10 times.
-const restartOnFailure = { restartPolicyType: "ON_FAILURE", restartPolicyMaxRetries: 10 } as const;
 
 export default defineRailway(() => {
   const Postgres = postgres("Postgres", { region: "us-west2" });
@@ -23,7 +23,6 @@ export default defineRailway(() => {
   const tempo = service("tempo", {
     source: github(REPO, { checkSuites: false }),
     build: { builder: "DOCKERFILE", dockerfilePath: "Dockerfile" },
-    deploy: restartOnFailure,
     replicas: { "us-west2": 1 },
     domains: [{ domain: "tempo.designbyjohnwayne.com", port: 3000 }],
     env: { VITE_ANTHROPIC_PROXY_URL: preserve(), VITE_FIREBASE_API_KEY: preserve(), VITE_FIREBASE_APP_ID: preserve(), VITE_FIREBASE_AUTH_DOMAIN: preserve(), VITE_FIREBASE_MESSAGING_SENDER_ID: preserve(), VITE_FIREBASE_PROJECT_ID: preserve(), VITE_FIREBASE_STORAGE_BUCKET: preserve() },
@@ -32,7 +31,6 @@ export default defineRailway(() => {
   const tempoApi = service("tempo-api", {
     source: github(REPO, { checkSuites: false, rootDirectory: "/api" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "api/Dockerfile" },
-    deploy: restartOnFailure,
     replicas: { "us-west2": 1 },
     env: { ANTHROPIC_API_KEY: preserve(), APNS_KEY: preserve(), APNS_KEY_ID: preserve(), APNS_TEAM_ID: preserve(), APP_URL: preserve(), AUTOPLAN_SECRET: preserve(), DATABASE_URL: preserve(), FIREBASE_PROJECT_ID: preserve(), FIREBASE_SA_CLIENT_EMAIL: preserve(), FIREBASE_SA_PRIVATE_KEY: preserve(), GOOGLE_CLIENT_ID: preserve(), GOOGLE_CLIENT_SECRET: preserve(), GOOGLE_OAUTH_REDIRECT_URI: preserve(), GOOGLE_SYNC_SECRET: preserve(), PORT: preserve(), TOKEN_ENCRYPTION_KEY: preserve() },
   });
@@ -41,7 +39,6 @@ export default defineRailway(() => {
   const tempoMcp = service("tempo-mcp", {
     source: github(REPO, { checkSuites: false, rootDirectory: "/mcp" }),
     build: { builder: "DOCKERFILE", dockerfilePath: "mcp/Dockerfile", watchPatterns: ["/mcp/**"] },
-    deploy: restartOnFailure,
     replicas: { "us-west2": 1 },
     env: { PORT: preserve(), PUBLIC_URL: preserve(), TEMPO_API_KEY: preserve(), TEMPO_API_URL: preserve(), TZ: preserve() },
   });
