@@ -47,7 +47,6 @@ export function AppShell() {
       // Focus & Plan
       { label: 'F', description: 'Focus mode', key: 'f', action: () => navigate('/focus') },
       { label: 'P', description: 'Plan my day', key: 'p', action: () => navigate('/plan') },
-      { label: 'W', description: 'Plan my week', key: 'w', action: () => navigate('/plan-week') },
       // Help
       { label: '?', description: 'Keyboard shortcuts', key: '?', shift: true, action: () => setShortcutsOpen((v) => !v) },
     ],
