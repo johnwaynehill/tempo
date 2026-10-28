@@ -58,6 +58,9 @@ struct TodoRow: View {
         .offset(x: completing ? 16 : 0)
         .animation(.easeOut(duration: 0.5), value: completing)
         .sensoryFeedback(.success, trigger: completing) { _, new in new }
+        // The List can hand a row its old state back when the same todo returns (Undo, or a
+        // refresh after undoing elsewhere), which would leave it faded out. Start visible.
+        .onAppear { completing = false }
         .accessibilityElement(children: .contain)
     }
 

@@ -72,7 +72,7 @@ struct CompletedView: View {
                 ForEach(days, id: \.day) { group in
                     Section {
                         ForEach(group.todos) { todo in
-                            CompletedRow(todo: todo) {
+                            CompletedRow(todo: todo, details: details(todo)) {
                                 Task { await model.uncomplete(id: todo.id) }
                             }
                             .navigates(to: todo.id)
@@ -97,16 +97,30 @@ struct CompletedView: View {
     }
 
     private func dayLabel(_ day: Date) -> String {
-        let calendar = model.calendar
+        Self.dayLabel(day, calendar: model.calendar)
+    }
+
+    /// "Today", "Yesterday", or a short day like "Tue, Oct 13".
+    static func dayLabel(_ day: Date, calendar: Calendar) -> String {
         if calendar.isDateInToday(day) { return "Today" }
         if calendar.isDateInYesterday(day) { return "Yesterday" }
         return day.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())
     }
+
+    /// Under each row: the time it was finished (the day is in the section header) and its project.
+    private func details(_ todo: Todo) -> [String] {
+        var parts: [String] = []
+        if let completed = todo.completedAt { parts.append(completed.formatted(date: .omitted, time: .shortened)) }
+        if let project = todo.project, !project.isEmpty { parts.append(project) }
+        return parts
+    }
 }
 
-/// A finished task: filled check, struck-through title, project, and Undo.
-private struct CompletedRow: View {
+/// A finished task: filled check, struck-through title, a quiet details line, and Undo.
+struct CompletedRow: View {
     let todo: Todo
+    /// Shown under the title, e.g. when it was finished and its project.
+    var details: [String] = []
     var onUndo: () -> Void
 
     var body: some View {
@@ -127,12 +141,7 @@ private struct CompletedRow: View {
                     .strikethrough(true, color: Theme.onSurfaceVariant)
                     .lineLimit(2)
                 HStack(spacing: Theme.grid) {
-                    if let completed = todo.completedAt {
-                        Text(completed.formatted(date: .omitted, time: .shortened))
-                    }
-                    if let project = todo.project, !project.isEmpty {
-                        Text(project)
-                    }
+                    ForEach(details, id: \.self) { Text($0) }
                 }
                 .font(Theme.font(.caption))
                 .foregroundStyle(Theme.onSurfaceVariant.opacity(0.7))
