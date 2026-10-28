@@ -20,7 +20,7 @@ export function createServer(apiKey?: string): McpServer {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   }
 
-  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number; actualMinutes?: number }) {
+  function formatTodo(t: { id: string; title: string; status: string; project?: string; dueDate?: string; size?: string; impact?: number; energyLevel?: string; estimatedMinutes?: number; actualMinutes?: number; noteId?: string }) {
     const parts = [`[${t.status}] ${t.title}`]
     if (t.project) parts.push(`project: ${t.project}`)
     if (t.dueDate) parts.push(`due: ${t.dueDate.slice(0, 10)}`)
@@ -29,6 +29,7 @@ export function createServer(apiKey?: string): McpServer {
     if (t.energyLevel) parts.push(`energy: ${t.energyLevel}`)
     if (t.estimatedMinutes) parts.push(`${t.estimatedMinutes}m`)
     if (t.actualMinutes) parts.push(`actual: ${t.actualMinutes}m`)
+    if (t.noteId) parts.push(`note: ${t.noteId}`)
     parts.push(`id: ${t.id}`)
     return parts.join(' | ')
   }
@@ -96,8 +97,11 @@ export function createServer(apiKey?: string): McpServer {
       energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
       due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
       estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
+      note_id: z.string().optional().describe('Note ID to link this todo to (links both ways; replaces the note\'s existing linked todo)'),
     },
     async (input) => {
+      // Check the note exists before creating anything, so a bad ID leaves no half link
+      const note = input.note_id ? await api.notes.get(input.note_id) : undefined
       const todo = await api.todos.create({
         title: input.title,
         description: input.description,
@@ -108,10 +112,12 @@ export function createServer(apiKey?: string): McpServer {
         energyLevel: input.energy_level,
         dueDate: input.due_date ? input.due_date + 'T00:00:00' : undefined,
         estimatedMinutes: input.estimated_minutes,
+        noteId: note?.id,
       } as Partial<import('./api.js').Todo>)
+      if (note) await api.notes.update(note.id, { linkedTodoId: todo.id })
 
       return {
-        content: [{ type: 'text', text: `Created todo: ${formatTodo(todo)}` }],
+        content: [{ type: 'text', text: `Created todo: ${formatTodo(todo)}${note ? `\nLinked to note: ${note.title}` : ''}` }],
       }
     },
   )
@@ -131,8 +137,10 @@ export function createServer(apiKey?: string): McpServer {
       energy_level: z.enum(['low', 'medium_low', 'medium', 'high']).optional().describe('Energy level required'),
       due_date: z.string().optional().describe('Due date (ISO format, e.g. 2026-04-10)'),
       estimated_minutes: z.number().optional().describe('Time estimate in minutes'),
+      note_id: z.string().optional().describe('Note ID to link this todo to (links both ways; replaces the note\'s existing linked todo)'),
     },
     async ({ id, ...updates }) => {
+      const note = updates.note_id ? await api.notes.get(updates.note_id) : undefined
       const data: Record<string, unknown> = {}
       if (updates.title !== undefined) data.title = updates.title
       if (updates.description !== undefined) data.description = updates.description
@@ -143,10 +151,12 @@ export function createServer(apiKey?: string): McpServer {
       if (updates.energy_level !== undefined) data.energyLevel = updates.energy_level
       if (updates.due_date !== undefined) data.dueDate = updates.due_date + 'T00:00:00'
       if (updates.estimated_minutes !== undefined) data.estimatedMinutes = updates.estimated_minutes
+      if (note) data.noteId = note.id
 
       const todo = await api.todos.update(id, data as Partial<import('./api.js').Todo>)
+      if (note) await api.notes.update(note.id, { linkedTodoId: todo.id })
       return {
-        content: [{ type: 'text', text: `Updated: ${formatTodo(todo)}` }],
+        content: [{ type: 'text', text: `Updated: ${formatTodo(todo)}${note ? `\nLinked to note: ${note.title}` : ''}` }],
       }
     },
   )
@@ -292,11 +302,11 @@ export function createServer(apiKey?: string): McpServer {
   // --- List Notes ---
   server.tool(
     'list_notes',
-    'List all notes (titles and IDs)',
+    'List all notes (titles, IDs and linked todo IDs)',
     {},
     async () => {
       const notes = await api.notes.list()
-      const lines = notes.map(n => `${n.title} | id: ${n.id}`)
+      const lines = notes.map(n => `${n.title}${n.linkedTodoId ? ` | todo: ${n.linkedTodoId}` : ''} | id: ${n.id}`)
       return {
         content: [{ type: 'text', text: lines.length === 0 ? 'No notes.' : lines.join('\n') }],
       }
@@ -312,8 +322,15 @@ export function createServer(apiKey?: string): McpServer {
     },
     async ({ id }) => {
       const note = await api.notes.get(id)
+      // A deleted todo can leave a stale link; show the ID rather than failing the read
+      const linkedTodo = note.linkedTodoId
+        ? await api.todos.get(note.linkedTodoId).catch(() => null)
+        : null
+      const link = note.linkedTodoId
+        ? `Linked todo: ${linkedTodo ? formatTodo(linkedTodo) : `${note.linkedTodoId} (not found)`}\n\n`
+        : ''
       return {
-        content: [{ type: 'text', text: `# ${note.title}\n\n${note.content}` }],
+        content: [{ type: 'text', text: `# ${note.title}\n\n${link}${note.content}` }],
       }
     },
   )
@@ -325,11 +342,15 @@ export function createServer(apiKey?: string): McpServer {
     {
       title: z.string().describe('Note title'),
       content: z.string().default('').describe('Note content (Markdown)'),
+      todo_id: z.string().optional().describe('Todo ID to link this note to (links both ways)'),
     },
-    async ({ title, content }) => {
-      const note = await api.notes.create({ title, content })
+    async ({ title, content, todo_id }) => {
+      // Check the todo exists before creating anything, so a bad ID leaves no half link
+      const todo = todo_id ? await api.todos.get(todo_id) : undefined
+      const note = await api.notes.create({ title, content, linkedTodoId: todo?.id })
+      if (todo) await api.todos.update(todo.id, { noteId: note.id })
       return {
-        content: [{ type: 'text', text: `Created note: ${note.title} | id: ${note.id}` }],
+        content: [{ type: 'text', text: `Created note: ${note.title} | id: ${note.id}${todo ? `\nLinked to todo: ${todo.title}` : ''}` }],
       }
     },
   )
@@ -337,19 +358,23 @@ export function createServer(apiKey?: string): McpServer {
   // --- Update Note ---
   server.tool(
     'update_note',
-    'Update a note\'s title or content',
+    'Update a note\'s title or content, or link it to a todo',
     {
       id: z.string().describe('Note ID'),
       title: z.string().optional().describe('New title'),
       content: z.string().optional().describe('New content (Markdown)'),
+      todo_id: z.string().optional().describe('Todo ID to link this note to (links both ways; replaces the note\'s existing linked todo)'),
     },
-    async ({ id, title, content }) => {
+    async ({ id, title, content, todo_id }) => {
+      const todo = todo_id ? await api.todos.get(todo_id) : undefined
       const data: Partial<import('./api.js').Note> = {}
       if (title !== undefined) data.title = title
       if (content !== undefined) data.content = content
+      if (todo) data.linkedTodoId = todo.id
       const note = await api.notes.update(id, data)
+      if (todo) await api.todos.update(todo.id, { noteId: note.id })
       return {
-        content: [{ type: 'text', text: `Updated note: ${note.title}` }],
+        content: [{ type: 'text', text: `Updated note: ${note.title}${todo ? `\nLinked to todo: ${todo.title}` : ''}` }],
       }
     },
   )
