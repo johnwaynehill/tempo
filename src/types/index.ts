@@ -81,8 +81,6 @@ export interface Todo {
   started_at?: Date
   actual_minutes?: number
   due_date?: Date
-  /** Local day ("YYYY-MM-DD") it's planned for, from Plan my week. Not a deadline. */
-  planned_date?: string
   supports?: string
   note_id?: string
   defer_until?: Date

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { useNavigate } from 'react-router'
 import { useTodos } from '@/hooks/useTodos'
 import { useInsightsData } from '@/hooks/useInsightsData'
 import { useWeeklyReview } from '@/hooks/useWeeklyReview'
@@ -21,7 +20,6 @@ import {
 import { MenuButton } from '@/components/ui/MenuButton'
 
 export function WeeklyReviewPage() {
-  const navigate = useNavigate()
   const { done } = useTodos()
 
   // Week navigation
@@ -93,14 +91,6 @@ export function WeeklyReviewPage() {
               <path d="M6 4l4 4-4 4" />
             </svg>
           </button>
-          {isCurrentWeek && (
-            <button
-              onClick={() => navigate('/plan-week')}
-              className="ml-auto text-sm font-medium text-primary hover:text-primary/80 px-3 py-1.5 rounded-lg hover:bg-primary/5 transition-colors cursor-pointer"
-            >
-              Plan the week ahead
-            </button>
-          )}
         </div>
       </div>
 

@@ -1,6 +1,5 @@
 import type { Todo, EnergyLevel } from '@/types'
 import { ENERGY_ORDINAL } from '@/types'
-import { toISODateString } from '@/lib/dateUtils'
 
 // Projects whose todos should never be suggested for Today *before* their due
 // date (not urgent yet), but are guaranteed on it — and every day after, until
@@ -12,7 +11,7 @@ import { toISODateString } from '@/lib/dateUtils'
 // Project Detail — those should keep showing every todo, just reordered).
 const DUE_DATE_GATED_PROJECTS = new Set(['chore'])
 
-export function isDueDateGatedProject(project?: string | null): boolean {
+function isDueDateGatedProject(project?: string | null): boolean {
   return !!project && DUE_DATE_GATED_PROJECTS.has(project.trim().toLowerCase())
 }
 
@@ -92,7 +91,6 @@ export function suggestTodayTodos(
 ): Todo[] {
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const todayStr = toISODateString(today)
 
   const candidates = todos.filter((t) => {
     if (t.status === 'done' || t.status === 'today_pinned') return false
@@ -109,24 +107,17 @@ export function suggestTodayTodos(
       if (due.getTime() > today.getTime()) return false
     }
 
-    // Planned for a later day (Plan my week): that day puts it on Today, not this one.
-    if (t.planned_date && t.planned_date > todayStr) return false
-
     return true
   })
 
   // Every DUE_DATE_GATED_PROJECTS todo that survived the filter above is, by
   // construction, due today or overdue — split those out as mandatory before
   // scoring/slicing the rest. Oldest due date first, so the most overdue chore
-  // leads. Then whatever was planned for today in Plan my week.
-  const mandatory = [
-    ...candidates
-      .filter((t) => isDueDateGatedProject(t.project))
-      .sort((a, b) => (a.due_date?.getTime() ?? 0) - (b.due_date?.getTime() ?? 0)),
-    ...candidates.filter((t) => t.planned_date === todayStr && !isDueDateGatedProject(t.project)),
-  ]
-  const mandatoryIds = new Set(mandatory.map((t) => t.id))
-  const discretionary = candidates.filter((t) => !mandatoryIds.has(t.id))
+  // leads.
+  const mandatory = candidates
+    .filter((t) => isDueDateGatedProject(t.project))
+    .sort((a, b) => (a.due_date?.getTime() ?? 0) - (b.due_date?.getTime() ?? 0))
+  const discretionary = candidates.filter((t) => !isDueDateGatedProject(t.project))
 
   const scored = discretionary.map((todo) => ({
     todo,

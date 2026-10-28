@@ -128,8 +128,8 @@ interface CandidateSelection {
   /** Top-N scored candidates fed to the AI/heuristic picker. */
   candidates: TodoRow[]
   /**
-   * DUE_DATE_GATED_PROJECTS todos that are due today or already overdue, then
-   * todos planned for today in Plan my week (`plannedDate`). Always a subset of `eligible` (computed before the top-N truncation, so it
+   * DUE_DATE_GATED_PROJECTS todos that are due today or already overdue.
+   * Always a subset of `eligible` (computed before the top-N truncation, so it
    * can never be dropped by the pool-size cap) — the caller adds these to the
    * final picks unconditionally, not just as candidates the AI/heuristic may
    * or may not choose. Due (or late) is a commitment, not a suggestion.
@@ -173,10 +173,6 @@ function selectCandidates(
       if (daysBetween(todayDateStr, localDateString(t.dueDate, timezone)) > 0) return false
     }
 
-    // Planned (Plan my week) for a later day: that day will put it on Today, not this one.
-    // A planned day that has passed is an ordinary candidate again.
-    if (t.plannedDate && t.plannedDate > todayDateStr) return false
-
     return true
   })
 
@@ -186,14 +182,10 @@ function selectCandidates(
     .slice(0, CANDIDATE_POOL_SIZE)
     .map((s) => s.todo)
 
-  // Oldest due date first, so the most overdue chore leads. Then whatever the user
-  // planned for today in Plan my week: they chose the day, so it isn't the AI's to drop.
-  const chores = eligible
+  // Oldest due date first, so the most overdue chore leads.
+  const mandatory = eligible
     .filter((t) => isDueDateGatedProject(t.project))
     .sort((a, b) => (a.dueDate?.getTime() ?? 0) - (b.dueDate?.getTime() ?? 0))
-  const plannedToday = eligible
-    .filter((t) => t.plannedDate === todayDateStr && !isDueDateGatedProject(t.project))
-  const mandatory = [...chores, ...plannedToday]
 
   return { candidates, mandatory }
 }
@@ -441,8 +433,8 @@ export async function runAutoplanForUser(
  * each day; every client now asks the server instead so there's one
  * implementation of the scoring and the Chore gate.
  *
- * Mirrors the client rule exactly: mandatory (due-or-overdue Chore, then
- * planned-for-today) todos first, then the best-scoring discretionary todos to fill
+ * Mirrors the client rule exactly: mandatory (due-or-overdue Chore) todos
+ * first, then the best-scoring discretionary todos to fill
  * `TARGET_COUNT_MAX - pinnedCount - mandatory.length` slots. Already-pinned
  * todos are never in the set (Today shows them regardless).
  */
@@ -466,8 +458,7 @@ export async function generateTodaySet(
   const currentEnergy = (prefs?.currentEnergy ?? null) as EnergyLevel | null
   const pinnedCount = todos.filter((t) => t.status === 'today_pinned').length
   const { candidates, mandatory } = selectCandidates(todos, currentEnergy, todayDate, timezone)
-  const mandatoryIds = new Set(mandatory.map((t) => t.id))
-  const discretionary = candidates.filter((t) => !mandatoryIds.has(t.id) && !isDueDateGatedProject(t.project))
+  const discretionary = candidates.filter((t) => !isDueDateGatedProject(t.project))
   const slots = Math.max(0, TARGET_COUNT_MAX - pinnedCount - mandatory.length)
   const todoIds = [...mandatory, ...discretionary.slice(0, slots)].map((t) => t.id)
 
