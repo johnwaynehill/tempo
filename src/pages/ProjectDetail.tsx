@@ -1,15 +1,20 @@
 import { useMemo, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router'
 import { TodoItem } from '@/components/ui/TodoItem'
+import { CompletedTodoItem } from '@/components/ui/CompletedTodoItem'
 import { FilterDropdown } from '@/components/ui/FilterDropdown'
 import { useTodos } from '@/hooks/useTodos'
 import { useNotes } from '@/hooks/useNotes'
 import { useProjects } from '@/hooks/useProjects'
 import { usePreferences } from '@/hooks/usePreferences'
 import { scoreTodo } from '@/lib/scoring'
+import { formatRelativeDay } from '@/lib/dateUtils'
 import { ENERGY_LABELS, ENERGY_LEVELS, type EnergyLevel, type Todo } from '@/types'
 
 type SortMode = 'score' | 'due' | 'recent'
+
+/** Completed todos shown before "Show all" */
+const COMPLETED_PREVIEW = 10
 
 const ENERGY_OPTIONS = ENERGY_LEVELS.map((level) => ({ value: level, label: ENERGY_LABELS[level] }))
 const SORT_OPTIONS: { value: SortMode; label: string }[] = [
@@ -44,7 +49,7 @@ export function ProjectDetailPage() {
   const projectName = decodeURIComponent(projectSlug ?? '')
   const navigate = useNavigate()
 
-  const { todos, completeTodo, deferTodo, loading } = useTodos()
+  const { todos, completeTodo, deferTodo, uncompleteTodo, loading } = useTodos()
   const { notes } = useNotes()
   const { projectList, renameProject, deleteProject } = useProjects()
   const { preferences } = usePreferences()
@@ -60,12 +65,23 @@ export function ProjectDetailPage() {
   const [renaming, setRenaming] = useState(false)
   const [renameValue, setRenameValue] = useState('')
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showCompleted, setShowCompleted] = useState(false)
+  const [showAllCompleted, setShowAllCompleted] = useState(false)
 
   // All active (non-done) todos in this project — includes inbox, backlog, pinned, deferred
   const projectTodos = useMemo(
     () => todos.filter((t) => t.project === projectName && t.status !== 'done'),
     [todos, projectName],
   )
+
+  // Done todos in this project, most recently finished first
+  const completedTodos = useMemo(
+    () => todos
+      .filter((t) => t.project === projectName && t.status === 'done')
+      .sort((a, b) => (b.completed_at?.getTime() ?? 0) - (a.completed_at?.getTime() ?? 0)),
+    [todos, projectName],
+  )
+  const visibleCompleted = showAllCompleted ? completedTodos : completedTodos.slice(0, COMPLETED_PREVIEW)
 
   // Total including done
   const totalCount = useMemo(
@@ -283,6 +299,48 @@ export function ProjectDetailPage() {
               </Link>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* Completed section, collapsed by default */}
+      {completedTodos.length > 0 && (
+        <div className="mt-10">
+          <button
+            onClick={() => setShowCompleted(!showCompleted)}
+            aria-expanded={showCompleted}
+            className="flex items-center gap-1.5 mb-3 min-h-[44px] text-xs font-medium text-on-surface-variant hover:text-on-surface uppercase tracking-wider transition-colors cursor-pointer"
+          >
+            <svg
+              className={`w-3 h-3 transition-transform duration-200 ${showCompleted ? 'rotate-90' : ''}`}
+              viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"
+            >
+              <path d="M4.5 2.5L8 6l-3.5 3.5" />
+            </svg>
+            Completed
+            <span className="text-on-surface-variant/50 normal-case tracking-normal">{completedTodos.length}</span>
+          </button>
+          {showCompleted && (
+            <>
+              <div className="space-y-0.5">
+                {visibleCompleted.map((todo) => (
+                  <CompletedTodoItem
+                    key={todo.id}
+                    todo={todo}
+                    meta={todo.completed_at ? formatRelativeDay(todo.completed_at) : undefined}
+                    onUndo={uncompleteTodo}
+                  />
+                ))}
+              </div>
+              {completedTodos.length > visibleCompleted.length && (
+                <button
+                  onClick={() => setShowAllCompleted(true)}
+                  className="mt-2 px-3 py-2 min-h-[44px] rounded-lg text-xs text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-colors cursor-pointer"
+                >
+                  Show all {completedTodos.length}
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
 

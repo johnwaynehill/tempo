@@ -111,7 +111,7 @@ struct ProjectsView: View {
 }
 
 /// Mirrors `ProjectDetail.tsx`: the project's active todos with energy and sort filters, its
-/// notes, a + that files a new todo here, and rename / delete.
+/// notes, its completed todos (collapsed), a + that files a new todo here, and rename / delete.
 struct ProjectDetailView: View {
     let projectId: UUID
 
@@ -128,6 +128,11 @@ struct ProjectDetailView: View {
     @State private var confirmingDelete = false
     @State private var notes: [Note] = []
     @State private var openedNote: ProjectNoteRoute?
+    @State private var showCompleted = false
+    @State private var showAllCompleted = false
+
+    /// Completed todos shown before "Show all".
+    private static let completedPreview = 10
 
     private var project: Project? { model.project(id: projectId) }
     private var name: String { project?.name ?? "" }
@@ -140,6 +145,13 @@ struct ProjectDetailView: View {
     private var shown: [Todo] {
         let filtered = active.filter { energyFilter == nil || $0.energyLevel == energyFilter }
         return sort.apply(to: filtered, energy: model.preferences?.currentEnergy, calendar: model.calendar)
+    }
+
+    /// Done todos in this project, most recently finished first.
+    private var completed: [Todo] {
+        model.todos
+            .filter { $0.project == name && $0.status == .done }
+            .sorted { ($0.completedAt ?? .distantPast) > ($1.completedAt ?? .distantPast) }
     }
 
     private var projectNotes: [Note] {
@@ -184,6 +196,8 @@ struct ProjectDetailView: View {
                     noteRow(note)
                 }
             }
+
+            completedSection
         }
         .tempoList()
         .animation(.easeOut(duration: 0.3), value: shown.map(\.id))
@@ -275,6 +289,51 @@ struct ProjectDetailView: View {
                 FilterChip(title: sort == .priority ? "Sort" : sort.rawValue, isActive: sort != .priority)
             }
             Spacer(minLength: 0)
+        }
+    }
+
+    @ViewBuilder
+    private var completedSection: some View {
+        let all = completed
+        if !all.isEmpty {
+            Button {
+                withAnimation(.easeOut(duration: 0.2)) { showCompleted.toggle() }
+            } label: {
+                HStack(spacing: Theme.grid * 0.75) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .rotationEffect(.degrees(showCompleted ? 90 : 0))
+                    SectionLabel(text: "Completed", count: all.count)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityValue(showCompleted ? "Expanded" : "Collapsed")
+            .plainRow(top: Theme.grid * 2)
+
+            if showCompleted {
+                let visible = showAllCompleted ? all : Array(all.prefix(Self.completedPreview))
+                ForEach(visible) { todo in
+                    CompletedRow(
+                        todo: todo,
+                        details: todo.completedAt.map { [CompletedView.dayLabel($0, calendar: model.calendar)] } ?? []
+                    ) {
+                        Task { await model.uncomplete(id: todo.id) }
+                    }
+                    .navigates(to: todo.id)
+                    .cardRow()
+                }
+                if all.count > visible.count {
+                    Button("Show all \(all.count)") { showAllCompleted = true }
+                        .font(Theme.font(.caption, weight: .medium))
+                        .foregroundStyle(Theme.onSurfaceVariant)
+                        .frame(minHeight: 44)
+                        .buttonStyle(.plain)
+                        .plainRow()
+                }
+            }
         }
     }
 
