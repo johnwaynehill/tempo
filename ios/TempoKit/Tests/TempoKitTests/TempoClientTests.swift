@@ -136,6 +136,15 @@ final class MockURLProtocol: URLProtocol, @unchecked Sendable {
         #expect(try last().request.httpMethod == "DELETE")
     }
 
+    @Test func deleteMoodUsesTheLowercasedId() async throws {
+        respond(204, "")
+        let id = UUID()
+        try await client.deleteMood(id: id)
+        let request = try last().request
+        #expect(request.httpMethod == "DELETE")
+        #expect(request.url?.path == "/api/mood/\(id.uuidString.lowercased())")
+    }
+
     @Test func todaySetAndHabits() async throws {
         respond(200, #"{"userId":"u","date":"2026-09-14","todoIds":[],"exists":false}"#)
         let set = try await client.todaySet(date: "2026-09-14")

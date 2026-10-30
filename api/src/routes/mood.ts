@@ -121,4 +121,15 @@ router.get('/latest', async (req, res) => {
   res.json(entry || null)
 })
 
+// Delete a mood entry. A habit the check-in ticked off stays ticked: it may have been ticked by
+// hand or by another check-in that day, and it's one tap to undo.
+router.delete('/:id', async (req, res) => {
+  if (!UUID_RE.test(req.params.id)) { res.status(404).json({ error: 'Not found' }); return }
+  const [row] = await db.delete(schema.moodEntries)
+    .where(and(eq(schema.moodEntries.id, req.params.id), eq(schema.moodEntries.userId, req.userId!)))
+    .returning({ id: schema.moodEntries.id })
+  if (!row) { res.status(404).json({ error: 'Not found' }); return }
+  res.status(204).send()
+})
+
 export default router

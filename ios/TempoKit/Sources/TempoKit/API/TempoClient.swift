@@ -74,6 +74,11 @@ public actor TempoClient {
         try await request("POST", "/api/mood", body: draft)
     }
 
+    /// `DELETE /api/mood/:id`. A habit the check-in completed stays completed.
+    public func deleteMood(id: UUID) async throws {
+        try await requestVoid("DELETE", "/api/mood/\(id.uuidString.lowercased())")
+    }
+
     /// `GET /api/mood?days=N` — entries from the last `days` days, newest first.
     public func moodHistory(days: Int = 7) async throws -> [MoodEntry] {
         try await request("GET", "/api/mood", query: [URLQueryItem(name: "days", value: String(days))])
