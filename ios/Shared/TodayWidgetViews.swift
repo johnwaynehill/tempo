@@ -378,7 +378,7 @@ struct TodayWidgetView<StartButton: View, CompleteButton: View>: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 22))
         default:
-            Image(systemName: "circle.circle")
+            Image(systemName: "sun.max")
                 .font(.system(size: 22))
         }
     }

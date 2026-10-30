@@ -217,7 +217,7 @@ struct BacklogView: View {
             .navigates(to: todo.id)
             .cardRow()
             .swipeActions(edge: .leading, allowsFullSwipe: true) {
-                Button("Today", systemImage: "circle.circle") {
+                Button("Today", systemImage: "sun.max") {
                     Task { await model.pin(id: todo.id) }
                 }
                 .tint(Theme.primary)
