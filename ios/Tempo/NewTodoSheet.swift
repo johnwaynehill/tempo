@@ -66,7 +66,7 @@ struct NewTodoSheet: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Theme.surface)
-            .navigationTitle(status == .backlog ? "New in Backlog" : status == .todayPinned ? "New for Today" : "New todo")
+            .navigationTitle(status == .backlog ? "New in Backlog" : "New todo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }

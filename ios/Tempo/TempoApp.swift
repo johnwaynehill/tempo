@@ -114,7 +114,7 @@ private struct MainTabs: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            SwiftUI.Tab("Today", systemImage: "circle.circle", value: Tab.today) {
+            SwiftUI.Tab("Today", systemImage: "sun.max", value: Tab.today) {
                 TabStack(opensRequestedTodos: true) { TodayView() }
             }
             SwiftUI.Tab("Inbox", systemImage: "arrow.down", value: Tab.inbox) {
