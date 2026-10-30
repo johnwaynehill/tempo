@@ -126,6 +126,8 @@ extension CacheSnapshot {
             for i in habits.indices where !habits[i].archived && habits[i].name.localizedCaseInsensitiveContains("mood") {
                 habits[i].completions[draft.date] = true
             }
+        case .deleteMood:
+            break  // Mood entries aren't cached, and habits it completed stay completed.
         }
     }
 }

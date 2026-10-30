@@ -35,10 +35,23 @@ export function useMood() {
     mutation.mutate({ value, note })
   }, [mutation])
 
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => api.mood.delete(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['mood-latest'] })
+      qc.invalidateQueries({ queryKey: ['mood-history'] })
+    },
+  })
+
+  const deleteMood = useCallback((id: string) => {
+    deleteMutation.mutate(id)
+  }, [deleteMutation])
+
   return {
     latestMood: latestMood ?? null,
     history: history ?? [],
     logMood,
+    deleteMood,
     loading,
     logging: mutation.isPending,
   }

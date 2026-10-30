@@ -19,11 +19,12 @@ function formatTime(date: Date): string {
 }
 
 export function MoodPage() {
-  const { latestMood, history, logMood, logging } = useMood()
+  const { latestMood, history, logMood, deleteMood, logging } = useMood()
   const [note, setNote] = useState('')
   const [showNote, setShowNote] = useState(false)
   const [justLogged, setJustLogged] = useState(false)
   const [lastValue, setLastValue] = useState<number | null>(null)
+  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null)
 
   const handleMoodCommit = useCallback((value: number) => {
     setLastValue(value)
@@ -184,7 +185,7 @@ export function MoodPage() {
                   return (
                     <div
                       key={entry.id}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-surface-container-lowest"
+                      className="group flex items-center gap-3 pl-4 pr-1 py-1.5 rounded-xl bg-surface-container-lowest"
                     >
                       <MoodBlob mood={mood} size={32} />
                       <div className="flex-1 min-w-0">
@@ -198,12 +199,60 @@ export function MoodPage() {
                       <span className="text-xs text-on-surface-variant flex-shrink-0">
                         {formatTime(entry.created_at)}
                       </span>
+                      <button
+                        onClick={() => setConfirmingDelete(entry.id)}
+                        className="w-11 h-11 flex items-center justify-center rounded-lg text-on-surface-variant hover:text-error hover:bg-error/5 opacity-0 group-hover:opacity-100 focus-visible:opacity-100 max-md:opacity-60 transition-all duration-200 cursor-pointer flex-shrink-0"
+                        aria-label={`Delete ${MOOD_LABELS[mood]} check-in from ${formatTime(entry.created_at)}`}
+                        title="Delete check-in"
+                      >
+                        <svg className="w-3.5 h-3.5" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                          <path d="M3 3l6 6M9 3l-6 6" />
+                        </svg>
+                      </button>
                     </div>
                   )
                 })}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Delete confirmation dialog */}
+      {confirmingDelete && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center"
+          onClick={() => setConfirmingDelete(null)}
+        >
+          <div className="absolute inset-0 bg-on-surface/20 backdrop-blur-sm" />
+          <div
+            className="relative bg-surface-container-lowest rounded-2xl shadow-xl p-6 mx-4 max-w-sm w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="font-display text-lg font-semibold text-on-surface mb-2">
+              Delete this check-in?
+            </h2>
+            <p className="text-on-surface-variant text-sm mb-6">
+              This can&rsquo;t be undone. A habit it checked off stays checked.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setConfirmingDelete(null)}
+                className="px-4 py-2 rounded-lg text-sm font-medium text-on-surface-variant hover:text-on-surface transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  deleteMood(confirmingDelete)
+                  setConfirmingDelete(null)
+                }}
+                className="px-4 py-2 rounded-lg text-sm font-medium bg-error text-on-primary hover:bg-error/90 transition-colors cursor-pointer"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

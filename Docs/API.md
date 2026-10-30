@@ -522,6 +522,9 @@ Get history.
 #### `GET /api/mood/latest`
 Most recent entry, or `null` if none.
 
+#### `DELETE /api/mood/:id`
+Delete an entry. **204** on success, **404** if it doesn't exist or isn't yours. A habit the check-in completed stays completed.
+
 ---
 
 ### Smart capture

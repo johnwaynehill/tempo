@@ -168,6 +168,7 @@ export const api = {
     latest: () =>
       apiFetch<Record<string, unknown> | null>('/api/mood/latest')
         .then(r => r ? fromApi(r, TIMESTAMP_DATES) : null),
+    delete: (id: string) => apiFetch<void>(`/api/mood/${id}`, { method: 'DELETE' }),
   },
   aiUsage: {
     get: () => apiFetch<AiUsageSummary>('/api/ai-usage'),

@@ -554,6 +554,11 @@ final class AppModel {
         return MoodEntry(draft: draft, userId: preferences?.userId ?? "")
     }
 
+    /// Through the same queue, so deleting a check-in that's still waiting to send lands after it.
+    func deleteMood(id: UUID) async {
+        await enqueue(.deleteMood(moodId: id))
+    }
+
     // MARK: Preferences
 
     func updatePreferences(_ update: UserPreferencesUpdate) async {

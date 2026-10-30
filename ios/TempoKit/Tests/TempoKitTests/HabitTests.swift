@@ -85,8 +85,19 @@ import Testing
         #expect(snapshot.habits[2].completions.isEmpty, "archived habits are left alone, as on the server")
     }
 
+    @Test func deletingACheckInLeavesItsHabitCheckedOff() {
+        var snapshot = CacheSnapshot(habits: [Habit(name: "Log my mood", createdAt: now)])
+        let draft = MoodDraft(value: 70, createdAt: now, date: "2026-10-15")
+        snapshot.apply(.logMood(createdAt: now, draft: draft))
+        snapshot.apply(.deleteMood(createdAt: now, moodId: draft.id))
+        #expect(snapshot.habits[0].completions == ["2026-10-15": true])
+    }
+
     @Test func moodOpsRoundTripThroughJSON() throws {
-        let ops: [WriteOp] = [.logMood(createdAt: now, draft: MoodDraft(value: 42, note: "tired", createdAt: now, date: "2026-10-15"))]
+        let ops: [WriteOp] = [
+            .logMood(createdAt: now, draft: MoodDraft(value: 42, note: "tired", createdAt: now, date: "2026-10-15")),
+            .deleteMood(createdAt: now, moodId: UUID()),
+        ]
         let decoded = try TempoJSON.decoder.decode([WriteOp].self, from: TempoJSON.encoder.encode(ops))
         #expect(decoded == ops)
     }

@@ -150,4 +150,9 @@ final class MoodTodayModel {
         self.entry = entry
         hasLoaded = true
     }
+
+    /// Drops a just-deleted entry; the next refresh brings back any earlier check-in from today.
+    func clear() {
+        entry = nil
+    }
 }

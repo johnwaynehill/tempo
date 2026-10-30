@@ -3,7 +3,8 @@ import TempoKit
 
 /// Today's compact mood entry point, like the row at the top of `Today.tsx`: the blob,
 /// label and note once a mood is logged today, otherwise "How are you feeling?". Tapping
-/// opens the check-in sheet. Refreshes on appear, after a save and when the scene is active.
+/// opens the check-in sheet, and a long press offers to delete today's check-in. Refreshes on
+/// appear, after a save and when the scene is active.
 struct MoodRow: View {
     @Environment(Session.self) private var session
     @Environment(AppModel.self) private var model
@@ -12,6 +13,7 @@ struct MoodRow: View {
     @State private var today = MoodTodayModel()
     @State private var showSheet = false
     @State private var saves = 0
+    @State private var confirmingDelete: MoodEntry?
 
     var body: some View {
         Button {
@@ -23,6 +25,24 @@ struct MoodRow: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .contextMenu {
+            if let entry = today.entry {
+                Button("Delete check-in", systemImage: "trash", role: .destructive) {
+                    confirmingDelete = entry
+                }
+            }
+        }
+        .accessibilityAction(named: "Delete check-in") {
+            if let entry = today.entry { confirmingDelete = entry }
+        }
+        .confirmationDialog("Delete this check-in?", isPresented: Binding(
+            get: { confirmingDelete != nil },
+            set: { if !$0 { confirmingDelete = nil } }
+        ), titleVisibility: .visible, presenting: confirmingDelete) { entry in
+            Button("Delete", role: .destructive) { delete(entry) }
+        } message: { _ in
+            Text("This can't be undone. A copy saved to Apple Health stays there, and a habit it checked off stays checked.")
+        }
         .animation(.easeOut(duration: 0.3), value: today.entry?.id)
         .sensoryFeedback(.success, trigger: saves)
         .sheet(isPresented: $showSheet) {
@@ -54,6 +74,16 @@ struct MoodRow: View {
         .onChange(of: scenePhase) { _, phase in
             guard phase == .active else { return }
             Task { await today.refresh(client: session.client) }
+        }
+    }
+
+    private func delete(_ entry: MoodEntry) {
+        today.clear()
+        Task {
+            await model.deleteMood(id: entry.id)
+            // Send it before asking for today's entry, or the deleted one comes straight back.
+            await model.reload()
+            await today.refresh(client: session.client)
         }
     }
 
